@@ -7,7 +7,7 @@ import qs.services
 // Minute precision: the clock wakes once a minute, aligned to the minute boundary (once a second only when clock.seconds is
 // on). clock.hour24, clock.date and clock.seconds choose the format ("Sun 24, 5:11"; no AM or PM, the hour says which). Left
 // click opens the calendar popup (modules/panels/CalendarPanel.qml) on this bar's screen; resting the pointer on it shows the
-// full date and the Nepali one in a small card (clock.hoverDate, modules/bar/DateHover.qml).
+// full date in a small card (clock.hoverDate, modules/bar/DateHover.qml).
 Txt {
     id: root
     property string screenName

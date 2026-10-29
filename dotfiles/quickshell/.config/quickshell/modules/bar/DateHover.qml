@@ -3,10 +3,8 @@ import Quickshell
 import qs
 import qs.components
 import qs.services
-import "../../components/CalendarMath.js" as Cal
 
-// The small card under the bar clock while the pointer rests on it (clock.hoverDate): the full date and, with calendar.nepali on,
-// the Nepali (Bikram Sambat) date. A PopupWindow hung from the bar item, so it needs no layer of its own; it exists only while shown.
+// The small card under the bar clock while the pointer rests on it (clock.hoverDate): the full date. A PopupWindow hung from the bar item, so it needs no layer of its own; it exists only while shown.
 LazyLoader {
     id: root
     required property Item target                        // the bar item it hangs from
@@ -16,8 +14,6 @@ LazyLoader {
     PopupWindow {
         id: win
         readonly property var d: clock.date
-        readonly property var bs: Cal.toBS(d.getFullYear(), d.getMonth(), d.getDate())
-        readonly property bool nepali: SettingsStore.shown("calendar.nepali") === true && bs !== null
         readonly property string edge: Theme.barEdge
         readonly property int pad: Theme.shadowPad
         // Free room for the shadow on every side but the one facing the bar, where only a small gap is left so the card sits close.
@@ -59,12 +55,6 @@ LazyLoader {
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: Theme.fg
                     text: Qt.formatDate(win.d, "dddd, d MMMM yyyy")
-                }
-                Txt {
-                    visible: win.nepali
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    color: Theme.dim
-                    text: win.nepali ? Cal.BS_MONTHS_NE[win.bs.month] + " " + Cal.nepaliDigits(win.bs.day) + ", " + Cal.nepaliDigits(win.bs.year) + " BS" : ""
                 }
             }
         }

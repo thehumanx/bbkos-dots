@@ -6,7 +6,7 @@ Part of the Quickshell shell (see `quickshell.md`). One bar per screen on the ed
 |---|---|---|---|
 | Overview | `services/OverviewState.qml` (accent while open) | click opens the workspace overview on this screen, or closes it when already open here; the bar stays visible and uncovered (the overlay starts at the bar edge), so the same icon can close it (`docs/modules/overview.md`) | always, first in the start section |
 | Workspaces | `Quickshell.Hyprland` (`workspaces`, `focusedWorkspace`) | click activates | always (ids above 0) |
-| Clock | `SystemClock`, minute precision; "Sun 25, 5:26" | click opens the calendar; hover shows a card with the full and Nepali date (`media.md`) | always |
+| Clock | `SystemClock`, minute precision; "Sun 25, 5:26" | click opens the calendar; hover shows a card with the full date (`media.md`) | always |
 | Updates | `services/Updates.qml` (`checkupdates`, every 30 min, 5 min after a failed check; repo packages only, not AUR) | click opens a floating terminal running `bbkos-update` (`yay -Syu`, then `bbkos-check`) | at least one update pending. Icon and count, default place right after the clock |
 | Tray | `Services.SystemTray` | left activate, middle secondary, right menu | one icon per item that registers (Vivaldi registers none on Linux; apps like nm-applet, Discord, Steam, Claude Desktop do). Monochrome icons (every visible pixel nearly grey, read through a small Canvas) are recoloured to the bar's text colour (`MultiEffect`), so black app icons stay visible; coloured icons such as Spotify's keep their colours |
 | Audio | `Services.Pipewire` | click opens the popup, middle click mutes, scroll 5 % | always |

@@ -133,7 +133,7 @@ SettingsPage {
         }
         SettingChoice {
             label: "Mains frequency"
-            hint: "Stops lights flickering in the picture. 50 Hz in Nepal and most of the world, 60 Hz in the Americas"
+            hint: "Stops lights flickering in the picture. 50 Hz in Europe, Asia and most of the world, 60 Hz in the Americas"
             key: "camera.powerLine"
             model: [{ value: "off", label: "Off" }, { value: "50hz", label: "50 Hz" }, { value: "60hz", label: "60 Hz" }]
         }

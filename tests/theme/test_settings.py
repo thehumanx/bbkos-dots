@@ -515,11 +515,11 @@ if __name__ == "__main__":
 
 class CalendarSettingsTest(unittest.TestCase):
     def test_defaults(self):
-        self.assertEqual(S.DEFAULTS["calendar"], {"nepali": False, "weekStart": "mon", "weekNumbers": False, "moon": True})
+        self.assertEqual(S.DEFAULTS["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True})
 
     def test_junk_falls_back_per_key(self):
-        out, warns = S.validate({"version": 1, "calendar": {"nepali": "yes", "weekStart": "tue", "weekNumbers": True}})
-        self.assertEqual(out["calendar"], {"nepali": False, "weekStart": "mon", "weekNumbers": True, "moon": True})
+        out, warns = S.validate({"version": 1, "calendar": {"weekStart": "tue", "weekNumbers": "yes"}})
+        self.assertEqual(out["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True})
         self.assertEqual(len(warns), 2)
 
     def test_set_value(self):

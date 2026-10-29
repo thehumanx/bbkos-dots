@@ -90,9 +90,9 @@ hl.on("hyprland.start", function () hl.exec_cmd("bbkos-lock") end)
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
 
--- Cursor theme (the cursor.theme setting; Adwaita from adwaita-cursors by default). Hyprland falls back to the Xcursor files.
-hl.env("XCURSOR_THEME", "Adwaita")
-hl.env("HYPRCURSOR_THEME", "Adwaita")
+-- Cursor theme (the cursor.theme setting; Afterglow, fetched by install.sh, falls back to Adwaita). Hyprland falls back to the Xcursor files.
+hl.env("XCURSOR_THEME", "Afterglow-cursors")
+hl.env("HYPRCURSOR_THEME", "Afterglow-cursors")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 

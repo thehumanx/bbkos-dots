@@ -25,7 +25,7 @@ var PAGES = [
         { id: "look", label: "Look", page: "PageBarLook",
           keywords: "opacity blur pills widget background padding icons only icon style" },
         { id: "widgets", label: "Widgets", page: "PageBarWidgets",
-          keywords: "clock date time 24 hour seconds calendar week numbers moon nepali music media song player width" }] },
+          keywords: "clock date time 24 hour seconds calendar week numbers moon music media song player width" }] },
     { id: "windows", label: "Windows", group: "Look", icon: "",
       keywords: "window",
       tabs: [

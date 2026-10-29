@@ -5,7 +5,7 @@ Music widget added 2026-10-25, replacing the island (2026-10-24, removed the sam
 ## The clock
 
 `Sun 25, 5:26` (`clock.date` adds the weekday and day; `clock.hour24` picks 24 h; no AM or PM, the hour says which; `clock.seconds` adds `:ss`). Qt only counts 12 hours when a format has AM or PM, so `Clock.qml` works the hour out itself. It is always visible: nothing replaces it.
-Left click opens the calendar popup. While the pointer is on it (`clock.hoverDate`, default on) a small card appears at once under it (above a bottom bar, beside a side bar) with the full date and, with `calendar.nepali` on, the Nepali date (`कार्तिक ८, २०८३ BS`). `DateHover.qml` is a `PopupWindow` hung from the bar item inside a `LazyLoader`, so it exists only while shown. Its window keeps `shadowPad` free pixels on every side except the one facing the bar, where only 6 px are left so the card sits close. It hides when the calendar opens.
+Left click opens the calendar popup. While the pointer is on it (`clock.hoverDate`, default on) a small card appears at once under it (above a bottom bar, beside a side bar) with the full date. `DateHover.qml` is a `PopupWindow` hung from the bar item inside a `LazyLoader`, so it exists only while shown. Its window keeps `shadowPad` free pixels on every side except the one facing the bar, where only 6 px are left so the card sits close. It hides when the calendar opens.
 
 ## The music widget
 

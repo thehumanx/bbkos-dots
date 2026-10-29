@@ -2,7 +2,7 @@
 
 The rules for how anything in bbkOS looks, behaves and is built. Read it before adding a feature, a widget, a panel, a setting or a command, and keep to it, so that a thing written by the owner, Claude or any other agent looks and acts like the rest. Where this file and the code disagree, the code is the fact: fix the code or fix this file in the same change.
 
-The visual version of this file is the Figma design system (section 11). Companion docs: `principles.md` (how changes are made), `modules/theme.md` (the theme engine and every setting's range), `modules/settings-app.md` (the settings window), `modules/bar.md`, `modules/panels.md`, `modules/failure-modes.md`.
+Companion docs: `principles.md` (how changes are made), `modules/theme.md` (the theme engine and every setting's range), `modules/settings-app.md` (the settings window), `modules/bar.md`, `modules/panels.md`, `modules/failure-modes.md`.
 
 ## 1. Principles
 
@@ -154,26 +154,7 @@ Sentence case, no full stops on labels, short hints in the dim colour under the 
 - **A test that runs a real tool must not reach the live session.** A temp HOME does not isolate D-Bus: `gsettings` from a test switched the live GTK theme to one inside a deleted temp dir (2026-10-23). Live-session writers check that HOME is the real home; test environments set `GSETTINGS_BACKEND=memory`.
 - **Check the log after a restart**, not just that the unit is active: `journalctl --user -u quickshell` for `ERROR` and `WARN scene`.
 
-## 11. The Figma file
-
-The design system is also drawn in Figma: https://www.figma.com/design/qJ6F2BANEtQSqHGhdbNa7g/bbkOS (built 2026-10-21 through the Figma MCP server from the code as it stood that day).
-
-- **Pages:** Cover, Getting started, Foundations, Icons, Components, Anatomy, Templates.
-- **Variables (93):** `Color/Palette`, `Color/Surface`, `Shape`, `Type` (each with modes **Built-in**, the defaults of `ThemeStore.qml`, and **Live**, the owner's palette and settings on 2026-10-21; the two `Color/` collections also have **Live light**, see below), `Spacing & Size` and `Motion` (one mode). Every variable's WEB code syntax is its QML token (`Theme.accent`, `Theme.radius`).
-- **Styles:** 14 system text styles, 6 `Doc/` text styles (documentation only), 3 effect styles.
-- **Components:** Button, Chip, Toggle, Slider (deprecated 2026-10-29), Step Bar, Tab and Tabs (added 2026-10-28), Input, List Row, Picker Row, Sidebar Item and Header, Setting Row, Settings Section, Bar Item, Notification Card, OSD, Popup, Popup Header, Popup Section, Calendar Day, Progress Row, Progress Tile, Timer Widget, 14 icons. Fills, edges, radii, padding and heights are bound to variables; change a frame's variable mode to see it in the other mode.
-- **Calendar, timer and popup placement (added 2026-10-21):** components Calendar Day (state variants, Nepali line), Progress Row and Timer Widget (Running, Paused, Done flash, Done rest); template `Template/Calendar and timer` (the calendar popup, the timer popup running and done, the bar with the widget) and `Template/Popup placement` (six mini screens: top, bottom, left, right, pushed in at the edge, no widget); palette variables `color/signal-red` and `color/signal-red-on` (the timer's literal red, not `crit`); icon `Icon/timer`.
-- **Live light mode (added 2026-10-21):** the two `Color/` collections have a third mode, the same wallpaper rendered with `colors.mode light` by a real dry run of the engine (`BBKOS_SETTINGS` pointing at a copy with `colors.mode` set to light, `bbkos-theme apply --only colors --out-dir DIR`), the surfaces computed with the `Theme.qml` arithmetic (popup, inset, control, pill; bar at 20%), the timer red `#b00020` on white. Foundations has a light swatch panel for each collection, Templates a `Desktop Live light` frame. A frame in this mode needs both Color collections set to Live light (Shape and Type have no light mode). It follows this wallpaper; regenerate it (and the swatch labels) when the wallpaper or contrast setting changes. A Built-in light fallback does not exist in the code, so none is drawn.
-- **Settings reorganisation (2026-10-28):** `Step Bar` (Value 0/40/100, State Default/Disabled) and `Tab` (Default, Hover, Active) plus a `Tabs` row on the Components page, next to Slider; Setting Row has a `Changed` boolean (the accent dot after the label) and Settings Section a `Show reset` boolean ("↺ Reset these" at the title); their spec lines say how "Set by grid mode" looks. Checked by screenshots of each through the plugin API. The settings window template was redrawn on 2026-10-29: search field, 16 pages in four groups, Bar with the Layout / Look / Widgets tabs, Step Bar rows (the Live frame is a copy of the Built-in one with the Live modes), drawn 1120 x 900 (the real window is tiled).
-- **Popups in the settings look (2026-10-29):** `space/panel` 14 -> 20; List Row 36 high (`size/picker-row`) with 12 px sides (`space/lg`); new `Popup Header` (Trailing None / Status / Toggle / Icon, Title and Status text, Icon swap), `Popup Section` (Title, Show title, Show divider, a `Content` slot made with `component.createSlot()`) and `Progress Tile` (Label, Value, Note); `Template/Popups` rebuilt from them (Battery, Wi-Fi, Audio with Step Bars, Power) and `Template/Calendar and timer` shows the 2 × 2 tiles (21 October figures from `CalendarMath.js`). `Slider` is marked deprecated (no template uses it; its Anatomy plate is labelled deprecated). Gotchas met: a node moved into another instance's slot changes id (create new instances there instead); a cloned variant loses its text-property link (re-set `componentPropertyReferences`); the tile fills were detached to set their widths (instance inner shapes do not resize).
-- **Bar float, radius and hug (added 2026-10-21):** `Template/Bar` shows a floating bar (float 12, radius 12) and a hugging one (float 12, radius 18). The settings are not Figma variables.
-- **Keep it in step:** a change to `Theme.qml`, the palette roles, `settings.py` ranges or a component's look is not finished until the matching variable or component here is updated (and the other way round). The code is the fact; Figma follows it.
-- **Built-in mode follows the accessible fallback palette** (`ThemeStore.qml` defaults: dim `#a7a8b3`, accent `#7fa8fd`, crit `#ff8298`); Live follows the generated `colors.json`.
-- **Differences from the shell:** JetBrains Mono stands in for the Nerd Font (and DejaVu Sans Mono in Live mode); vector icons stand in for Nerd Font glyphs; the lock screen is shown at 68%; opacities on fills (active plate 30%, off knob 85%) live on the node, not in a variable.
-- **Editing through the MCP:** read the `figma-use` and `figma-generate-library` skills first. Frames made with `createAutoLayout` have a white fill (set `fills = []`); `resize()` resets a child's sizing to fixed (set FILL after it); a paint with an opacity must be assigned first and its opacity set on the read-back copy, or the opacity is dropped; instances created before a change to their main component may need the override cleared; `get_screenshot` caches by image size, so vary `maxDimension` when re-checking.
-
-
-## 12. Nice to have (not done)
+## 11. Nice to have (not done)
 
 - **A redesign of the whole UI and its components (considered 2026-10-23, left for later by the owner).** Not a component
   library: the QML ones (Qt Quick Controls styles, Kirigami, FluentUI-QML) bring their own theming and would fight
@@ -184,5 +165,5 @@ The design system is also drawn in Figma: https://www.figma.com/design/qJ6F2BANE
   first, as the reference-first rule asks, the Quickshell shells that already did this (end-4's dots-hyprland, Caelestia,
   Noctalia, DankMaterialShell: named from memory, not read yet). Order: audit every panel with screenshots, restructure
   `Theme.qml` into roles, rebuild the shared components one panel at a time checked at every bar position and in light
-  and dark, then bring the Figma file (section 11) up to date. Open question for the owner: what bothers them in the
+  and dark. Open question for the owner: what bothers them in the
   current look.

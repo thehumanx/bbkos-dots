@@ -22,6 +22,8 @@ One GNU Stow package per directory, each mirroring `$HOME`. `install.sh` links t
 | `~/.config/hypr/hyprlock.conf`, `~/.config/gtk-4.0/gtk.css` | rendered from `templates/` (they hold absolute paths) |
 | `~/.config/bbkos/settings.json` | copied from `defaults/settings.json`: it is *your* file, the settings app writes to it |
 
+The cursor theme is not a package here: `install.sh` fetches Afterglow (GPL-3.0) from its own repository at a pinned commit.
+
 ## By hand
 
 ```sh

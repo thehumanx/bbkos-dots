@@ -5,5 +5,6 @@ wallpaper so the screenshots match what you get, and may not be reused outside t
 Replace it with your own (Settings > Appearance, or `bbkos-theme wallpaper set FILE`).
 
 Third-party software this repository installs or builds is under its own licence:
+- The Afterglow cursor theme (GPL-3.0) is fetched by install.sh from github.com/yeyushengfan258/Afterglow-Cursors; it is not part of this repository
 - omasnap (screenshots, OCR, annotation) is built from source by scripts/install-omasnap.sh: github.com/omacom/omasnap
 - Hyprland, Quickshell, matugen, hyprlock, hypridle and every package in packages/*.txt

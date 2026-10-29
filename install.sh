@@ -218,6 +218,26 @@ if [ $OMASNAP = 1 ] && [ $PACKAGES = 1 ] && ! command -v omasnap >/dev/null; the
     run bash "$REPO/scripts/install-omasnap.sh" || warn "omasnap build failed; screenshots stay unavailable. Rerun scripts/install-omasnap.sh"
 fi
 
+# ---- 7b. cursor theme: Afterglow (GPL-3.0, so fetched from its repository, not bundled) ----
+step "Cursor theme"
+AFTERGLOW_URL=https://github.com/yeyushengfan258/Afterglow-Cursors.git
+AFTERGLOW_COMMIT=424a3326827f3bc56856fc5a3a1cce8da1ea3ecd      # 2021-11-17, the repository's last commit
+CURSOR_OK=1
+if [ -d "$HOME/.local/share/icons/Afterglow-cursors" ] || [ -d /usr/share/icons/Afterglow-cursors ]; then
+    info "Afterglow-cursors already installed"
+elif [ $DRY = 1 ]; then
+    info "would clone $AFTERGLOW_URL (commit ${AFTERGLOW_COMMIT:0:7}) and copy dist/ to ~/.local/share/icons/Afterglow-cursors"
+else
+    tmp=$(mktemp -d)
+    if git clone -q --depth 1 "$AFTERGLOW_URL" "$tmp/src" 2>/dev/null && [ "$(git -C "$tmp/src" rev-parse HEAD)" = "$AFTERGLOW_COMMIT" ] && [ -d "$tmp/src/dist/cursors" ]; then
+        mkdir -p "$HOME/.local/share/icons" && cp -r "$tmp/src/dist" "$HOME/.local/share/icons/Afterglow-cursors"
+        state_add cursor "$HOME/.local/share/icons/Afterglow-cursors"; info "installed Afterglow-cursors (GPL-3.0, github.com/yeyushengfan258/Afterglow-Cursors)"
+    else
+        CURSOR_OK=0; warn "could not fetch the Afterglow cursors (offline, or the repository changed); using Adwaita"
+    fi
+    rm -rf "$tmp"
+fi
+
 # ---- 8. first theme ----
 step "Theme"
 if [ $DRY = 0 ]; then
@@ -227,6 +247,7 @@ if [ $DRY = 0 ]; then
     fi
     lay=$(localectl status 2>/dev/null | awk -F': *' '/X11 Layout/{print $2}'); lay=${lay%%,*}
     [ -n "$lay" ] && [ "$lay" != us ] && bbkos-theme set keyboard.layout "$lay" >/dev/null 2>&1 && info "keyboard layout: $lay"
+    [ "$CURSOR_OK" = 0 ] && bbkos-theme set cursor.theme Adwaita >/dev/null 2>&1
     bbkos-theme apply >/dev/null 2>&1 && info "theme generated" || warn "bbkos-theme apply failed; run it by hand to see why"
 fi
 

@@ -14,7 +14,7 @@ SettingsPage {
         title: "Clock"
         SettingToggle { label: "24-hour clock"; hint: "Off: 12-hour, without AM or PM"; key: "clock.hour24" }
         SettingToggle { label: "Show the date"; hint: "The weekday, day and month before the time"; key: "clock.date" }
-        SettingToggle { label: "Full date on hover"; hint: "Resting the pointer on the clock shows a small card with the full date, and the Nepali date when Nepali dates are on"; key: "clock.hoverDate" }
+        SettingToggle { label: "Full date on hover"; hint: "Resting the pointer on the clock shows a small card with the full date"; key: "clock.hoverDate" }
         SettingToggle { label: "Show seconds"; hint: "The clock then redraws every second instead of every minute, which costs a little battery"; key: "clock.seconds" }
     }
 
@@ -27,7 +27,6 @@ SettingsPage {
         }
         SettingToggle { label: "Week numbers"; key: "calendar.weekNumbers" }
         SettingToggle { label: "Moon phase"; hint: "Shown with the selected day"; key: "calendar.moon" }
-        SettingToggle { label: "Nepali dates"; hint: "Bikram Sambat under every day (2007 to April 2028)"; key: "calendar.nepali" }
     }
 
     SettingsSection {

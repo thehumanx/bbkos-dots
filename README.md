@@ -14,7 +14,7 @@ Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, ra
 | | |
 |---|---|
 | ![settings](assets/screenshots/settings.png) **Settings app** (`Super+,`): 16 pages, search, reset per page | ![launcher](assets/screenshots/launcher.jpg) **Launcher** (`Super+R`): apps, commands and every single setting |
-| ![popups](assets/screenshots/popups.png) **Bar popups**: battery, sound, calendar (with Bikram Sambat), Wi-Fi, Bluetooth, display, timer | ![terminals](assets/screenshots/terminals.png) **Tiling**, kitty, fish, starship |
+| ![popups](assets/screenshots/popups.png) **Bar popups**: battery, sound, calendar, Wi-Fi, Bluetooth, display, timer | ![terminals](assets/screenshots/terminals.png) **Tiling**, kitty, fish, starship |
 
 ## What is in it
 
@@ -150,7 +150,6 @@ tests/                              python3 -m unittest discover -s tests/<area>
 - Built and used daily on **one laptop** (Lenovo Slim 7, Intel Core Ultra 7, Arc iGPU, btrfs). Intel is the tested path. The AMD and NVIDIA package sets, the no-battery (desktop) path and non-btrfs installs are written from the Arch wiki and **untested on real hardware**.
 - What was verified for this repo: hardware detection and the package list on the author's machine, every package name against the Arch repos, link, render, backup and uninstall in a throwaway `$HOME` with a pre-existing config planted, the theme engine from an empty `$HOME`, and the test suites (theme, keybinds, power, touchpad, launcher, dictation, android, skill). **Not verified:** a full install on a fresh machine with a real package install and first login.
 - `docs/modules/` are the author's working notes, written in the first person of one owner's machine. They are accurate about how things work; measurements and some paths are the author's.
-- The calendar popup has a Bikram Sambat (Nepali) date line; it is a setting (`calendar.nepali`, the `BS` button in the popup) and is off by default; the screenshot has it on.
 
 ## Credits
 

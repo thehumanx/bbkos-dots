@@ -208,7 +208,6 @@
     "edgeMargin": 0
   },
   "calendar": {
-    "nepali": false,
     "weekStart": "mon",
     "weekNumbers": false,
     "moon": true
@@ -249,7 +248,7 @@
     "leftHanded": false
   },
   "cursor": {
-    "theme": "Adwaita",
+    "theme": "Afterglow-cursors",
     "size": 24
   },
   "nightlight": {

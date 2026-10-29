@@ -134,7 +134,7 @@ Wrong types, NaN, huge numbers, unknown keys and control characters never raise:
 
 ### Calendar section (`calendar.*`)
 
-`nepali` (bool, default off), `weekStart` (`mon`, `sun`, `sat`; default `mon`), `weekNumbers` (bool, off), `moon` (bool, on). Read by the calendar popup only, nothing is rendered into a generated file (docs/modules/calendar.md).
+`weekStart` (`mon`, `sun`, `sat`; default `mon`), `weekNumbers` (bool, off), `moon` (bool, on). Read by the calendar popup only, nothing is rendered into a generated file (docs/modules/calendar.md).
 
 ### Lock section (`lock.*`, rendered into `hyprlock.conf`)
 

@@ -51,7 +51,6 @@ Nothing was dropped: every key that had a row still has one. Duplicates removed:
 
 **Idle timeline.** Power and sleep › When idle draws the four steps on one time line above their chips (square-root scale; steps at the same time share a dot; a line in the warning colour when the order is unusual, for example the screen switching off before it locks), and says when Keep awake is on that none of them happen now.
 
-**Figma.** Step Bar, Tab and Tabs added to the design system, Setting Row and Settings Section got their changed and reset states (`design.md` section 11). The settings window template there still shows the old sidebar.
 
 **Menu.** The bbkOS menu lists every page and every tab of a page with tabs ("Stage mode", "Settings · Windows"), built from `Pages.js`; the old page names stay findable through the keywords. Learned ranking for the old `settings:N` entries is not carried over.
 
@@ -139,7 +138,7 @@ Hardware, Network, Tools, System.
 ## Date and time page (2026-10-24)
 
 Twenty-fourth sidebar entry (`PageDateTime`, index 23, group System): the bar clock (24 hour, date, seconds) and the calendar keys that
-had no page (week start, week numbers, moon, Nepali dates). Doc: `calendar.md`. The Reset page has a Date and time row (the clock keys;
+had no page (week start, week numbers, moon). Doc: `calendar.md`. The Reset page has a Date and time row (the clock keys;
 the calendar keeps its own). The Sound page also holds the **Music widget in the bar** section (`media.*`, `media.md`) and the Reset page has a Music widget row.
 
 ## Clipboard page (2026-10-24)

@@ -103,10 +103,9 @@ CAMERA_DEFAULTS = {"exposure": "auto", "exposureTime": 156, "brightness": 128, "
                    "sharpness": 3, "gamma": 120, "backlight": 1, "whiteBalance": "auto", "whiteBalanceTemp": 4600,
                    "steadyFramerate": True, "powerLine": "50hz"}
 
-# Calendar popup (the bar clock's click target, docs/modules/calendar.md). nepali shows the Bikram Sambat date beside
-# every day; the rest are display choices.
+# Calendar popup (the bar clock's click target, docs/modules/calendar.md): display choices.
 CALENDAR_WEEK_STARTS = ("mon", "sun", "sat")
-CALENDAR_DEFAULTS = {"nepali": False, "weekStart": "mon", "weekNumbers": False, "moon": True}
+CALENDAR_DEFAULTS = {"weekStart": "mon", "weekNumbers": False, "moon": True}
 
 # Idle timers (hypridle, the Idle and lock page): seconds of inactivity before each step, 0 = never. dim also switches the
 # keyboard light off. Awake mode skips every step except the ones the owner does by hand (bbkos-awake).
@@ -154,7 +153,7 @@ BEHAVIOR_DEFAULTS = {"followMouse": "hover", "focusOnActivate": True, "workspace
                      "hideCursorWhenTyping": False, "cursorHideAfter": 0, "cursorWarps": True, "snap": False, "snapGap": 10}
 
 # The bar clock (the Date and time page): 24 or 12 hour, seconds (the clock then wakes every second instead of every minute),
-# the date before the time, and the small popup with the full date (and the Nepali one) while the pointer rests on it. The
+# the date before the time, and the small popup with the full date while the pointer rests on it. The
 # calendar popup has its own keys above.
 CLOCK_DEFAULTS = {"hour24": True, "seconds": False, "date": True, "hoverDate": True}
 
@@ -388,7 +387,6 @@ RANGES = {
     "lock.edgeMargin": ("int", 0, 40, 1),
     "lock.timeFormat": ("enum", LOCK_TIME_FORMATS),
     "lock.dateFormat": ("enum", LOCK_DATE_FORMATS),
-    "calendar.nepali": ("bool",),
     "calendar.weekStart": ("enum", CALENDAR_WEEK_STARTS),
     "calendar.weekNumbers": ("bool",),
     "calendar.moon": ("bool",),

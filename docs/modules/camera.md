@@ -36,7 +36,7 @@ that value (the camera reported 30 fps while measured; not measured at 400).
 | `whiteBalance` | auto / manual | `white_balance_automatic` |
 | `whiteBalanceTemp` | 2800-6500 | `white_balance_temperature` (manual only) |
 | `steadyFramerate` | bool | `exposure_dynamic_framerate` off when on |
-| `powerLine` | off / 50hz / 60hz | `power_line_frequency` (50 Hz default, right for Nepal) |
+| `powerLine` | off / 50hz / 60hz | `power_line_frequency` (50 Hz default; 60 Hz in the Americas) |
 
 Defaults are the camera's own (automatic) except `steadyFramerate` on. The owner's live file has `exposure` manual, `exposureTime`
 400. Each card has "Reset these" (the Reset page's Camera row until 2026-10-28).

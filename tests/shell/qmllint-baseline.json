@@ -130,10 +130,10 @@
     "unqualified": 7
   },
   "modules/bar/DateHover.qml": {
-    "import": 3,
+    "import": 2,
     "missing-property": 5,
-    "unqualified": 17,
-    "unresolved-type": 2
+    "unqualified": 13,
+    "unresolved-type": 1
   },
   "modules/bar/DisplayWidget.qml": {
     "import": 2,
@@ -299,10 +299,10 @@
     "unresolved-type": 2
   },
   "modules/panels/CalendarPanel.qml": {
-    "import": 21,
+    "import": 17,
     "required": 3,
-    "unqualified": 78,
-    "unresolved-type": 12
+    "unqualified": 60,
+    "unresolved-type": 9
   },
   "modules/panels/DisplayPanel.qml": {
     "import": 25,
@@ -400,7 +400,7 @@
     "unqualified": 4
   },
   "modules/settings/PageBarWidgets.qml": {
-    "import": 12
+    "import": 11
   },
   "modules/settings/PageBehavior.qml": {
     "import": 8,

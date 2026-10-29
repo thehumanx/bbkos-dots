@@ -40,6 +40,7 @@ for p in "${STOW_PKGS[@]}"; do
     [ -d "$REPO/dotfiles/$p" ] && { run stow -D -d "$REPO/dotfiles" -t "$HOME" "$p" 2>&1 | grep -v '^$' || true; }
 done
 for f in $(state_get rendered | sort -u); do [ -e "$f" ] && { run rm -f "$f"; info "removed ${f#"$HOME"/}"; }; done
+for d in $(state_get cursor | sort -u); do [ -d "$d" ] && { run rm -rf "$d"; info "removed ${d/#$HOME/\~}"; }; done
 [ -L "$SHARE/repo" ] && run rm -f "$SHARE/repo"
 run systemctl --user daemon-reload
 
