@@ -17,9 +17,9 @@ Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, ra
 | **Bar popups**: battery and sound (calendar, Wi-Fi, Bluetooth, display and timer too) | **Tiling** with kitty, fish and starship |
 | ![popups](assets/screenshots/popups.png) | ![terminals](assets/screenshots/terminals.png) |
 
-## The ideas that are mine
+## Design choices
 
-These are design choices, not stock features, and each one is a switch you can turn off.
+The parts that set this desktop apart. Each one is a switch you can turn off.
 
 - **Grid mode.** One toggle (Settings > Appearance > Style) turns the whole desktop into flat cells with hairline borders: bar widgets, windows, popups and stage cards touch, with no gaps, shadows or rounded corners (popups and controls can keep their round corners). Inspired by the key grid of my keyboard, *Omakey*. On in the default look.
 - **Stage mode.** A workspace opens windows one at a time, full size, and the others wait as thumbnail cards in a rail at the edge; click a card to bring it forward. Inspired by macOS Stage Manager. It works *per workspace*: the default is a setting, `Super+Alt+S` or the overview switch flips one workspace, and the rail's size, position and look have their own settings page. On in the default look.
