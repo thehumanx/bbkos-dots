@@ -17,11 +17,22 @@ Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, ra
 | **Bar popups**: battery and sound (calendar, Wi-Fi, Bluetooth, display and timer too) | **Tiling** with kitty, fish and starship |
 | ![popups](assets/screenshots/popups.png) | ![terminals](assets/screenshots/terminals.png) |
 
+## The ideas that are mine
+
+These are design choices, not stock features, and each one is a switch you can turn off.
+
+- **Grid mode.** One toggle (Settings > Appearance > Style) turns the whole desktop into flat cells with hairline borders: bar widgets, windows, popups and stage cards touch, with no gaps, shadows or rounded corners (popups and controls can keep their round corners). Inspired by the key grid of my keyboard, *Omakey*. On in the default look.
+- **Stage mode.** A workspace opens windows one at a time, full size, and the others wait as thumbnail cards in a rail at the edge; click a card to bring it forward. Inspired by macOS Stage Manager. It works *per workspace*: the default is a setting, `Super+Alt+S` or the overview switch flips one workspace, and the rail's size, position and look have their own settings page. On in the default look.
+- **Settings app for the details.** `Super+,` opens a real window with 16 pages in four groups and a search box that finds any single setting, with "Reset these" per section and a reset for the page you are on. If the look, behaviour or hardware can be changed, it is in there; nothing is hidden in a file you have to know about.
+- **Workspace overview.** Click the grid icon at the start of the bar, or swipe three fingers up: the workspaces along the top, the selected one's windows drawn at their real positions below, drag a window onto another workspace to move it, `Esc` to close. A Mission Control-style layout built in Quickshell, over the blurred wallpaper.
+- **Global menu.** `Super+R` is one search box for apps, web apps, commands, settings pages *and single settings*, plus a calculator and a web search; it ranks like Raycast and learns what you open. Inspired by typecraft's Raycast-style launcher for Linux ([oma-cast](https://github.com/typecraft-dev/oma-cast)); the ranking follows the behaviour its spec documents, the code is written from scratch.
+- **Bar popups.** Battery, sound, Wi-Fi, Bluetooth, display, calendar and timer open as small cards under the widget you clicked, in the same look as the settings window. Inspired by Omarchy's widget popups.
+
 ## What is in it
 
 - **Shell:** bar, launcher, notifications, lock screen (hyprlock), OSDs, clipboard history with preview, emoji picker, screen recorder, webcam controls, calendar and timer. All QML in `dotfiles/quickshell`.
 - **Theme engine:** `bbkos-theme` turns the wallpaper into colours for the shell, kitty, GTK 3/4, hyprlock and Hyprland; every text colour is lifted until it passes WCAG contrast on the surface it is drawn on.
-- **Window management:** workspace overview (three-finger swipe), optional *stage mode* (one window at a time with a rail of cards), grid mode, per-monitor scale and layout, DDC/CI brightness for external monitors.
+- **Display handling:** per-monitor scale, mode and layout, DDC/CI brightness for external monitors, a night-light schedule.
 - **Laptop:** battery and power-profile popups, lid actions, optional root helpers for power limits, charge mode and a touchpad stall fix.
 - **Extras (opt in):** local dictation (Voxtype), Android app manager, screen sharing over VNC, btrfs snapshots.
 - **Agent skill:** `.claude/skills/bbkos` plus `AGENTS.md`, so Claude Code (or any agent) can change the desktop without breaking it. See [Using an agent](#using-an-agent).
@@ -156,6 +167,6 @@ tests/                              python3 -m unittest discover -s tests/<area>
 
 ## Credits
 
-[Hyprland](https://hypr.land) and the hypr* tools · [Quickshell](https://quickshell.org) · [matugen](https://github.com/InioX/matugen) · [uwsm](https://github.com/Vladimir-csp/uwsm) · [omasnap](https://github.com/omacom/omasnap) from the Omarchy project · ideas from [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland), [Caelestia](https://github.com/caelestia-dots/caelestia) and [Omarchy](https://github.com/basecamp/omarchy).
+[Hyprland](https://hypr.land) and the hypr* tools · [Quickshell](https://quickshell.org) · [matugen](https://github.com/InioX/matugen) · [uwsm](https://github.com/Vladimir-csp/uwsm) · [omasnap](https://github.com/omacom/omasnap) from the Omarchy project · [oma-cast](https://github.com/typecraft-dev/oma-cast) (the idea behind the menu) · macOS Stage Manager (stage mode) · ideas from [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland), [Caelestia](https://github.com/caelestia-dots/caelestia) and [Omarchy](https://github.com/basecamp/omarchy).
 
 MIT, see [LICENSE](LICENSE). The wallpaper is not covered, see [NOTICE](NOTICE).
