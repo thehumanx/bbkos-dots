@@ -87,7 +87,7 @@ uwsm start hyprland-uwsm.desktop
 
 ## Keys
 
-| | |
+| | Keys |
 |---|---|
 | **Apps** | `Super+Q` terminal · `Super+E` files · `Super+R` launcher · `Super+,` settings · `Super+L` system menu |
 | **Windows** | `Super+C` close · `Super+V` float · `Super+F` fullscreen · `Alt+Tab` cycle · `Super+Alt+S` stage mode |
