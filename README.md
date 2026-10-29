@@ -149,6 +149,31 @@ Your settings live in `~/.config/bbkos/settings.json`, a copy that the settings 
 
 Anything not in the window is a plain key in the JSON file; `bbkos-theme defaults` prints them all with their defaults.
 
+## Bar widgets at a glance
+
+Sixteen widgets, placed in the start, centre and end of the bar. Reorder them by dragging in Settings > Bar > Layout; the icon sets and "icons only" are in Bar > Look. Widgets marked *when* hide themselves the rest of the time.
+
+| Widget | Shows | Click · scroll · hover | Shown |
+|---|---|---|---|
+| **Overview** | grid icon, accent while the overview is open | click opens or closes the workspace overview | always |
+| **Workspaces** | one number per workspace | click activates | always |
+| **Clock** | day, date and time (`Sun 25, 5:26`) | click opens the calendar; hover shows the full date | always |
+| **Music** | title of the song playing, any MPRIS player | click opens the player's app, middle click skips, scroll sets the volume; hover shows previous, play or pause, next | *when* a song plays or is paused (horizontal bars) |
+| **Timer** | countdown, dim when paused, flashing red when done | click opens the timer popup: pause, +1 min, +5 min, reset | *when* a timer runs |
+| **Updates** | icon and the number of pending repo updates | click opens a terminal running `bbkos-update` | *when* updates are pending |
+| **Tray** | one icon per app that registers (black icons are recoloured to stay visible) | left click activates, middle click secondary, right click the app's menu | *when* an app registers an icon |
+| **Display** | monitor icon and this monitor's brightness | click opens the display popup; scroll changes brightness by 5 % | always |
+| **Audio** | speaker icon and volume | click opens the sound popup, middle click mutes, scroll changes volume by 5 % | always |
+| **Bluetooth** | icon by state: off, connected (accent), idle | click opens the Bluetooth popup | *when* an adapter exists |
+| **Network** | Wi-Fi name with signal bars, wired globe, or `off`, `connecting…`, `offline` | click opens the Wi-Fi popup | always |
+| **Battery** | icon and charge, warn and crit colours when low | click opens the battery and power-profile popup | *when* a battery exists |
+| **Notifications** | bell and unread count (`99+` above 99) | click opens the history sheet | always |
+| **Recording** | red dot and elapsed time | click stops and saves | *when* recording |
+| **Privacy** | amber glyphs for microphone, camera, screen share | none | *when* an app uses one |
+| **Settings** | gear, accent while the window is open | click opens or closes the settings window | always |
+
+While a widget's popup is open it gets a highlighted plate. The popup opens under the widget you clicked, on any bar edge. Details and how to add a widget: `docs/modules/bar.md`.
+
 ## Update
 
 ```sh
