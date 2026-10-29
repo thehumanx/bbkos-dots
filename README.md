@@ -11,10 +11,11 @@ One installer that looks at your hardware, a settings app, an agent skill, and a
 
 Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, radii, blur, fonts, lock screen, keybinds, touchpad, power) is one value in one JSON file, edited from a settings window or the `bbkos-theme` command. Built on Hyprland's new **Lua config** (0.55+), Quickshell, matugen and uwsm.
 
-| | |
+| **Settings app** (`Super+,`): 16 pages, search, reset per page | **Launcher** (`Super+R`): apps, commands and every single setting |
 |---|---|
-| ![settings](assets/screenshots/settings.png) **Settings app** (`Super+,`): 16 pages, search, reset per page | ![launcher](assets/screenshots/launcher.jpg) **Launcher** (`Super+R`): apps, commands and every single setting |
-| ![popups](assets/screenshots/popups.png) **Bar popups**: battery, sound, calendar, Wi-Fi, Bluetooth, display, timer | ![terminals](assets/screenshots/terminals.png) **Tiling**, kitty, fish, starship |
+| ![settings](assets/screenshots/settings.png) | ![launcher](assets/screenshots/launcher.jpg) |
+| **Bar popups**: battery and sound (calendar, Wi-Fi, Bluetooth, display and timer too) | **Tiling** with kitty, fish and starship |
+| ![popups](assets/screenshots/popups.png) | ![terminals](assets/screenshots/terminals.png) |
 
 ## What is in it
 
