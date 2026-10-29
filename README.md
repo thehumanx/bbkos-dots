@@ -26,6 +26,7 @@ The parts that set this desktop apart. Each one is a switch you can turn off.
 - **Settings app for the details.** `Super+,` opens a real window with 16 pages in four groups and a search box that finds any single setting, with "Reset these" per section and a reset for the page you are on. If the look, behaviour or hardware can be changed, it is in there; nothing is hidden in a file you have to know about.
 - **Workspace overview.** Click the grid icon at the start of the bar, or swipe three fingers up: the workspaces along the top, the selected one's windows drawn at their real positions below, drag a window onto another workspace to move it, `Esc` to close. A Mission Control-style layout built in Quickshell, over the blurred wallpaper.
 - **Global menu.** `Super+R` is one search box for apps, web apps, commands, settings pages *and single settings*, plus a calculator and a web search; it ranks like Raycast and learns what you open. Inspired by typecraft's Raycast-style launcher for Linux ([oma-cast](https://github.com/typecraft-dev/oma-cast)); the ranking follows the behaviour its spec documents, the code is written from scratch.
+- **Notification panel.** The shell is the notification daemon, so history is part of the desktop: the bell in the bar shows the unread count and opens a sheet down the right edge. Read state is manual (a click marks one read, "Mark all read", two-click "Clear all"), a right click closes a popup without triggering its action, and there is a do-not-disturb switch, per-app mute and a critical-urgency style. Short state notices (charger, sound output, VPN) are small toasts that never enter the history.
 - **Bar popups.** Battery, sound, Wi-Fi, Bluetooth, display, calendar and timer open as small cards under the widget you clicked, in the same look as the settings window. Inspired by Omarchy's widget popups.
 
 ## What is in it
@@ -122,6 +123,31 @@ All of them are editable in Settings > Keyboard > Shortcuts, or `bbkos-keybinds`
 | Go back to defaults | `bbkos-theme reset` (everything) or `reset SECTION` |
 
 Your settings live in `~/.config/bbkos/settings.json`, a copy that the settings app writes to. `git pull` never touches it.
+
+## Settings at a glance
+
+`Super+,` opens the settings window: 16 pages in four groups, 233 searchable rows. Every value lives in `~/.config/bbkos/settings.json`; `bbkos-theme set section.key value` changes the same thing from a terminal.
+
+| Group | Page (tabs) | What you can change |
+|---|---|---|
+| **Look** | **Appearance** (Wallpaper and colours, Style, Terminal) | wallpaper picker; dark or light, or switch by time of day; colour scheme (9 styles), contrast, accent strength; grid mode, font, text size, radii, gaps, popup shadow, reduced motion; kitty font, padding and opacity |
+| | **Bar** (Layout, Look, Widgets) | position (any edge), thickness, floating, hugging, widget order by drag; opacity, blur, pills, icon style; clock format, hover date, calendar week start, week numbers and moon, music widget width |
+| | **Windows** (Look, Behaviour, Stage mode) | gaps, border, rounding, opacity, shadow, blur, animation speed; focus follows mouse, workspace switching; stage mode default and the rail's size, position and look |
+| | **Lock screen** | avatar picture, position and size of every element (clock, date, welcome text, password field, battery), blur, brightness with auto-dim, 12/24 h |
+| **Desktop** | **Notifications** | do not disturb, popup timeout and corner, history size, per-app mute, critical style |
+| | **Apps** (Default apps, Startup, Launcher) | default browser, terminal, files, media; apps that start at login; menu web-search engine, calculator, forget what it learned |
+| | **Capture and camera** | screenshot folder and editor; recording area, audio, quality and folder; webcam exposure, white balance, power-line frequency |
+| | **Privacy and wellbeing** | mic, camera and screen-sharing indicators; clipboard history (text and images); screen time and break reminders |
+| **Devices** | **Network** | Wi-Fi, saved connections, Tailscale, screen mirroring to a phone |
+| | **Displays** | per-monitor scale, resolution, layout, brightness (DDC/CI for external ones), night-light schedule |
+| | **Sound** | outputs, inputs, volume, per-app volume |
+| | **Power and sleep** (When idle, Lid and power button, Power profiles) | idle dim, lock and sleep timers, keep-awake; lid and power-button actions; profile tuning (CPU energy preference, turbo, power cap, battery charge mode) with the root helper |
+| | **Keyboard** (Typing, Shortcuts, Dictation) | layout, repeat rate; rebind any shortcut; dictation status (service, backend, model, language; read-only) |
+| | **Mouse and touchpad** (Mouse and cursor, Touchpad, Gestures) | speed, acceleration, natural scrolling, cursor theme and size; tap, scroll, disable while typing; what three- and four-finger swipes do |
+| **System** | **Accessibility** | reduced motion, contrast, larger text and cursor, slow keys |
+| | **About and system** (About and updates, Reset) | system info and update check; reset a section, a page or everything |
+
+Anything not in the window is a plain key in the JSON file; `bbkos-theme defaults` prints them all with their defaults.
 
 ## Update
 
