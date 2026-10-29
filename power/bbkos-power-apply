@@ -1,0 +1,331 @@
+#!/usr/bin/python3 -I
+"""bbkos-power-apply: apply the owner's per-profile power settings (docs/specs/2026-10-19-power-tuning-design.md).
+
+Runs as root through a sudoers rule that allows exactly this file and no arguments. It is ONE self-contained file
+installed root-owned: it must never import code from the owner's home (anything the owner can write would run as
+root). The settings file is untrusted input: it is checked and every value is validated again here.
+
+For the active power-profiles-daemon profile it writes only three things, each only when the owner asked for it:
+  - cpu*/cpufreq/energy_performance_preference   (EPP)
+  - intel_pstate/no_turbo                        (turbo)
+  - intel-rapl-mmio:0/constraint_0_power_limit_uw (package power limit PL1, never above the firmware's own value)
+and, for every profile, the battery's charge mode when the owner chose one:
+  - power_supply/BAT*/charge_types               (Fast, Standard or Long_Life, only a value the file offers)
+Prints one JSON line: {profile, applied: {epp, turbo, cap, charge}, skipped: [...], errors: [...]}.
+Exit 0 on success (missing files are "skipped", not errors), 2 when the settings or the profile could not be read.
+"""
+import fcntl
+import glob
+import json
+import math
+import os
+import pwd
+import re
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+
+EPP_VALUES = ("default", "performance", "balance_performance", "balance_power", "power")
+TURBO_VALUES = ("default", "on", "off")
+CHARGE_VALUES = ("default", "Fast", "Standard", "Long_Life")
+PROFILE_PREFIX = {"power-saver": "saver", "balanced": "balanced", "performance": "performance"}
+CAP_MIN_W, CAP_MAX_W = 10, 28
+MAX_SETTINGS_BYTES = 65536
+LOCK_WAIT_S = 5          # a second run waits this long for the first, then gives up (the shell service also kills at 10 s)
+DEFAULT_SYSFS = "/sys"
+DEFAULT_RUN_DIR = "/run/bbkos-power"
+
+DEFAULTS = {}
+for _p in PROFILE_PREFIX.values():
+    DEFAULTS[f"{_p}Epp"] = "default"
+    DEFAULTS[f"{_p}Turbo"] = "default"
+    DEFAULTS[f"{_p}Cap"] = 0
+DEFAULTS["chargeMode"] = "default"
+
+
+class SettingsError(Exception):
+    pass
+
+
+def _valid(key, value):
+    """One setting, checked against its fixed list or range; anything else becomes the default."""
+    if key.endswith("Epp"):
+        return value if isinstance(value, str) and value in EPP_VALUES else "default"
+    if key.endswith("Turbo"):
+        return value if isinstance(value, str) and value in TURBO_VALUES else "default"
+    if key == "chargeMode":
+        return value if isinstance(value, str) and value in CHARGE_VALUES else "default"
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or (isinstance(value, float) and not math.isfinite(value)):
+        return 0
+    v = min(max(int(round(value)), 0), CAP_MAX_W)
+    return CAP_MIN_W if 0 < v < CAP_MIN_W else v
+
+
+def read_power_settings(path, uid):
+    """The ten power settings from `path`, each valid or its default. Raises SettingsError when the file is not a
+    regular file, is not owned by `uid`, is over 64 KiB, or is not a JSON object.
+
+    The file is opened with the user's own rights (as root the effective uid drops to `uid` for the open and read), so a
+    symlink can never reach a file the user could not read anyway; the real settings.json is a stow symlink into the
+    repo, so symlinks have to work. Ownership and type are checked on the opened file, not on the path."""
+    drop = os.geteuid() == 0 and uid != 0
+    try:
+        if drop:
+            os.seteuid(uid)
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+            with os.fdopen(fd, "rb") as f:
+                st = os.fstat(f.fileno())
+                if not stat.S_ISREG(st.st_mode):
+                    raise SettingsError(f"{path} is not a regular file")
+                if st.st_uid != uid:
+                    raise SettingsError(f"{path} is not owned by the invoking user")
+                if st.st_size > MAX_SETTINGS_BYTES:
+                    raise SettingsError(f"{path} is larger than {MAX_SETTINGS_BYTES} bytes")
+                raw = f.read(MAX_SETTINGS_BYTES + 1)
+        finally:
+            if drop:
+                os.seteuid(0)
+        data = json.loads(raw.decode("utf-8"))
+    except SettingsError:
+        raise
+    except (OSError, ValueError) as e:
+        raise SettingsError(f"cannot read {path}: {e}") from None
+    if not isinstance(data, dict):
+        raise SettingsError(f"{path} is not a JSON object")
+    section = data.get("power")
+    if not isinstance(section, dict):
+        section = {}
+    return {key: _valid(key, section.get(key, default)) for key, default in DEFAULTS.items()}
+
+
+def active_profile():
+    """power-profiles-daemon's ActiveProfile ("power-saver", "balanced", "performance")."""
+    try:
+        out = subprocess.run(
+            ["/usr/bin/busctl", "--system", "get-property", "net.hadess.PowerProfiles", "/net/hadess/PowerProfiles",
+             "net.hadess.PowerProfiles", "ActiveProfile"],
+            capture_output=True, text=True, timeout=5, check=True).stdout.strip()
+    except (OSError, subprocess.SubprocessError) as e:
+        raise RuntimeError(f"cannot read the active profile: {e}") from None
+    m = re.fullmatch(r's "([^"]+)"', out)
+    if not m:
+        raise RuntimeError(f"unexpected busctl output: {out!r}")
+    return m.group(1)
+
+
+def _read(path):
+    with open(path) as f:
+        return f.read().strip()
+
+
+def _write(path, text):
+    with open(path, "w") as f:
+        f.write(text)
+
+
+def _load_state(run_dir):
+    try:
+        data = json.loads(_read(os.path.join(run_dir, "orig.json")))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_state(run_dir, state):
+    os.makedirs(run_dir, mode=0o700, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=run_dir, prefix="orig.")
+    with os.fdopen(fd, "w") as f:
+        json.dump(state, f)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, os.path.join(run_dir, "orig.json"))
+
+
+def _lock(run_dir):
+    """An exclusive flock on run_dir/lock for the whole run, so overlapping runs cannot lose each other's saved
+    originals. Returns the open fd, or None when another run still holds it after LOCK_WAIT_S."""
+    try:
+        os.makedirs(run_dir, mode=0o700, exist_ok=True)
+        fd = os.open(os.path.join(run_dir, "lock"), os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError:
+        return None
+    deadline = time.monotonic() + LOCK_WAIT_S
+    while True:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return fd
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                os.close(fd)
+                return None
+            time.sleep(0.05)
+
+
+def _apply_epp(want, sysfs, res):
+    cpu = os.path.join(sysfs, "devices/system/cpu")
+    files = sorted(glob.glob(os.path.join(cpu, "cpu[0-9]*/cpufreq/energy_performance_preference")))
+    missing = len(glob.glob(os.path.join(cpu, "cpu[0-9]*"))) - len(files)
+    if missing > 0:
+        res["skipped"].append(f"energy preference: {missing} CPUs without cpufreq")
+    unsupported = written = 0
+    for path in files:
+        try:
+            available = _read(os.path.join(os.path.dirname(path), "energy_performance_available_preferences")).split()
+            if want not in available:
+                unsupported += 1
+                continue
+            _write(path, want)
+            written += 1
+        except OSError as e:
+            res["errors"].append(f"energy preference {path}: {e}")
+    if unsupported:
+        res["skipped"].append(f"energy preference {want}: not offered by {unsupported} CPUs")
+    if written:
+        res["applied"]["epp"] = want
+
+
+def _apply_turbo(want, sysfs, state, res, persist):
+    path = os.path.join(sysfs, "devices/system/cpu/intel_pstate/no_turbo")
+    restore = want == "default" and state.get("turbo_set")
+    if want == "default" and not restore:
+        return
+    if not os.path.exists(path):
+        res["skipped"].append("turbo: intel_pstate/no_turbo not present")
+        return
+    value = "off" if want == "off" else "on"
+    previous = state.get("turbo_set")
+    state["turbo_set"] = value == "off"          # recorded BEFORE the write: a run killed in between must still know
+    try:
+        persist()
+        _write(path, "1" if value == "off" else "0")
+    except OSError as e:
+        state["turbo_set"] = previous
+        res["errors"].append(f"turbo: {e}")
+        return
+    res["applied"]["turbo"] = value
+
+
+def _apply_cap(want, sysfs, state, res, persist):
+    path = os.path.join(sysfs, "class/powercap/intel-rapl-mmio:0/constraint_0_power_limit_uw")
+    if not os.path.exists(path):
+        if want > 0:
+            res["skipped"].append("power cap: intel-rapl-mmio:0 not present")
+        return
+    try:
+        current = int(_read(path))
+        orig = state.get("pl1_uw")
+        if not isinstance(orig, int) or orig <= 0:
+            orig = state["pl1_uw"] = current                    # the firmware's value, saved on first use
+            persist()                                           # BEFORE any write: if this run dies, the original survives
+        if want > 0:
+            target = min(max(want * 1_000_000, CAP_MIN_W * 1_000_000), orig)    # never above the firmware's value
+            if target != current:
+                _write(path, str(target))
+            res["applied"]["cap"] = target // 1_000_000
+        elif current != orig:
+            _write(path, str(orig))
+            res["applied"]["cap"] = 0
+    except (OSError, ValueError) as e:
+        res["errors"].append(f"power cap: {e}")
+
+
+def _apply_charge(want, sysfs, res):
+    """charge_types lists every mode with the active one in brackets ("[Fast] Standard Long_Life"); write only on a change."""
+    files = sorted(glob.glob(os.path.join(sysfs, "class/power_supply/BAT*/charge_types")))
+    if not files:
+        res["skipped"].append("charge mode: no battery charge_types file")
+        return
+    for path in files:
+        try:
+            words = _read(path).split()
+            if want not in [w.strip("[]") for w in words]:
+                res["skipped"].append(f"charge mode {want}: not offered by {path}")
+                continue
+            if f"[{want}]" not in words:
+                _write(path, want)
+            res["applied"]["charge"] = want
+        except OSError as e:
+            res["errors"].append(f"charge mode {path}: {e}")
+
+
+def apply_power(power, profile, sysfs=DEFAULT_SYSFS, run_dir=DEFAULT_RUN_DIR):
+    """Apply the settings of `profile` (a power-profiles-daemon name). Returns the result dict described above."""
+    prefix = PROFILE_PREFIX[profile]
+    res = {"profile": profile, "applied": {"epp": None, "turbo": None, "cap": None, "charge": None}, "skipped": [], "errors": []}
+    lock = _lock(run_dir)
+    if lock is None:
+        res["errors"].append(f"cannot take the lock in {run_dir} (another run is still going?)")
+        return res
+    try:
+        state = _load_state(run_dir)
+        before = json.dumps(state, sort_keys=True)
+
+        def persist():
+            _save_state(run_dir, state)
+
+        epp, turbo, cap = power[f"{prefix}Epp"], power[f"{prefix}Turbo"], power[f"{prefix}Cap"]
+        if epp != "default":
+            _apply_epp(epp, sysfs, res)
+        _apply_turbo(turbo, sysfs, state, res, persist)
+        _apply_cap(cap, sysfs, state, res, persist)
+        if power["chargeMode"] != "default":
+            _apply_charge(power["chargeMode"], sysfs, res)
+        if json.dumps(state, sort_keys=True) != before:
+            try:
+                persist()
+            except OSError as e:
+                res["errors"].append(f"state file: {e}")
+        return res
+    finally:
+        os.close(lock)                                           # releases the flock
+
+
+def resolve_paths(environ):
+    """(sysfs, run_dir, settings path override, profile override). The overrides exist for tests and are honoured
+    only when not running as root: a root helper must not let the environment redirect its writes."""
+    if os.geteuid() != 0:
+        return (environ.get("BBKOS_POWER_SYSFS", DEFAULT_SYSFS), environ.get("BBKOS_POWER_RUN", DEFAULT_RUN_DIR),
+                environ.get("BBKOS_POWER_SETTINGS"), environ.get("BBKOS_POWER_PROFILE"))
+    return DEFAULT_SYSFS, DEFAULT_RUN_DIR, None, None
+
+
+def _fail(message, profile=None):
+    print(json.dumps({"profile": profile, "applied": {"epp": None, "turbo": None, "cap": None, "charge": None},
+                      "skipped": [], "errors": [message]}))
+    return 2
+
+
+def main(argv, environ=None):
+    environ = os.environ if environ is None else environ
+    if argv:
+        return _fail("takes no arguments")
+    sysfs, run_dir, settings_override, profile_override = resolve_paths(environ)
+    if settings_override:
+        path, uid = settings_override, os.getuid()
+    else:
+        user = environ.get("SUDO_USER")
+        if not user:
+            return _fail("SUDO_USER is not set: run through sudo")
+        try:
+            pw = pwd.getpwnam(user)
+        except KeyError:
+            return _fail(f"unknown user {user!r}")
+        path, uid = os.path.join(pw.pw_dir, ".config/bbkos/settings.json"), pw.pw_uid
+    try:
+        power = read_power_settings(path, uid)
+    except SettingsError as e:
+        return _fail(str(e))
+    try:
+        profile = profile_override or active_profile()
+    except RuntimeError as e:
+        return _fail(str(e))
+    if profile not in PROFILE_PREFIX:
+        return _fail(f"unknown profile {profile!r}", profile)
+    print(json.dumps(apply_power(power, profile, sysfs, run_dir)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

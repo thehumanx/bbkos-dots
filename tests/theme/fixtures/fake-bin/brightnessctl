@@ -1,0 +1,10 @@
+#!/bin/sh
+# Fake brightnessctl: records argv to $FAKE_HYPRCTL_LOG (prefixed "brightnessctl"); `-m` prints $FAKE_BRIGHTNESS_LINE.
+log=${FAKE_HYPRCTL_LOG:-/dev/null}
+printf 'brightnessctl' >> "$log"
+for a in "$@"; do printf '\t%s' "$a" >> "$log"; done
+printf '\n' >> "$log"
+case "$*" in
+    *" -m"*|"-m") echo "${FAKE_BRIGHTNESS_LINE:-fake_backlight,backlight,16,45%,400}" ;;
+esac
+exit 0

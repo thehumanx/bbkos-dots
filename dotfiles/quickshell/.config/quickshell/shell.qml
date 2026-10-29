@@ -1,0 +1,42 @@
+// bbkOS Quickshell entry point. One process hosts the whole shell; each module is lazy and event-driven.
+import Quickshell
+import "modules/bar"
+import "modules/notifications"
+import "modules/overview"
+import "modules/stage"
+import "modules/osd"
+import "modules/toast"
+import "modules/launcher"
+import "modules/polkit"
+import "modules/clipboard"
+import "modules/power"
+import "modules/panels"
+import "modules/network"
+import "modules/theme"
+import "modules/record"
+import "modules/emoji"
+import "modules/wallpaper"
+import "modules/settings"
+import "modules/android"
+
+ShellRoot {
+    Wallpaper {}
+    Bar {}
+    Notifications {}
+    Osd {}
+    Toast {}
+    Launcher {}
+    Polkit {}
+    Clipboard {}
+    Panels {}
+    Overview {}
+    Stage {}
+    CaptivePortal {}
+    BatteryAlerts {}
+    ThemeIpc {}
+    ThemeSchedule {}
+    RecordIpc {}
+    Emoji {}
+    SettingsWindow {}
+    AndroidWindow {}
+}

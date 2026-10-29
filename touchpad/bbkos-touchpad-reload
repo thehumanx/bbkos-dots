@@ -1,0 +1,35 @@
+#!/bin/bash
+# bbkos-touchpad-reload: the root half of bbkos-touchpad-reset (docs/modules/touchpad.md).
+# The Synaptics touchpad on the Slim 7 sometimes stops sending touches (no cursor movement, scrolling or gestures)
+# until its I2C HID driver is reloaded. This reloads it: remove the driver, load it again, wait for the touchpad.
+#
+# Runs as root through a sudoers rule that allows exactly this file and no arguments. It is ONE self-contained file
+# installed root-owned: it must not read anything the owner can write, and it takes no arguments and no environment.
+# Exit 0: touchpad is back. 1: it did not come back. 2: arguments given. 3: another reload is running.
+# The driver is always loaded again, even when removing it failed, so a failure never leaves the machine without a
+# touchpad. The touchscreen shares the driver and is reset too.
+export PATH=/usr/bin:/bin
+unset BASH_ENV ENV LD_PRELOAD LD_LIBRARY_PATH
+
+[ $# -eq 0 ] || { echo "takes no arguments" >&2; exit 2; }
+
+module=i2c_hid_acpi
+exec 9>/run/bbkos-touchpad-reload.lock
+flock -n 9 || { echo "another reload is running" >&2; exit 3; }
+
+touchpad_present() { grep -q 'Touchpad' /proc/bus/input/devices; }
+
+modprobe -r "$module" || echo "could not remove $module; loading it anyway" >&2
+sleep 1
+modprobe "$module" || echo "could not load $module" >&2
+
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+    touchpad_present && { echo "touchpad is back"; exit 0; }
+    sleep 0.5
+done
+
+modprobe "$module" 2>/dev/null
+sleep 1
+touchpad_present && { echo "touchpad is back (second load)"; exit 0; }
+echo "the touchpad did not come back; reboot restores it" >&2
+exit 1

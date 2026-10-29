@@ -1,0 +1,3 @@
+# --with remote: share the screen over VNC, and a mesh VPN
+wayvnc
+tailscale

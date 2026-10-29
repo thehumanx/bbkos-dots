@@ -1,0 +1,4 @@
+Packages:
+  Package [com.vivo.compass] (61bf659):
+    codePath=/system/app/Compass
+    pkgFlags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ]

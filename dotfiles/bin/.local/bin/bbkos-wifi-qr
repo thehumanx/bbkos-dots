@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# bbkos-wifi-qr: the joined Wi-Fi network as a QR code, for the Wi-Fi popup's Share button (docs/modules/panels.md).
+# Prints one line "meta<TAB>security<TAB>ssid", then the QR matrix as rows of 0 and 1 (1 = dark module), which the
+# popup draws with rectangles: no image file, nothing on disk. The same method as Omarchy's omarchy-network-qr (MIT):
+# the WIFI: payload is piped to `qrencode --type ASCII` (never an argument, so the password never shows in /proc), and
+# each pair of characters becomes one module. Needs qrencode (exit 3 when missing). Enterprise networks: exit 1.
+# --password prints only the password (for the popup's reveal line), on the private stdout pipe.
+set -euo pipefail
+
+mode=qr
+[ "${1:-}" = "--password" ] && mode=password
+
+dev=$(LC_ALL=C nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: '$2 == "wifi" && $3 ~ /^connected/ { print $1; exit }')
+[ -n "$dev" ] || { echo "Not connected to Wi-Fi" >&2; exit 1; }
+uuid=$(nmcli --get-values GENERAL.CON-UUID device show "$dev" | head -n 1)
+[ -n "$uuid" ] && [ "$uuid" != "--" ] || { echo "Not connected to Wi-Fi" >&2; exit 1; }
+
+mapfile -t f < <(nmcli --show-secrets --escape no --get-values \
+    802-11-wireless.ssid,802-11-wireless-security.key-mgmt,802-11-wireless-security.psk,802-11-wireless.hidden,802-11-wireless-security.wep-key0 \
+    connection show uuid "$uuid")
+ssid=${f[0]:-}; mgmt=${f[1]:-}; pass=${f[2]:-}; hidden=${f[3]:-no}; wep=${f[4]:-}
+[ -n "$ssid" ] || { echo "Could not read the network name" >&2; exit 1; }
+case "$mgmt" in *eap*|*ieee8021x*) echo "Enterprise networks cannot be shared with a QR code" >&2; exit 1 ;; esac
+
+if [ -n "$mgmt" ] && [ "$mgmt" != "none" ]; then
+    [ -n "$pass" ] || { echo "Could not read the password" >&2; exit 1; }
+    sec=WPA
+elif [ -n "$wep" ]; then
+    pass=$wep; sec=WEP            # NetworkManager models WEP as key-mgmt none plus a wep-key
+else
+    pass=""; sec=nopass
+fi
+
+if [ "$mode" = password ]; then
+    printf '%s\n' "$pass"
+    exit 0
+fi
+
+command -v qrencode >/dev/null || { echo "qrencode is not installed: sudo pacman -S qrencode" >&2; exit 3; }
+
+esc() { local v=$1; v=${v//\\/\\\\}; v=${v//;/\\;}; v=${v//,/\\,}; v=${v//:/\\:}; v=${v//\"/\\\"}; printf '%s' "$v"; }
+payload="WIFI:T:$sec;S:$(esc "$ssid");"
+[ "$sec" = nopass ] || payload+="P:$(esc "$pass");"
+[ "$hidden" = yes ] && payload+="H:true;"
+payload+=";"
+
+printf 'meta\t%s\t%s\n' "$sec" "$ssid"
+# Margin 2 modules: the popup draws its own light quiet zone around the code.
+printf '%s' "$payload" | qrencode --type ASCII --margin 2 --output - | while IFS= read -r line; do
+    row=
+    for ((i = 0; i < ${#line}; i += 2)); do
+        [[ ${line:i:2} == *"#"* ]] && row+=1 || row+=0
+    done
+    printf '%s\n' "$row"
+done

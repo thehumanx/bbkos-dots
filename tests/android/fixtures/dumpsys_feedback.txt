@@ -1,0 +1,4 @@
+Packages:
+  Package [com.vivo.feedback] (c79aa15):
+    codePath=/data/app/~~Sf7B8fRjn1IHyybgZl-OFw==/com.vivo.feedback-bENZ1SrGXOvmRolJoW_jAQ==
+    pkgFlags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ]

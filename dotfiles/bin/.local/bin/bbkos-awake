@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# bbkos-awake: awake mode. While it is on, hypridle does not suspend the laptop, dim the screen, turn the keyboard light off
+# or switch the screen off when idle, and does not lock it either. The owner's own lock (keybinding, menu, bar) still works,
+# the lid still suspends (logind, see bbkos-lid) and the lock before sleep still runs.
+#
+#   bbkos-awake on | off | status      the flag file is the state; it survives a shell restart and a reboot
+#   bbkos-awake idle-lock              hypridle's on-timeout for the 5-minute listener
+#   bbkos-awake idle-suspend           hypridle's on-timeout for the 15-minute listener
+#   bbkos-awake idle-dim | idle-dim-resume
+#   bbkos-awake idle-kbd | idle-kbd-resume
+#   bbkos-awake idle-screen-off | idle-screen-on
+#
+# hypridle cannot be told to skip one listener, so each listener asks this script instead of acting directly. The dim and
+# keyboard-light steps leave a marker when they really acted, and their resume restores only then: `brightnessctl -r` on its
+# own would put back whatever an earlier run saved. Turning awake mode on while the screen is dimmed restores it at once.
+state="${XDG_STATE_HOME:-$HOME/.local/state}/bbkos"
+flag="$state/awake"
+dimmed="$state/idle-dimmed"
+kbd_off="$state/idle-kbd-off"
+kbd=platform::kbd_backlight
+
+awake() { [ -e "$flag" ]; }
+
+restore_screen() {
+    if [ -e "$dimmed" ]; then rm -f "$dimmed"; brightnessctl -r >/dev/null 2>&1; fi
+    if [ -e "$kbd_off" ]; then rm -f "$kbd_off"; brightnessctl -rd "$kbd" >/dev/null 2>&1; fi
+    hyprctl dispatch 'hl.dsp.dpms({action = "on"})' >/dev/null 2>&1
+}
+
+case "${1:-status}" in
+    on)               mkdir -p "$state" && : > "$flag"; restore_screen ;;
+    off)              rm -f "$flag" ;;
+    status)           if awake; then echo on; else echo off; fi ;;
+    idle-lock)        awake || exec loginctl lock-session ;;
+    idle-suspend)     awake || exec systemctl suspend-then-hibernate ;;
+    idle-dim)         awake || { mkdir -p "$state" && : > "$dimmed" && brightnessctl -s set 10; } ;;
+    idle-dim-resume)  if [ -e "$dimmed" ]; then rm -f "$dimmed"; exec brightnessctl -r; fi ;;
+    idle-kbd)         awake || { mkdir -p "$state" && : > "$kbd_off" && brightnessctl -sd "$kbd" set 0; } ;;
+    idle-kbd-resume)  if [ -e "$kbd_off" ]; then rm -f "$kbd_off"; exec brightnessctl -rd "$kbd"; fi ;;
+    idle-screen-off)  awake || exec hyprctl dispatch 'hl.dsp.dpms({action = "off"})' ;;
+    idle-screen-on)   exec hyprctl dispatch 'hl.dsp.dpms({action = "on"})' ;;
+    *)                echo "usage: bbkos-awake on|off|status|idle-lock|idle-suspend|idle-dim[-resume]|idle-kbd[-resume]|idle-screen-off|idle-screen-on" >&2; exit 2 ;;
+esac

@@ -1,0 +1,8 @@
+Packages:
+  Package [com.google.android.gm] (9099e6b):
+    codePath=/data/app/~~pq3KDcrNM3PBwGR3Zn7ALQ==/com.google.android.gm-YvfsX2IMdzAWzaVUjUrLew==
+    pkgFlags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA UPDATED_SYSTEM_APP ALLOW_BACKUP KILL_AFTER_RESTORE RESTORE_ANY_VERSION LARGE_HEAP ]
+Hidden system packages:
+  Package [com.google.android.gm] (566bd86):
+    codePath=/product/app/Gmail2
+    pkgFlags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE RESTORE_ANY_VERSION LARGE_HEAP ]

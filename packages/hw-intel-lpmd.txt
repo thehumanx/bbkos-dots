@@ -1,0 +1,2 @@
+# Intel Meteor Lake and newer hybrid CPUs; --with lpmd
+intel-lpmd

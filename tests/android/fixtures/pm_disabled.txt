@@ -1,0 +1,7 @@
+package:com.google.audio.hearing.visualization.accessibility.scribe
+package:com.google.android.apps.photos
+package:com.google.android.gm
+package:com.google.android.as.oss
+package:com.google.android.marvin.talkback
+package:com.google.android.apps.nbu.files
+package:com.facebook.appmanager

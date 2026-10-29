@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# bbkos-uninstall DESKTOP_ID: uninstall the app behind a desktop entry, for the bbkOS menu's Delete key
+# (docs/modules/menu.md, "Uninstall").
+# - A web app (bbkos-webapp-*): removed with bbkos-webapp remove.
+# - A pacman package (the entry's owner, pacman -Qqo): `sudo pacman -Rns PKG` in a floating terminal, so the owner sees
+#   exactly what goes (the package, the dependencies nothing else needs, their saved configs) and answers pacman's own
+#   Y/n; pacman itself refuses to remove what another package still requires.
+# - A Flatpak app: `flatpak uninstall APP_ID`, then `flatpak uninstall --unused` (runtimes nothing uses any more).
+# - Anything else (an app from a tarball, a hand-made entry) and the packages bbkOS needs to run are refused with a
+#   notification; nothing is deleted.
+# --dry-run prints the plan (kind and target) instead of doing it. Exit: 0 started, 1 refused or not found, 2 usage.
+set -euo pipefail
+
+dry=false
+[ "${1:-}" = "--dry-run" ] && { dry=true; shift; }
+id=${1:-}
+[[ $id =~ ^[A-Za-z0-9._+-]+$ ]] || { echo "usage: bbkos-uninstall [--dry-run] DESKTOP_ID" >&2; exit 2; }
+id=${id%.desktop}
+
+# Packages the desktop itself runs on (the shell, the compositor, the terminal and file manager it opens, the browser
+# web apps use). Removing one from a launcher would break bbkOS; do it by hand with pacman if really wanted.
+DEFAULT_PROTECTED="quickshell hyprland uwsm kitty thunar vivaldi greetd pipewire wireplumber networkmanager"
+# The tools the shell and the bbkos-* commands call at run time (lock, idle, screenshots, clipboard, Bluetooth, DDC,
+# night light, theme, camera preview, notifications, the login shell and the dotfile linker).
+DEFAULT_PROTECTED+=" hyprlock hypridle hyprsunset grim slurp cliphist wl-clipboard bluez bluez-utils ddcutil matugen"
+DEFAULT_PROTECTED+=" brightnessctl power-profiles-daemon upower fish stow inotify-tools mpv socat jq libnotify"
+DEFAULT_PROTECTED+=" gpu-screen-recorder tesseract xdg-desktop-portal-hyprland polkit gnome-keyring pipewire-pulse"
+PROTECTED=" ${BBKOS_UNINSTALL_PROTECTED:-$DEFAULT_PROTECTED} "
+
+say() {
+    if $dry; then echo "refused: $1"; else notify-send -a bbkos "Cannot uninstall" "$1" 2>/dev/null || echo "$1" >&2; fi
+    exit 1
+}
+
+if [[ $id == bbkos-webapp-* ]]; then
+    $dry && { echo "webapp ${id#bbkos-webapp-}"; exit 0; }
+    exec bbkos-webapp remove "${id#bbkos-webapp-}"
+fi
+
+data_dirs=${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
+file=""
+for d in "${XDG_DATA_HOME:-$HOME/.local/share}" ${data_dirs//:/ }; do
+    [ -f "$d/applications/$id.desktop" ] && { file="$d/applications/$id.desktop"; break; }
+done
+[ -n "$file" ] || say "No app entry named $id"
+
+case "$(realpath "$file")" in
+*/flatpak/*)
+    app=$(sed -n 's/^X-Flatpak=//p' "$file" | head -1); app=${app:-$id}
+    $dry && { echo "flatpak $app"; exit 0; }
+    exec uwsm app -- kitty --class bbkos-tui-uninstall -e bash -c \
+        'flatpak uninstall "$1" && flatpak uninstall --unused; read -rsn1 -p "Press a key to close"' _ "$app"
+    ;;
+esac
+
+pkg=$(pacman -Qqo "$(realpath "$file")" 2>/dev/null | head -1) || true
+[ -n "$pkg" ] || say "$(sed -n 's/^Name=//p' "$file" | head -1) was not installed by pacman or Flatpak ($file); remove it by hand"
+[[ $PROTECTED == *" $pkg "* ]] || [[ $PROTECTED == *" ${pkg%-bin} "* ]] && say "$pkg is part of what bbkOS runs on; remove it with pacman by hand if you really mean to"
+
+$dry && { echo "pacman $pkg"; exit 0; }
+exec uwsm app -- kitty --class bbkos-tui-uninstall -e bash -c \
+    'echo "Uninstalling $1 and the dependencies nothing else needs:"; echo; sudo pacman -Rns -- "$1"; echo; read -rsn1 -p "Press a key to close"' _ "$pkg"

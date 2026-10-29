@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# bbkos-captive-open [url]
+# Opens the captive-portal sign-in page. A portal is an untrusted page on a network you do not control, so it opens
+# in a PRIVATE window of Zen (no logged-in session or cookies to expose); falls back to the default browser.
+# The URL is plain HTTP on purpose: the portal intercepts it and redirects to its login page.
+url=${1:-http://ping.archlinux.org/nm-check.txt}
+if command -v zen >/dev/null 2>&1; then
+    exec uwsm app -- zen --private-window "$url"
+fi
+exec xdg-open "$url"

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Stand-in kitty process: its /proc comm is this file's name. Appends "usr1"
+# to $FAKE_KITTY_LOG on SIGUSR1; exits on SIGTERM.
+trap 'echo usr1 >> "$FAKE_KITTY_LOG"' USR1
+echo ready >> "$FAKE_KITTY_LOG"
+while :; do sleep 0.05; done

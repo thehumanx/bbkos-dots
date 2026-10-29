@@ -1,0 +1,6 @@
+List of devices attached
+192.168.1.31:45833     device product:V2503i model:V2503 device:V2503 transport_id:7
+adb-10BF7330P70015J-Jr5gD1._adb-tls-connect._tcp device product:V2503i model:V2503 device:V2503 transport_id:6
+0123456789ABCDEF       unauthorized usb:1-2 transport_id:9
+R5CT1234567           device usb:3-1 product:a52q model:SM_A525F device:a52q transport_id:10
+

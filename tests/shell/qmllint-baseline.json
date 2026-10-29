@@ -1,0 +1,658 @@
+{
+  "Theme.qml": {
+    "import": 3,
+    "unqualified": 39
+  },
+  "components/ActionPicker.qml": {
+    "import": 2,
+    "unqualified": 45
+  },
+  "components/BadgeDot.qml": {
+    "unqualified": 3
+  },
+  "components/BarHit.qml": {
+    "missing-property": 1,
+    "unqualified": 4
+  },
+  "components/BarItem.qml": {
+    "unqualified": 19
+  },
+  "components/Button.qml": {
+    "unqualified": 16
+  },
+  "components/CardShadow.qml": {
+    "missing-property": 1,
+    "unqualified": 2
+  },
+  "components/Chips.qml": {
+    "unqualified": 24
+  },
+  "components/KeyCapture.qml": {
+    "unqualified": 8
+  },
+  "components/Picker.qml": {
+    "missing-property": 1,
+    "uncreatable-type": 1,
+    "unqualified": 24
+  },
+  "components/PopupHeader.qml": {
+    "unqualified": 2
+  },
+  "components/PopupSection.qml": {
+    "unqualified": 5
+  },
+  "components/SettingChoice.qml": {
+    "import": 2,
+    "unqualified": 2
+  },
+  "components/SettingRow.qml": {
+    "unqualified": 34
+  },
+  "components/SettingSlider.qml": {
+    "unqualified": 2
+  },
+  "components/SettingText.qml": {
+    "unqualified": 15
+  },
+  "components/SettingToggle.qml": {
+    "unqualified": 2
+  },
+  "components/StepBar.qml": {
+    "unqualified": 35
+  },
+  "components/Tabs.qml": {
+    "unqualified": 15
+  },
+  "components/Toggle.qml": {
+    "unqualified": 23
+  },
+  "components/Txt.qml": {
+    "unqualified": 6
+  },
+  "modules/android/AndroidWindow.qml": {
+    "import": 24,
+    "unqualified": 7,
+    "unresolved-type": 7
+  },
+  "modules/android/AppRow.qml": {
+    "import": 9,
+    "unqualified": 49,
+    "unresolved-type": 12
+  },
+  "modules/android/ConfirmSheet.qml": {
+    "import": 7,
+    "unqualified": 26,
+    "unresolved-type": 3
+  },
+  "modules/android/Field.qml": {
+    "import": 1,
+    "unqualified": 16,
+    "unresolved-type": 1
+  },
+  "modules/android/WifiForm.qml": {
+    "import": 8,
+    "unqualified": 10,
+    "unresolved-type": 3
+  },
+  "modules/bar/AudioWidget.qml": {
+    "import": 8,
+    "unqualified": 17
+  },
+  "modules/bar/Bar.qml": {
+    "import": 29,
+    "missing-property": 4,
+    "required": 3,
+    "uncreatable-type": 1,
+    "unqualified": 95,
+    "unresolved-type": 9,
+    "unused-imports": 1
+  },
+  "modules/bar/BarBlur.qml": {
+    "unqualified": 6
+  },
+  "modules/bar/BarContrast.qml": {
+    "unqualified": 25,
+    "unused-imports": 1
+  },
+  "modules/bar/BarSection.qml": {
+    "unqualified": 15
+  },
+  "modules/bar/BatteryWidget.qml": {
+    "import": 2,
+    "unqualified": 16
+  },
+  "modules/bar/BluetoothWidget.qml": {
+    "import": 2,
+    "unqualified": 18
+  },
+  "modules/bar/Clock.qml": {
+    "import": 2,
+    "unqualified": 7
+  },
+  "modules/bar/DateHover.qml": {
+    "import": 3,
+    "missing-property": 5,
+    "unqualified": 17,
+    "unresolved-type": 2
+  },
+  "modules/bar/DisplayWidget.qml": {
+    "import": 2,
+    "unqualified": 11
+  },
+  "modules/bar/MediaWidget.qml": {
+    "import": 5,
+    "required": 8,
+    "unqualified": 29,
+    "unresolved-type": 2
+  },
+  "modules/bar/NetworkWidget.qml": {
+    "import": 2,
+    "unqualified": 27
+  },
+  "modules/bar/NotificationsWidget.qml": {
+    "import": 3,
+    "unqualified": 13,
+    "unused-imports": 1
+  },
+  "modules/bar/OverviewWidget.qml": {
+    "import": 2,
+    "unqualified": 6
+  },
+  "modules/bar/PrivacyWidget.qml": {
+    "import": 1,
+    "unqualified": 8,
+    "unresolved-type": 1
+  },
+  "modules/bar/RecordWidget.qml": {
+    "import": 2,
+    "unqualified": 7,
+    "unresolved-type": 1
+  },
+  "modules/bar/SettingsWidget.qml": {
+    "import": 2,
+    "unqualified": 6
+  },
+  "modules/bar/TimerWidget.qml": {
+    "import": 2,
+    "incompatible-type": 2,
+    "unqualified": 14,
+    "unresolved-type": 1
+  },
+  "modules/bar/Tray.qml": {
+    "import": 1,
+    "unqualified": 6,
+    "unused-imports": 1
+  },
+  "modules/bar/UpdatesWidget.qml": {
+    "import": 3,
+    "unqualified": 8
+  },
+  "modules/bar/Workspaces.qml": {
+    "import": 2,
+    "required": 2,
+    "unqualified": 6,
+    "unresolved-type": 1
+  },
+  "modules/clipboard/Clipboard.qml": {
+    "import": 5,
+    "unqualified": 11
+  },
+  "modules/emoji/Emoji.qml": {
+    "Quick.layout-positioning": 1,
+    "import": 2,
+    "missing-property": 2,
+    "uncreatable-type": 1,
+    "unqualified": 23
+  },
+  "modules/launcher/Launcher.qml": {
+    "import": 4,
+    "missing-property": 14,
+    "unqualified": 18
+  },
+  "modules/launcher/MenuWindow.qml": {
+    "import": 20,
+    "uncreatable-type": 1,
+    "unqualified": 97,
+    "unresolved-type": 16
+  },
+  "modules/network/CaptivePortal.qml": {
+    "import": 2,
+    "unqualified": 2
+  },
+  "modules/notifications/NotificationCard.qml": {
+    "import": 10,
+    "unqualified": 19,
+    "unresolved-type": 2
+  },
+  "modules/notifications/NotificationHistoryCard.qml": {
+    "import": 5,
+    "unqualified": 28,
+    "unresolved-type": 5
+  },
+  "modules/notifications/NotificationHistoryPanel.qml": {
+    "import": 6,
+    "unqualified": 20,
+    "unresolved-type": 2
+  },
+  "modules/notifications/Notifications.qml": {
+    "missing-property": 4,
+    "uncreatable-type": 1,
+    "unqualified": 41
+  },
+  "modules/osd/Osd.qml": {
+    "import": 9,
+    "missing-property": 1,
+    "uncreatable-type": 1,
+    "unqualified": 33,
+    "unresolved-type": 1
+  },
+  "modules/overview/AddWorkspaceCard.qml": {
+    "import": 6,
+    "unqualified": 28,
+    "unresolved-type": 4
+  },
+  "modules/overview/Backdrop.qml": {
+    "import": 2,
+    "unqualified": 5
+  },
+  "modules/overview/Overview.qml": {
+    "import": 4,
+    "missing-property": 4,
+    "uncreatable-type": 2,
+    "unqualified": 146,
+    "unresolved-type": 7
+  },
+  "modules/overview/WindowCard.qml": {
+    "import": 1,
+    "missing-property": 1,
+    "unqualified": 29,
+    "unresolved-type": 2
+  },
+  "modules/overview/WorkspaceCard.qml": {
+    "import": 4,
+    "unqualified": 54,
+    "unresolved-type": 8
+  },
+  "modules/panels/AudioPanel.qml": {
+    "import": 11,
+    "unqualified": 31,
+    "unresolved-type": 3,
+    "unused-imports": 1
+  },
+  "modules/panels/AudioRow.qml": {
+    "import": 3,
+    "unqualified": 7
+  },
+  "modules/panels/BatteryPanel.qml": {
+    "import": 13,
+    "property-override": 1,
+    "unqualified": 46,
+    "unresolved-type": 3
+  },
+  "modules/panels/BluetoothPanel.qml": {
+    "import": 9,
+    "unqualified": 34
+  },
+  "modules/panels/BluetoothRow.qml": {
+    "import": 7,
+    "unqualified": 13,
+    "unresolved-type": 2
+  },
+  "modules/panels/CalendarPanel.qml": {
+    "import": 21,
+    "required": 3,
+    "unqualified": 78,
+    "unresolved-type": 12
+  },
+  "modules/panels/DisplayPanel.qml": {
+    "import": 25,
+    "required": 4,
+    "unqualified": 64,
+    "unresolved-type": 4
+  },
+  "modules/panels/NetworkRow.qml": {
+    "import": 11,
+    "unqualified": 26,
+    "unresolved-type": 4
+  },
+  "modules/panels/Panels.qml": {
+    "import": 1,
+    "missing-property": 1,
+    "uncreatable-type": 1,
+    "unqualified": 89
+  },
+  "modules/panels/PowerPanel.qml": {
+    "import": 3,
+    "unqualified": 17
+  },
+  "modules/panels/RecordPanel.qml": {
+    "import": 15,
+    "unqualified": 26,
+    "unresolved-type": 3
+  },
+  "modules/panels/TimerControls.qml": {
+    "import": 11,
+    "unqualified": 46,
+    "unresolved-type": 3
+  },
+  "modules/panels/WifiPanel.qml": {
+    "import": 12,
+    "unqualified": 39
+  },
+  "modules/panels/WifiTools.qml": {
+    "import": 9,
+    "unqualified": 39,
+    "unresolved-type": 5
+  },
+  "modules/polkit/Polkit.qml": {
+    "import": 10,
+    "uncreatable-type": 1,
+    "unqualified": 37,
+    "unresolved-type": 3
+  },
+  "modules/power/BatteryAlerts.qml": {
+    "import": 2,
+    "unqualified": 26
+  },
+  "modules/record/RecordIpc.qml": {
+    "import": 2,
+    "unqualified": 6
+  },
+  "modules/settings/BarLayoutEditor.qml": {
+    "import": 11,
+    "required": 3,
+    "unqualified": 38,
+    "unresolved-type": 3
+  },
+  "modules/settings/IdleTimeline.qml": {
+    "import": 4,
+    "unqualified": 29,
+    "unresolved-type": 4
+  },
+  "modules/settings/LockPreview.qml": {
+    "import": 5,
+    "missing-property": 2,
+    "unqualified": 42,
+    "unresolved-type": 6
+  },
+  "modules/settings/MonitorScaleRow.qml": {
+    "import": 2,
+    "unqualified": 2
+  },
+  "modules/settings/PageAbout.qml": {
+    "import": 8,
+    "required": 3,
+    "unqualified": 7
+  },
+  "modules/settings/PageAccessibility.qml": {
+    "import": 11
+  },
+  "modules/settings/PageApps.qml": {
+    "import": 4,
+    "required": 3,
+    "unqualified": 4
+  },
+  "modules/settings/PageBarLayout.qml": {
+    "import": 9
+  },
+  "modules/settings/PageBarLook.qml": {
+    "import": 18,
+    "unqualified": 4
+  },
+  "modules/settings/PageBarWidgets.qml": {
+    "import": 12
+  },
+  "modules/settings/PageBehavior.qml": {
+    "import": 8,
+    "unqualified": 1
+  },
+  "modules/settings/PageCamera.qml": {
+    "import": 20,
+    "unqualified": 2
+  },
+  "modules/settings/PageCapture.qml": {
+    "import": 14,
+    "unqualified": 1
+  },
+  "modules/settings/PageDictation.qml": {
+    "import": 15,
+    "unqualified": 10
+  },
+  "modules/settings/PageDisplays.qml": {
+    "import": 11,
+    "required": 4,
+    "unqualified": 15,
+    "unresolved-type": 1
+  },
+  "modules/settings/PageGestures.qml": {
+    "import": 14,
+    "unused-imports": 1
+  },
+  "modules/settings/PageIdle.qml": {
+    "import": 8,
+    "unqualified": 7
+  },
+  "modules/settings/PageKeybindings.qml": {
+    "import": 29,
+    "unqualified": 97,
+    "unresolved-type": 5
+  },
+  "modules/settings/PageKeyboard.qml": {
+    "import": 7
+  },
+  "modules/settings/PageLauncher.qml": {
+    "import": 9,
+    "unqualified": 2
+  },
+  "modules/settings/PageLidPower.qml": {
+    "import": 7,
+    "unqualified": 12
+  },
+  "modules/settings/PageLock.qml": {
+    "import": 32,
+    "unqualified": 23,
+    "unresolved-type": 3
+  },
+  "modules/settings/PageMouse.qml": {
+    "import": 11
+  },
+  "modules/settings/PageNetwork.qml": {
+    "import": 17,
+    "required": 3,
+    "unqualified": 14,
+    "unresolved-type": 1
+  },
+  "modules/settings/PageNotifications.qml": {
+    "import": 19,
+    "required": 3,
+    "unqualified": 9
+  },
+  "modules/settings/PagePower.qml": {
+    "confusing-expression-statement": 2,
+    "import": 12,
+    "required": 2,
+    "unqualified": 7
+  },
+  "modules/settings/PagePrivacy.qml": {
+    "import": 20,
+    "unqualified": 20
+  },
+  "modules/settings/PageReset.qml": {
+    "import": 5,
+    "unqualified": 10,
+    "unresolved-type": 1
+  },
+  "modules/settings/PageShell.qml": {
+    "import": 12,
+    "unqualified": 1,
+    "unused-imports": 1
+  },
+  "modules/settings/PageSound.qml": {
+    "import": 11,
+    "missing-property": 1,
+    "required": 3,
+    "unqualified": 19,
+    "unresolved-type": 3
+  },
+  "modules/settings/PageStage.qml": {
+    "import": 19,
+    "unused-imports": 1
+  },
+  "modules/settings/PageStartup.qml": {
+    "import": 10,
+    "required": 6,
+    "unqualified": 19
+  },
+  "modules/settings/PageTerminal.qml": {
+    "import": 4
+  },
+  "modules/settings/PageTouchpad.qml": {
+    "import": 15,
+    "unused-imports": 1
+  },
+  "modules/settings/PageWallpaper.qml": {
+    "import": 22,
+    "unqualified": 60,
+    "unresolved-type": 5
+  },
+  "modules/settings/PageWindows.qml": {
+    "import": 20,
+    "unqualified": 4,
+    "unused-imports": 1
+  },
+  "modules/settings/SettingsPage.qml": {
+    "import": 1,
+    "unqualified": 7
+  },
+  "modules/settings/SettingsWindow.qml": {
+    "import": 4,
+    "unqualified": 55,
+    "unresolved-type": 2
+  },
+  "modules/settings/Sidebar.qml": {
+    "import": 8,
+    "unqualified": 42,
+    "unresolved-type": 7
+  },
+  "modules/stage/Stage.qml": {
+    "import": 4,
+    "missing-property": 4,
+    "uncreatable-type": 1,
+    "unqualified": 34
+  },
+  "modules/stage/StageCard.qml": {
+    "import": 3,
+    "unqualified": 19,
+    "unresolved-type": 2
+  },
+  "modules/stage/StillImage.qml": {
+    "missing-property": 1,
+    "unqualified": 2
+  },
+  "modules/theme/ThemeIpc.qml": {
+    "import": 4,
+    "unqualified": 16
+  },
+  "modules/theme/ThemeSchedule.qml": {
+    "import": 2,
+    "unqualified": 2
+  },
+  "modules/toast/Toast.qml": {
+    "import": 10,
+    "missing-property": 1,
+    "uncreatable-type": 1,
+    "unqualified": 29,
+    "unresolved-type": 3
+  },
+  "modules/wallpaper/Wallpaper.qml": {
+    "import": 4,
+    "missing-property": 2,
+    "uncreatable-type": 1,
+    "unqualified": 5
+  },
+  "services/Audio.qml": {
+    "import": 1,
+    "missing-property": 3
+  },
+  "services/Awake.qml": {
+    "import": 1
+  },
+  "services/BarState.qml": {
+    "import": 1
+  },
+  "services/Bt.qml": {
+    "import": 1,
+    "missing-property": 2,
+    "unresolved-type": 1
+  },
+  "services/Countdown.qml": {
+    "import": 1
+  },
+  "services/Displays.qml": {
+    "import": 1
+  },
+  "services/KeybindStore.qml": {
+    "import": 1
+  },
+  "services/LogindApply.qml": {
+    "import": 1,
+    "incompatible-type": 1,
+    "missing-property": 2
+  },
+  "services/Media.qml": {
+    "import": 1,
+    "missing-property": 2
+  },
+  "services/Net.qml": {
+    "import": 1,
+    "missing-property": 2
+  },
+  "services/Notifs.qml": {
+    "id-shadows-member": 2,
+    "import": 1,
+    "missing-property": 5
+  },
+  "services/OverviewState.qml": {
+    "import": 1
+  },
+  "services/PanelState.qml": {
+    "import": 1
+  },
+  "services/Power.qml": {
+    "import": 1,
+    "missing-property": 1
+  },
+  "services/PowerTuning.qml": {
+    "import": 1,
+    "incompatible-type": 2,
+    "missing-property": 3
+  },
+  "services/Privacy.qml": {
+    "import": 1,
+    "missing-property": 4
+  },
+  "services/Record.qml": {
+    "import": 1
+  },
+  "services/ScreenTime.qml": {
+    "import": 1,
+    "incompatible-type": 1,
+    "missing-property": 8
+  },
+  "services/SettingsStore.qml": {
+    "import": 1
+  },
+  "services/StageState.qml": {
+    "import": 1,
+    "missing-property": 1
+  },
+  "services/ThemeStore.qml": {
+    "import": 1
+  },
+  "services/Updates.qml": {
+    "import": 1
+  },
+  "shell.qml": {
+    "import": 16
+  }
+}

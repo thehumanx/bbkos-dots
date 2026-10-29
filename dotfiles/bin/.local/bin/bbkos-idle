@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# bbkos-idle: starts hypridle (the user unit's ExecStart). The timers come from the Idle and lock page: bbkos-theme renders
+# hypridle.conf into the theme state directory. It is used only when it is there and looks like a config (has a general
+# block); otherwise the static ~/.config/hypr/hypridle.conf runs, so a missing or broken
+# render can never leave the machine without an idle lock. The copy hypridle-active.conf tells bbkos-theme which file is running.
+state="${BBKOS_STATE_DIR:-$HOME/.local/state/bbkos/theme}"
+conf="$state/hypridle.conf"
+if [ -s "$conf" ] && grep -q '^general {' "$conf"; then
+    cp -f "$conf" "$state/hypridle-active.conf" 2>/dev/null
+    exec hypridle -c "$conf"
+fi
+rm -f "$state/hypridle-active.conf"
+exec hypridle

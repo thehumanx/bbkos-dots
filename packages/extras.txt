@@ -1,0 +1,11 @@
+# Nice to have, asked for by default in the installer (answer n to skip). Official repos.
+fastfetch
+yazi
+zathura
+zathura-pdf-mupdf
+vim
+tree
+fwupd
+zram-generator
+reflector
+pacman-contrib

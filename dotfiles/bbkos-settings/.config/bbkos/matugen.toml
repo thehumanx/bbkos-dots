@@ -1,0 +1,14 @@
+# Palette-engine config for bbkos-theme. [templates] must exist (even empty)
+# or matugen exits 1 "missing field templates". See docs/modules/theme.md.
+[config]
+
+[config.custom_colors]
+red = {color="#ff0000", blend=true}
+green = {color="#00ff00", blend=true}
+yellow = {color="#ffff00", blend=true}
+blue = {color="#0000ff", blend=true}
+magenta = {color="#ff00ff", blend=true}
+cyan = {color="#00ffff", blend=true}
+warn = {color="#e0af68", blend=true}
+
+[templates]

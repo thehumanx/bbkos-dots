@@ -1,0 +1,3 @@
+/* bbkOS: GTK 3 gets its colours from the generated theme bbkos-a / bbkos-b (~/.local/share/themes, written by
+   bbkos-theme), not from here: GTK 3 reads this file once at start, and its definitions would win over the theme's,
+   so an open app could never recolour (docs/modules/theme.md, "GTK apps"). Keep this file free of @define-color. */

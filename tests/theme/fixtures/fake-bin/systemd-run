@@ -1,0 +1,10 @@
+#!/bin/sh
+# Fake systemd-run: drops its own options and runs the wrapped command.
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p) shift 2 ;;
+        -*) shift ;;
+        *) break ;;
+    esac
+done
+exec "$@"

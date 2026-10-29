@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# bbkos-webapp: web apps, a site in its own window with its own launcher entry (docs/modules/menu.md, "Web apps").
+#   install NAME URL [ICON]   write ~/.local/share/applications/bbkos-webapp-SLUG.desktop and its icon
+#   remove SLUG               delete both
+#   list                      one JSON object a line: {"slug","name","url"}
+#   launch URL                open URL as an app window (what the .desktop entry runs)
+# Every web app opens in Vivaldi (the owner's choice, 2026-10-23) with Chromium's --app=URL: a window without tabs or
+# an address bar, using the browser's own profile, so the owner is signed in as in the browser. The same design as
+# Omarchy's omarchy-webapp-install and omarchy-launch-webapp (MIT): the icon is the site's apple-touch-icon, else
+# /apple-touch-icon.png, else Google's favicon service at 256 px; StartupWMClass is the window class Chromium gives an
+# --app window, so the window is grouped under the entry. Only http and https URLs (Chromium's --app would also run
+# javascript:, file: and data: URLs as a document). Exit codes: 0 ok, 1 failed, 2 usage.
+set -euo pipefail
+
+BROWSER=${BBKOS_WEBAPP_BROWSER:-vivaldi}
+APPS=${BBKOS_WEBAPP_APPS:-$HOME/.local/share/applications}
+ICONS=${BBKOS_WEBAPP_ICONS:-$HOME/.local/share/icons/hicolor/256x256/apps}
+
+die() { echo "$1" >&2; exit "${2:-1}"; }
+
+normalize_url() {
+    local u=$1
+    [[ $u == *://* ]] || u="https://$u"
+    local re="^https?://[A-Za-z0-9.-]+(:[0-9]+)?([/?#][A-Za-z0-9._~:/?#@!&'()*+,;=%-]*)?$"
+    [[ $u =~ $re ]] || die "Not a web address (http or https, no spaces or quotes): $1" 2
+    printf '%s' "$u"
+}
+
+slug_of() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//' | cut -c1-40; }
+
+window_class() {
+    local a=${1#*://}; a=${a%%[?#]*}
+    local host=${a%%/*}
+    local path=${a:${#host}}
+    host=${host##*@}; host=${host%%:*}
+    printf '%s-%s_%s-Default\n' "$BROWSER" "${host,,}" "${path:-/}" | sed 's|/|_|g'
+}
+
+fetch_icon() {   # URL OUT: the site's icon as a PNG, or nothing
+    local url=$1 out=$2 origin page href tmp
+    origin=$(printf '%s' "$url" | sed -E 's|^(https?://[^/]+).*|\1|')
+    tmp=$(mktemp)
+    page=$(curl -fsSL --max-time 5 "$url" 2>/dev/null | tr '\n' ' ' | head -c 300000 || true)
+    href=$(printf '%s' "$page" | grep -oiE '<link[^>]+rel="?apple-touch-icon[^>]*>' | head -1 | grep -oiE 'href="[^"]+"' | head -1 | sed -E 's/^href="//I; s/"$//' || true)
+    case "$href" in
+        "") ;;
+        //*) href="https:$href" ;;
+        /*) href="$origin$href" ;;
+        http*) ;;
+        *) href="$origin/$href" ;;
+    esac
+    for src in ${href:+"$href"} "$origin/apple-touch-icon.png" \
+               "https://www.google.com/s2/favicons?sz=256&domain_url=$origin"; do
+        if curl -fsSL --max-time 10 -o "$tmp" "$src" 2>/dev/null && [ -s "$tmp" ] \
+           && [[ $(file -b --mime-type "$tmp") == image/png ]]; then
+            install -m 644 "$tmp" "$out"
+            rm -f "$tmp"
+            return 0
+        fi
+    done
+    rm -f "$tmp"
+    return 1
+}
+
+cmd=${1:-}
+case "$cmd" in
+install)
+    [ $# -ge 3 ] || die "usage: bbkos-webapp install NAME URL [ICON.png]" 2
+    name=$2
+    [[ -n $name && ${#name} -le 60 && $name != */* && $name != *[[:cntrl:]]* ]] || die "A name of 1-60 characters, without / or control characters" 2
+    url=$(normalize_url "$3")
+    slug=$(slug_of "$name")
+    [ -n "$slug" ] || die "The name needs at least one letter or digit" 2
+    mkdir -p "$APPS" "$ICONS"
+    icon="$ICONS/bbkos-webapp-$slug.png"
+    if [ -n "${4:-}" ]; then
+        [[ $(file -b --mime-type "$4") == image/png ]] || die "The icon must be a PNG file" 2
+        install -m 644 "$4" "$icon"
+    else
+        fetch_icon "$url" "$icon" || icon=""
+    fi
+    exec_url=${url//%/%%}                       # % is special in a desktop Exec line
+    file="$APPS/bbkos-webapp-$slug.desktop"
+    tmp="$file.tmp"
+    {
+        echo "[Desktop Entry]"
+        echo "Type=Application"
+        echo "Name=$name"
+        echo "Comment=Web app: $url"
+        echo "Exec=bbkos-webapp launch \"$exec_url\""
+        echo "Icon=$icon"                       # an absolute path (the spec allows it): no icon-theme lookup to miss
+        echo "Categories=Network;"
+        echo "StartupWMClass=$(window_class "$url")"
+        echo "StartupNotify=true"
+        echo "Terminal=false"
+        echo "X-bbkOS-WebApp=$url"
+    } > "$tmp"
+    mv "$tmp" "$file"
+    [ -n "$icon" ] || sed -i 's/^Icon=$/Icon=web-browser/' "$file"
+    command -v update-desktop-database >/dev/null && update-desktop-database -q "$APPS" 2>/dev/null || true
+    echo "$slug"
+    ;;
+remove)
+    [ $# -eq 2 ] || die "usage: bbkos-webapp remove SLUG" 2
+    slug=$2
+    [[ $slug =~ ^[a-z0-9-]+$ ]] || die "Not a web app name: $slug" 2
+    file="$APPS/bbkos-webapp-$slug.desktop"
+    [ -f "$file" ] && grep -q '^X-bbkOS-WebApp=' "$file" || die "No such web app: $slug"
+    rm -f "$file" "$ICONS/bbkos-webapp-$slug.png"
+    command -v update-desktop-database >/dev/null && update-desktop-database -q "$APPS" 2>/dev/null || true
+    ;;
+list)
+    shopt -s nullglob
+    for f in "$APPS"/bbkos-webapp-*.desktop; do
+        url=$(sed -n 's/^X-bbkOS-WebApp=//p' "$f" | head -1)
+        [ -n "$url" ] || continue
+        name=$(sed -n 's/^Name=//p' "$f" | head -1)
+        slug=$(basename "$f" .desktop); slug=${slug#bbkos-webapp-}
+        python3 -c 'import json,sys; print(json.dumps({"slug": sys.argv[1], "name": sys.argv[2], "url": sys.argv[3]}))' "$slug" "$name" "$url"
+    done
+    ;;
+launch)
+    [ $# -eq 2 ] || die "usage: bbkos-webapp launch URL" 2
+    url=$(normalize_url "$2")
+    command -v "$BROWSER" >/dev/null || die "$BROWSER is not installed"
+    exec "$BROWSER" --app="$url"
+    ;;
+class)
+    url=$(normalize_url "${2:-}")
+    window_class "$url"
+    ;;
+*)
+    die "usage: bbkos-webapp install NAME URL [ICON] | remove SLUG | list | launch URL" 2
+    ;;
+esac

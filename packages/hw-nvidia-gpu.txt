@@ -1,0 +1,4 @@
+# The open kernel modules (Turing and newer). Older cards: see the Arch wiki (NVIDIA) and edit this file.
+nvidia-open-dkms
+nvidia-utils
+libva-nvidia-driver

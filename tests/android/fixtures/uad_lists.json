@@ -1,0 +1,254 @@
+{
+ "com.google.audio.hearing.visualization.accessibility.scribe": {
+  "list": "Google",
+  "description": "Live Transcribe & Sound Notifications (https://play.google.com/store/apps/details?id=com.google.audio.hearing.visualization.accessibility.scribe)\nProvides push notifications for critical sounds around you. This feature can be helpful for people with hearing loss.\nhttps://blog.google/products/android/new-sound-notifications-on-android/\nWorks offline\nProvides text-to-speech for most apps, find a replacement before uninstalling\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.google.android.apps.photos": {
+  "list": "Google",
+  "description": "Google Photos (https://play.google.com/store/apps/details?id=com.google.android.apps.photos)",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.google.android.gm": {
+  "list": "Google",
+  "description": "Gmail (https://play.google.com/store/apps/details?id=com.google.android.gm)",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.google.android.as.oss": {
+  "list": "Google",
+  "description": "Private Compute Services. On-device behavior analysis\nEnables live caption, music recognition and smart replies.\nSeems to be a dependency of System Intelligence.\nhttps://play.google.com/store/apps/details?id=com.google.android.as.oss\nhttps://milaq.net/android-bloatware",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.google.android.marvin.talkback": {
+  "list": "Google",
+  "description": "Android Accessibility Suite (https://play.google.com/store/apps/details?id=com.google.android.marvin.talkback)\nHelps blind and visually impaired users.\nWARNING: Causes com.motorola.dynamicvolume to not display individual apps and their respective volumes when volume button pressed. Seems to revert to an older (maybe testing) version of the dynamicvolume pkg?\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.niksoftware.snapseed": {
+  "list": "Misc",
+  "description": "Snapseed (https://play.google.com/store/apps/details?id=com.niksoftware.snapseed)\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.android.bbk.lockscreen3": {
+  "description": "Lock\nNeeded for lockscreen?",
+  "removal": "Expert",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.vivo.appstore": {
+  "description": "V-Appstore\nvivo app store.",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.vivo.notes": {
+  "description": "Notes\nVivo notes",
+  "removal": "Advanced",
+  "suggestions": "note_taking_apps",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.google.android.apps.tachyon": {
+  "list": "Google",
+  "description": "Google Duo (Video Calls) (https://play.google.com/store/apps/details?id=com.google.android.apps.tachyon)\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.android.browser": {
+  "list": "Aosp",
+  "description": "Mi Browser and browser for the LDPlayer emulator\nYou really should use something else.\nFYI https://www.xda-developers.com/xiaomi-mi-web-browser-pro-mint-collecting-browsing-data-incognito-mode/\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.vivo.calculator": {
+  "description": "Calculator\nVivo calculator app",
+  "removal": "Advanced",
+  "suggestions": "calculators",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.android.stk": {
+  "list": "Aosp",
+  "description": "SIM toolkit\nEnables carriers to initiate \"value-added services\". Basically, some operators provide SIM-cards with applications installed on them.\nhttps://en.wikipedia.org/wiki/SIM_Application_Toolkit#cite_note-CellularZA-1\nHas been abused:\n- SimJacker: https://thehackernews.com/2019/09/simjacker-mobile-hacking.html\n- WIBattack: https://www.zdnet.com/article/new-sim-card-attack-disclosed-similar-to-simjacker/\nWARNING: do mind that disabling/uninstalling this package will break mobile identity management which could be used by apps (for example your Bank) to authenticate you. See https://en.wikipedia.org/wiki/Mobile_identity_management\nNOTE: removing this package removes the launcher icon. `com.android.stk` relies on `com.android.stk2` and vice-versa.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [
+   "mim"
+  ],
+  "removal": "Advanced"
+ },
+ "com.google.android.overlay.modules.permissioncontroller.forframework": {
+  "list": "Aosp",
+  "description": "config_incidentReportApproverPackage\nIt looks very useless.\nNot needed, it doesnt affect on (com.google.android.permissioncontroller)",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Expert"
+ },
+ "com.vivo.upnpserver": {
+  "description": "Phone Mirroring\nSmart things and needed for broadcast?",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.android.email.partnerprovider": {
+  "list": "Aosp",
+  "description": "Lets Google partners (OEM in most of the case) to customize the default email settings.\nThe manufacturer often changes the default signature displayed at the end of each of your mail (e.g \"Sent from my Nokia phone\")",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.vivo.nightpearl": {
+  "description": "Always on Display\nAlways on display, it's available in settings.",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.android.systemui.accessibility.accessibilitymenu": {
+  "list": "Aosp",
+  "description": "Hidden menu that only shows 2 buttons:\nLarge buttons - that increases size of accessibility menu buttons,\nand Help - that redirects to support google com site accessibility.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.android.providers.contacts": {
+  "list": "Aosp",
+  "description": "Contacts Storage\nProvider for contact data.\nContent providers encapsulate data, providing centralized management of data shared between apps.\nhttps://developer.android.com/guide/topics/providers/content-providers.html\nBreaks contact functionality if disabled. Not recommended to disable if you plan to use your device as a phone.\nOn POCO Pad M1, disabling this will cause Bluetooth to malfunction, turning on and off continuously.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Expert"
+ },
+ "com.google.android.apps.nbu.files": {
+  "list": "Google",
+  "description": "Files by Google (https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.files)\nRuns in the background.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.android.companiondevicemanager": {
+  "list": "Aosp",
+  "description": "Companion Device Manager\nThis handles connections to nearby (usually not remote) devices, desktop Operating Systems, etc...\nWARNING: removing this package may result in the inability to read the SD card from your computer's file manager (via USB).",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.android.cts.priv.ctsshim": {
+  "list": "Aosp",
+  "description": "Compatibility Test Service. Verifies certain upgrade scenarios. Disabling could mess with OTA updates.\nA shim is basically a compatibility layer for an API, that makes sure anything that uses the API does so correctly.\nhttps://android.googlesource.com/platform/frameworks/base/+/51e458e/packages/CtsShim\nhttps://en.wikipedia.org/wiki/Shim_(computing)",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Expert"
+ },
+ "com.android.providers.downloads": {
+  "list": "Aosp",
+  "description": "Downloads Manager\nProvider for downloaded files.\nContent providers encapsulate data, providing centralized management of data shared between apps.\nhttps://developer.android.com/guide/topics/providers/content-providers.html",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Unsafe"
+ },
+ "com.android.bluetoothmidiservice": {
+  "list": "Aosp",
+  "description": "Provides classes for using the MIDI protocol over Bluetooth. Safe to remove if you don't plan to connect MIDI devices.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.facebook.appmanager": {
+  "list": "Misc",
+  "description": "Facebook app manager handles Facebook apps updates.\n",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Recommended"
+ },
+ "com.vivo.networkimprove": {
+  "description": "NetworkImprove\nMay be only for China because of non-English words. Also has logs.",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.android.credentialmanager": {
+  "list": "Aosp",
+  "description": "Credential Manager\nManages with Passwords, passkeys.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.vivo.audiofx": {
+  "description": "Audio effect\nNeeded for sound effects.",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.google.android.printservice.recommendation": {
+  "list": "Aosp",
+  "description": "I think this has to do with recommending a printservice app you can get from the Play store.\nI think printing still works with this off.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Advanced"
+ },
+ "com.vivo.quickpay": {
+  "description": "Quick Pay\nChinese pay.",
+  "removal": "Recommended",
+  "list": "Oem",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": []
+ },
+ "com.vivo.e2ee": {
+  "list": "Oem",
+  "description": "Odd removal value for the test.",
+  "dependencies": [],
+  "neededBy": [],
+  "labels": [],
+  "removal": "Weird"
+ }
+}

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# omarchy-notification-send: compatibility shim for omasnap (docs/modules/capture.md). omasnap sends its "Screenshot saved"
+# notifications by calling Omarchy's helper of this name, which does not exist on bbkOS; this one passes the notification
+# to the desktop's server with notify-send. Only the options omasnap uses are understood:
+#   omarchy-notification-send [-g GLYPH] [--app-name NAME] [-t MS] [-u LEVEL] SUMMARY [BODY]
+#                             [--image FILE] [--exec PROGRAM ARG...]
+# `--exec` must be last; the program and its arguments run (no shell) when the notification is clicked. That is done
+# with a "default" action and notify-send --wait, which prints the action name when the server reports a click.
+set -u
+app=omasnap; timeout_ms=4500; urgency=normal; image=""; summary=""; body=""; have_summary=0; cmd=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -g|--glyph|-i) shift 2 ;;                       # glyph / icon: not used
+        --app-name) app=$2; shift 2 ;;
+        -t) timeout_ms=$2; shift 2 ;;
+        -u) urgency=$2; shift 2 ;;
+        --image) image=$2; shift 2 ;;
+        --exec) shift; cmd=("$@"); break ;;
+        *) if [ $have_summary = 0 ]; then summary=$1; have_summary=1; else body=$1; fi; shift ;;
+    esac
+done
+[ $have_summary = 1 ] || exit 2
+
+args=(-a "$app" -t "$timeout_ms" -u "$urgency")
+[ -n "$image" ] && [ -r "$image" ] && args+=(-h "string:image-path:file://$image")
+if [ ${#cmd[@]} -gt 0 ]; then
+    # Wait for the click in the background, so omasnap's caller is not held up.
+    ( choice=$(notify-send "${args[@]}" -A default=Open --wait "$summary" "$body" 2>/dev/null) || exit 0
+      [ "$choice" = default ] && exec setsid "${cmd[@]}" >/dev/null 2>&1 ) &
+    disown
+else
+    exec notify-send "${args[@]}" "$summary" "$body"
+fi

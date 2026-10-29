@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""Audit a Quickshell config for missing `import qs...` lines and for QML that does not parse.
+
+Usage: bbkos-qml-audit [DIR]   (default ~/.config/quickshell)
+
+Syntax: every *.qml is run through qmlformat (BBKOS_QMLFORMAT, default /usr/lib/qt6/bin/qmlformat); a file it cannot
+parse would stop the whole shell from loading (2026-10-29: an extra brace passed the import check and the bar was down).
+
+Singletons (services/*.qml) need `import qs.services`, components
+(components/*.qml) need `import qs.components`, Theme needs `import qs`.
+Files inside services/ or components/ need no import for their own directory.
+A missing import makes QML fail at runtime, not at load, so check before a
+shell restart.
+"""
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+QMLFORMAT = os.environ.get("BBKOS_QMLFORMAT", "/usr/lib/qt6/bin/qmlformat")
+
+
+def strip_noncode(src):
+    """Blank out comments and string literals, keeping newlines."""
+    out, i, n = [], 0, len(src)
+    while i < n:
+        c = src[i]
+        if src.startswith("//", i):
+            j = src.find("\n", i)
+            i = n if j < 0 else j
+        elif src.startswith("/*", i):
+            j = src.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append("\n" * src.count("\n", i, j))
+            i = j
+        elif c in "\"'`":
+            j = i + 1
+            while j < n and src[j] != c:
+                j += 2 if src[j] == "\\" else 1
+            j = min(j + 1, n)
+            out.append(c + c if c != "`" else "``")
+            out.append("\n" * src.count("\n", i, j))
+            i = j
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def names_in(directory):
+    return sorted(p.stem for p in directory.glob("*.qml"))
+
+
+def audit(root):
+    need = {}  # name -> (module, own directory name or None)
+    for n in names_in(root / "services"):
+        need[n] = ("qs.services", "services")
+    for n in names_in(root / "components"):
+        need[n] = ("qs.components", "components")
+    need["Theme"] = ("qs", None)
+
+    problems = []
+    for path in sorted(root.rglob("*.qml")):
+        rel = path.relative_to(root)
+        own = rel.parts[0] if len(rel.parts) == 2 else None
+        code = strip_noncode(path.read_text(encoding="utf-8", errors="replace"))
+        imported = set(re.findall(r"^\s*import\s+([\w.]+)", code, re.M))
+        for name, (module, home) in sorted(need.items()):
+            if home is not None and own == home:
+                continue
+            if name == path.stem or module in imported:
+                continue
+            if re.search(rf"(?<![\w.]){name}\s*[.{{]", code):
+                problems.append(f"MISSING {module} for {name} in {rel}")
+    return problems
+
+
+def syntax_errors(root, qmlformat=QMLFORMAT):
+    """One `SYNTAX <rel path>: <first error line>` per QML file qmlformat cannot parse; None when qmlformat is missing."""
+    if not os.access(qmlformat, os.X_OK):
+        return None
+    problems = []
+    for path in sorted(root.rglob("*.qml")):
+        try:
+            r = subprocess.run([qmlformat, str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                               text=True, timeout=10)
+        except subprocess.TimeoutExpired:
+            problems.append(f"SYNTAX {path.relative_to(root)}: qmlformat timed out")
+            continue
+        if r.returncode != 0:
+            first = next((l for l in r.stderr.splitlines() if l.strip()), "does not parse")
+            problems.append(f"SYNTAX {path.relative_to(root)}: {first.strip()}")
+    return problems
+
+
+def main(argv):
+    root = Path(argv[1] if len(argv) > 1 else "~/.config/quickshell").expanduser()
+    if not root.is_dir():
+        print(f"bbkos-qml-audit: not a directory: {root}", file=sys.stderr)
+        return 2
+    problems = audit(root)
+    for p in problems:
+        print(p)
+    syntax = syntax_errors(root)
+    for p in syntax or []:
+        print(p)
+    if not problems:
+        print("missing imports: 0")
+    if syntax is None:
+        print(f"syntax check skipped: {QMLFORMAT} not found")
+    elif not syntax:
+        print("syntax errors: 0")
+    return 1 if problems or syntax else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

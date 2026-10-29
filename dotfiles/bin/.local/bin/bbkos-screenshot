@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# bbkos-screenshot {region|full}
+# Saves a PNG to ~/Pictures/Screenshots and copies it to the clipboard.
+set -euo pipefail
+
+dir="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+mkdir -p "$dir"
+file="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"
+
+case "${1:-region}" in
+    region)
+        geometry=$(slurp -d) || exit 0   # Esc cancels: not an error
+        grim -g "$geometry" "$file"
+        ;;
+    full)
+        grim "$file"
+        ;;
+    *)
+        echo "usage: bbkos-screenshot {region|full}" >&2
+        exit 2
+        ;;
+esac
+
+wl-copy < "$file"
+timeout 2 notify-send -a bbkos "Screenshot saved" "$file" || true

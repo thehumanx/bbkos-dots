@@ -1,0 +1,6 @@
+package:com.reddit.frontpage
+package:com.cybercat.acbridge
+package:com.yanstarstudio.joss.undercover
+package:com.niksoftware.snapseed
+package:com.vwfndr.mbl
+package:com.twitter.android

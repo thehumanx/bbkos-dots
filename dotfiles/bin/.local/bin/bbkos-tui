@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# bbkos-tui <command> [args...]
+# Opens a terminal UI (nmtui, bluetui, ...) in a floating terminal window, or focuses it if it is already open
+# (launch-or-focus, the pattern Omarchy uses). The window class is bbkos-tui-<command>; hyprland.lua floats and
+# centres every class matching bbkos-tui-.* The terminal starts in its own systemd scope (uwsm app).
+set -euo pipefail
+cmd=${1:?usage: bbkos-tui <command> [args...]}
+shift
+class="bbkos-tui-$(basename "$cmd")"
+
+addr=$(hyprctl clients -j | python3 -I -c '
+import sys, json
+cls = sys.argv[1]
+for c in json.load(sys.stdin):
+    if c["class"] == cls:
+        print(c["address"]); break' "$class")
+
+if [ -n "$addr" ]; then
+    exec hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })"
+fi
+exec uwsm app -- kitty --class "$class" -e "$cmd" "$@"

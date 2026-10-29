@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# bbkos-lock: hypridle's lock_cmd. Starts hyprlock at most once at a time.
+#
+# Why not the stock `pidof hyprlock || hyprlock`: two lock requests arriving together (lid close + the sleep
+# hook) both passed the pidof check and started two hyprlocks. The loser was refused the session lock but did
+# not exit, and from then on `pidof hyprlock` was always true, so every later lock request silently did
+# nothing: the laptop slept and hibernated unlocked (found 2026-10-18).
+#
+# Here the lock file is held for hyprlock's whole lifetime (the kernel releases it when hyprlock exits or dies),
+# so a concurrent or repeated request fails at once instead of starting a second instance.
+#
+# The layout comes from the Lock screen page: bbkos-theme renders hyprlock.conf into the theme state directory. It is
+# used only when it is there and looks like a config (has a background block); otherwise plain hyprlock runs on the
+# static ~/.config/hypr/hyprlock.conf, so a missing or broken render can never leave the machine without a lock.
+conf="${BBKOS_STATE_DIR:-$HOME/.local/state/bbkos/theme}/hyprlock.conf"
+lock="${XDG_RUNTIME_DIR:?}/bbkos-hyprlock.lock"
+if [ -s "$conf" ] && grep -q '^background {' "$conf"; then
+    # exit 99 = the flock guard refused (a lock is already running): stop, do not start a second one. Any other
+    # failure means hyprlock rejected the generated file before locking: fall through to the static config.
+    flock -n -E 99 "$lock" hyprlock -c "$conf"
+    rc=$?
+    if [ "$rc" -eq 0 ] || [ "$rc" -eq 99 ]; then exit "$rc"; fi
+fi
+exec flock -n "$lock" hyprlock

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fake hyprctl for the keybinds CLI tests. Records argv (one call per line, tab-separated) to
+# $FAKE_HYPRCTL_LOG. `configerrors` prints $FAKE_HYPRCTL_CONFIGERRORS, or
+# $FAKE_HYPRCTL_CONFIGERRORS_AFTER_RELOAD once a `reload` has been logged. Any other call sleeps
+# $FAKE_HYPRCTL_SLEEP seconds (if set) and exits with $FAKE_HYPRCTL_RC (default 0).
+log=${FAKE_HYPRCTL_LOG:-/dev/null}
+first=1
+for a in "$@"; do
+    if [ $first = 1 ]; then printf '%s' "$a" >> "$log"; first=0
+    else printf '\t%s' "$a" >> "$log"; fi
+done
+printf '\n' >> "$log"
+if [ "$1" = configerrors ]; then
+    if [ -n "${FAKE_HYPRCTL_CONFIGERRORS_AFTER_RELOAD:-}" ] && grep -qx reload "$log" 2>/dev/null; then
+        printf '%s' "$FAKE_HYPRCTL_CONFIGERRORS_AFTER_RELOAD"
+    else
+        printf '%s' "${FAKE_HYPRCTL_CONFIGERRORS:-}"
+    fi
+    exit 0
+fi
+[ -n "${FAKE_HYPRCTL_SLEEP:-}" ] && sleep "$FAKE_HYPRCTL_SLEEP"
+rc=${FAKE_HYPRCTL_RC:-0}
+if [ "$rc" != 0 ]; then echo "fake hyprctl failure" >&2; exit "$rc"; fi
+echo ok

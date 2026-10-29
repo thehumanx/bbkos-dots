@@ -1,0 +1,22 @@
+/usr/share/scrcpy/scrcpy-server: 1 file pushed, 0 skipped. 264.1 MB/s (733930 bytes in 0.003s)
+[server] INFO: Device: [vivo] vivo V2503 (Android 16)
+[server] INFO: Processing Android apps... (this may take some time)
+[server] INFO: List of apps:
+ - Reddit                         com.reddit.frontpage
+ - ACBridge                       com.cybercat.acbridge
+ - Undercover                     com.yanstarstudio.joss.undercover
+ - Snapseed                       com.niksoftware.snapseed
+ * Lock                           com.android.bbk.lockscreen3
+ * V-Appstore                     com.vivo.appstore
+ * Notes                          com.vivo.notes
+ * Meet                           com.google.android.apps.tachyon
+ * BrowserPlug                    com.android.browser
+ * Calculator                     com.vivo.calculator
+ * Origin Health                  com.vivo.exhealth
+ * SIM Toolkit                    com.android.stk
+ - VWFNDR™ + MBL                  com.vwfndr.mbl
+ - X                              com.twitter.android
+scrcpy 5.0.1 <https://github.com/Genymobile/scrcpy>
+INFO: ADB device found:
+INFO:     --> (tcpip)  192.168.1.31:45833              device  V2503
+INFO:         (tcpip)  adb-10BF7330P70015J-Jr5gD1._adb-tls-connect._tcp            device  V2503

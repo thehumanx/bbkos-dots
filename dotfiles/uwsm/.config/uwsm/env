@@ -1,0 +1,7 @@
+# bbkOS: session-wide environment, sourced by uwsm for every Wayland session.
+# ~/.bashrc returns early for non-interactive shells, so PATH set there never reaches
+# Hyprland or the programs it starts (keybinds, Quickshell, systemd user units).
+export PATH="$HOME/.local/bin:$PATH"
+
+# CLI tools that open links (git, gh, npm, Claude Code) honour $BROWSER before falling back to xdg-open.
+export BROWSER=xdg-open

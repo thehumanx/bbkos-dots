@@ -1,0 +1,12 @@
+#!/bin/sh
+# Fake ddcutil: records argv to $FAKE_HYPRCTL_LOG (prefixed "ddcutil"). `getvcp 10 --brief` prints the brightness
+# (current $FAKE_DDC_CUR, max $FAKE_DDC_MAX); $FAKE_DDC_FAIL makes every call fail.
+log=${FAKE_HYPRCTL_LOG:-/dev/null}
+printf 'ddcutil' >> "$log"
+for a in "$@"; do printf '\t%s' "$a" >> "$log"; done
+printf '\n' >> "$log"
+[ -n "${FAKE_DDC_FAIL:-}" ] && { echo "ddcutil: ${FAKE_DDC_FAIL}" >&2; exit 1; }
+case "$*" in
+    *getvcp*) echo "VCP 10 C ${FAKE_DDC_CUR:-30} ${FAKE_DDC_MAX:-100}" ;;
+esac
+exit 0

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# bbkos-lid {closed|opened|check}
+# Clamshell handling that logind does not do on its own. logind decides what to do only at the moment the
+# lid closes (and ignores it when an external display is connected); it never looks again afterwards.
+#   closed  Lid just closed. If an external display is active: lock the session and disable the internal
+#           panel so no windows or cursor live on a screen nobody can see. With no external display do
+#           nothing: logind suspends and hypridle locks before sleep (verified in the journal).
+#   opened  Lid opened. Re-enable the internal panel if it was disabled.
+#   check   A monitor went away. If the lid is closed and no external display remains, suspend now
+#           (otherwise the laptop would stay awake in a bag until the hypridle timeout).
+# Safety: the internal panel is never disabled unless an external display is active.
+#         bbkos-display (saved scale/layout) is told the lid state afterwards, so its generated eDP-1 rule agrees.
+# Testing: BBKOS_DRY_RUN=1 prints actions instead of doing them; BBKOS_LID_STATE=open|closed and
+#          BBKOS_EXTERNAL_COUNT=<n> override what is read from the system.
+set -euo pipefail
+
+internal="eDP-1"
+
+run() {
+    if [ -n "${BBKOS_DRY_RUN:-}" ]; then echo "DRY: $*"; else "$@"; fi
+}
+
+# The logind action for a closed lid on the current power source, from the drop-in the Lid and power page writes
+# (BBKOS_LOGIND_CONF overrides the path, BBKOS_ON_AC=1|0 the power source: for the tests).
+lid_action() {
+    local conf="${BBKOS_LOGIND_CONF:-/etc/systemd/logind.conf.d/bbkos.conf}" key=HandleLidSwitch ac
+    ac="${BBKOS_ON_AC:-}"
+    if [ -z "$ac" ]; then
+        ac=0
+        for f in /sys/class/power_supply/A*/online; do [ -r "$f" ] && [ "$(cat "$f")" = 1 ] && ac=1; done
+    fi
+    [ "$ac" = 1 ] && key=HandleLidSwitchExternalPower
+    sed -n "s/^$key=//p" "$conf" 2>/dev/null | head -n1
+}
+
+lid_state() {
+    if [ -n "${BBKOS_LID_STATE:-}" ]; then echo "$BBKOS_LID_STATE"; return; fi
+    awk '{print $2}' /proc/acpi/button/lid/LID0/state 2>/dev/null || echo open
+}
+
+external_count() {
+    if [ -n "${BBKOS_EXTERNAL_COUNT:-}" ]; then echo "$BBKOS_EXTERNAL_COUNT"; return; fi
+    hyprctl monitors -j | python3 -I -c 'import sys, json; print(sum(1 for m in json.load(sys.stdin) if m["name"] != "'"$internal"'"))'
+}
+
+internal_disabled() {
+    if [ -n "${BBKOS_INTERNAL_DISABLED:-}" ]; then [ "$BBKOS_INTERNAL_DISABLED" = 1 ]; return; fi
+    hyprctl monitors all -j | python3 -I -c 'import sys, json; sys.exit(0 if any(m["name"] == "'"$internal"'" and m.get("disabled") for m in json.load(sys.stdin)) else 1)'
+}
+
+case "${1:-}" in
+    closed)
+        if [ "$(external_count)" -gt 0 ]; then
+            # logind ignores the lid here, so nothing else would lock the session. (With no external display
+            # logind suspends and hypridle locks before sleep; locking here too raced it and started two hyprlocks.)
+            run loginctl lock-session
+            run hyprctl eval "hl.monitor({ output = \"$internal\", disabled = true })"
+            run bbkos-display apply --lid closed || true      # keep the saved rules (same eDP-1 rule) in step
+        else
+            echo "no external display: logind handles the lid"
+        fi
+        ;;
+    opened)
+        if internal_disabled; then
+            run hyprctl eval "hl.monitor({ output = \"$internal\", mode = \"preferred\", position = \"auto\", scale = \"auto\" })"
+        else
+            echo "internal panel already enabled"
+        fi
+        run bbkos-display apply --lid open || true            # bring back the saved scale and layout of the panel
+        ;;
+    check)
+        if [ "$(lid_state)" = closed ] && [ "$(external_count)" -eq 0 ]; then
+            # What logind would have done had the lid closed now: the Lid and power page's choice for the current power source
+            # (the drop-in is readable by everyone). Without the file: suspend-then-hibernate, as before.
+            case "$(lid_action)" in
+                ignore) echo "lid action is ignore: nothing to do" ;;
+                lock) run loginctl lock-session ;;
+                suspend|hibernate|suspend-then-hibernate) run systemctl "$(lid_action)" ;;
+                *) run systemctl suspend-then-hibernate ;;
+            esac
+        else
+            echo "nothing to do"
+        fi
+        ;;
+    *)
+        echo "usage: bbkos-lid {closed|opened|check}" >&2
+        exit 2
+        ;;
+esac

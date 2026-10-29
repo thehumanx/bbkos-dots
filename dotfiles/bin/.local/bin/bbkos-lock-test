@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# bbkos-lock-test [SECONDS]
+# Locks the screen for real (bbkos-lock, so the layout is the one the Lock screen page generated), photographs it with
+# grim after SECONDS (1-30, default 5), then unlocks and prints the capture path ($XDG_RUNTIME_DIR/bbkos-lock-test.png).
+# For the Lock screen page's "Test real lock" button. If the lock never appears it does nothing else (exit 1). If the
+# unlock does not end it, SIGUSR1 (hyprlock's unlock signal) is tried; if it still runs, the owner types the password
+# (exit 1). BBKOS_LOCK_PROC and BBKOS_LOCK_TEST_WAIT exist for the tests.
+#
+# Ending a lock from outside counts as ONE FAILED LOGIN for pam_faillock (3 in 10 minutes lock the account: the lock
+# screen, sudo and the login all refuse even the right password; found 2026-10-19 after three tests in a row). So the
+# test refuses (exit 3) while any failed login is on record, which leaves two spare attempts for the owner's typos.
+set -uo pipefail
+delay=${1-5}
+[[ $delay =~ ^[0-9]+$ ]] && ((delay >= 1 && delay <= 30)) || { echo "usage: bbkos-lock-test [SECONDS 1-30]" >&2; exit 2; }
+# failed logins still counted against the account ("V" rows of `faillock`); none when faillock is not installed
+if command -v faillock >/dev/null 2>&1; then
+    me=${USER:-$(id -un)}
+    fails=$(faillock --user "$me" 2>/dev/null | awk 'NF >= 4 && $NF == "V"' | wc -l)
+    if [ "$fails" -gt 0 ]; then
+        echo "bbkos-lock-test: $fails failed login(s) are on record for this account (this test would add one; 3 in 10 minutes lock the account). Wait about 10 minutes, check with: faillock --user $me" >&2
+        exit 3
+    fi
+fi
+proc=${BBKOS_LOCK_PROC:-hyprlock}
+wait_s=${BBKOS_LOCK_TEST_WAIT:-2}
+png="${XDG_RUNTIME_DIR:?}/bbkos-lock-test.png"
+
+running() { pgrep -x "$proc" >/dev/null; }
+# until CONDITION holds, at most wait_s seconds (checked every 0.1 s)
+until_() { local i; for ((i = 0; i < wait_s * 10; i++)); do "$@" && return 0; sleep 0.1; done; "$@"; }
+gone() { ! running; }
+
+# A lock that is already up was not started by this test (hypridle, the lid): never photograph or unlock it.
+running && { echo "bbkos-lock-test: the screen is already locked, nothing done" >&2; exit 1; }
+bbkos-lock >/dev/null 2>&1 &
+until_ running || { echo "bbkos-lock-test: the lock did not start" >&2; exit 1; }
+sleep "$delay"
+grim "$png" || echo "bbkos-lock-test: grim failed" >&2
+loginctl unlock-session
+until_ gone || { pkill -USR1 -x "$proc"; until_ gone; } || { echo "bbkos-lock-test: the screen is still locked: type your password" >&2; exit 1; }
+printf '%s\n' "$png"

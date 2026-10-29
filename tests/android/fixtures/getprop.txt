@@ -1,0 +1,5 @@
+[ro.build.version.release]: [16]
+[ro.build.version.sdk]: [36]
+[ro.product.brand]: [vivo]
+[ro.product.model]: [V2503]
+[ro.product.product.model]: [vivo V2503_EEA]

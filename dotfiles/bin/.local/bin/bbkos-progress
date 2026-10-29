@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# bbkos-progress [-w WIDTH] [-n] DONE TOTAL [UNIT]
+# Draws a progress bar on one line: [█████░░░░░░░░░░░]  2/9 steps. Called again it redraws in place (\r);
+# at DONE = TOTAL it ends the line. UNIT is the word after the count ("steps"); UNIT "%" shows a percentage instead
+# (DONE/TOTAL scaled to 100, e.g. `bbkos-progress 45 100 %` -> 45%). -w sets the bar width (default 30, at most
+# the terminal width less the label); -n draws without redrawing in place (one new line per call, for logs).
+set -euo pipefail
+width=30 inplace=1
+while getopts "w:n" o; do
+    case $o in
+        w) width=$OPTARG ;;
+        n) inplace=0 ;;
+        *) echo "usage: bbkos-progress [-w WIDTH] [-n] DONE TOTAL [UNIT]" >&2; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+done_=${1:?usage: bbkos-progress [-w WIDTH] [-n] DONE TOTAL [UNIT]}
+total=${2:?usage: bbkos-progress [-w WIDTH] [-n] DONE TOTAL [UNIT]}
+unit=${3:-}
+[[ $done_ =~ ^[0-9]+$ && $total =~ ^[0-9]+$ && $width =~ ^[0-9]+$ && $total -gt 0 ]] || { echo "bbkos-progress: DONE, TOTAL and WIDTH must be whole numbers, TOTAL above 0" >&2; exit 2; }
+((done_ > total)) && done_=$total
+
+if [[ $unit == % ]]; then label="$((done_ * 100 / total))%"; else label="$done_/$total${unit:+ $unit}"; fi
+cols=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
+((width > cols - ${#label} - 5)) && width=$((cols - ${#label} - 5))
+((width < 5)) && width=5
+
+fill=$((done_ * width / total))
+bar_on=$(printf '█%.0s' $(seq 1 "$fill") 2>/dev/null || true)
+((fill == 0)) && bar_on=""
+bar_off=$(printf '░%.0s' $(seq 1 $((width - fill))) 2>/dev/null || true)
+((fill == width)) && bar_off=""
+
+# Filled part in the terminal's cyan, the rest dim; plain text when stdout is not a terminal.
+if [[ -t 1 ]]; then
+    line=$(printf '[\e[36m%s\e[2m%s\e[0m] %s' "$bar_on" "$bar_off" "$label")
+else
+    line="[$bar_on$bar_off] $label"
+fi
+
+if ((inplace)) && [[ -t 1 ]]; then
+    printf '\r\e[K%s' "$line"
+    ((done_ == total)) && printf '\n'
+else
+    printf '%s\n' "$line"
+fi

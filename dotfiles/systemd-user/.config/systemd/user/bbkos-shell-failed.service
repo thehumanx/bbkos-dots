@@ -1,0 +1,6 @@
+[Unit]
+Description=Tell the user that Quickshell failed (works without Quickshell)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/hyprctl notify 3 20000 "rgb(f7768e)" "Quickshell stopped: no bar, notifications, launcher or password prompts. Open a terminal (Super+Q) and run: bbkos-check"

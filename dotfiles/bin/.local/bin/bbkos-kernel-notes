@@ -1,0 +1,47 @@
+#!/usr/bin/python3 -I
+"""bbkos-kernel-notes: for pending kernel updates, print the version jump and the kernel.org changelog link.
+
+Reads `checkupdates` output on stdin (`linux 7.2.11.arch1-1 -> 7.2.12.arch1-1`) and prints nothing when neither `linux`
+nor `linux-lts` is in it. It only prints links: no network access. Arch's kernel packages ship no changelog
+(`pacman -Qc linux`), kernel.org has one per release. Used by bbkos-update; see docs/modules/update-safety.md."""
+import re
+import sys
+
+KERNELS = ("linux", "linux-lts")
+URL = "https://cdn.kernel.org/pub/linux/kernel/v{major}.x/ChangeLog-{version}"
+# 7.2.11.arch1-1 (linux), 6.18.57-2 (linux-lts), 7.3.arch1-1 (a new series without a patch number)
+VERSION = re.compile(r"^(\d+)\.(\d+)(?:\.(\d+))?(?:\.arch\d+)?-\d+$")
+
+
+def parse(text):
+    """(major, minor, 'major.minor[.patch]') or None."""
+    m = VERSION.match(text)
+    return (m.group(1), m.group(2), ".".join(g for g in m.group(1, 2, 3) if g)) if m else None
+
+
+def note(pkg, old, new):
+    a, b = parse(old), parse(new)
+    if a is None or b is None:
+        return [f"  {pkg} {old} -> {new}"]
+    if a[2] == b[2]:
+        return [f"  {pkg}: same kernel {b[2]}, packaging change only"]
+    series = f"  (new series {a[0]}.{a[1]} -> {b[0]}.{b[1]})" if a[:2] != b[:2] else ""
+    return [f"  {pkg} {a[2]} -> {b[2]}{series}", "    " + URL.format(major=b[0], version=b[2])]
+
+
+def main():
+    lines = []
+    for raw in sys.stdin:
+        parts = raw.split()
+        if len(parts) == 4 and parts[2] == "->" and parts[0] in KERNELS:
+            lines += note(parts[0], parts[1], parts[3])
+    if lines:
+        print("Kernel updates (what changed is on kernel.org):")
+        print("\n".join(lines))
+        print("  The upgrade replaces the old kernel of that package. If the new one misbehaves, pick the other")
+        print("  kernel (linux-lts or linux) under GRUB's Advanced options.")
+        print()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,23 @@
+# Paths inside the `bin` package that Stow must never link into $HOME.
+# A local ignore file REPLACES Stow's built-in list, so the defaults are repeated below.
+\.stow-local-ignore
+
+# Version control and editor leftovers (Stow's built-in defaults)
+RCS
+.+,v
+CVS
+\.\#.+
+\.cvsignore
+\.svn
+_darcs
+\.hg
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+
+# Python byte-code caches: created by running the bbkos-* tools, not configuration.
+# They stay in the package (untracked, see .gitignore) but are not linked into ~/.local/lib.
+__pycache__
+\.pyc$

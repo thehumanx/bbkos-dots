@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# bbkos-mirror: show this screen on the phone and use it by touch (wayvnc over Tailscale).
+#
+#   bbkos-mirror on [OUTPUT]   start wayvnc on the Tailscale address only (default output: the first one)
+#   bbkos-mirror off | status | address | password
+#   bbkos-mirror setup         create the certificate and password once (on does it when missing)
+#
+# wayvnc runs as the transient user unit bbkos-mirror.service, so nothing runs until `on`. It listens only on the
+# Tailscale address (never 0.0.0.0, never the LAN), with a password and TLS (a self-signed certificate: the phone asks
+# once to trust it). The credentials live in ~/.config/wayvnc/ and are not in the repo.
+dir="${XDG_CONFIG_HOME:-$HOME/.config}/wayvnc"
+conf="$dir/config"
+unit=bbkos-mirror
+port=5900
+
+ts_ip() { tailscale ip -4 2>/dev/null | head -n1; }
+
+setup() {
+    [ -s "$conf" ] && [ -s "$dir/key.pem" ] && [ -s "$dir/cert.pem" ] && return 0
+    command -v openssl >/dev/null || { echo "openssl is missing" >&2; return 1; }
+    mkdir -p "$dir" && chmod 700 "$dir"
+    openssl req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=bbkos-mirror" \
+        -keyout "$dir/key.pem" -out "$dir/cert.pem" 2>/dev/null || { echo "could not create the certificate" >&2; return 1; }
+    chmod 600 "$dir/key.pem"
+    pw=$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 20)
+    ( umask 077; cat > "$conf" <<CONF
+enable_auth=true
+username=$USER
+password=$pw
+private_key_file=$dir/key.pem
+certificate_file=$dir/cert.pem
+port=$port
+CONF
+    )
+    echo "created $conf (see: bbkos-mirror password)"
+}
+
+running() { systemctl --user is-active --quiet "$unit.service"; }
+
+case "${1:-status}" in
+    setup)    setup ;;
+    password) setup >/dev/null && sed -n 's/^password=//p' "$conf" ;;
+    address)  ip=$(ts_ip); [ -n "$ip" ] && echo "$ip:$port" || { echo "Tailscale has no address (not logged in?)" >&2; exit 1; } ;;
+    on)
+        running && { echo "already on"; exit 0; }
+        ip=$(ts_ip); [ -n "$ip" ] || { echo "Tailscale has no address: log in with 'sudo tailscale up'" >&2; exit 1; }
+        command -v wayvnc >/dev/null || { echo "wayvnc is not installed" >&2; exit 1; }
+        setup || exit 1
+        out=()
+        [ -n "$2" ] && out=(-o "$2")
+        systemd-run --user --quiet --unit="$unit" --collect -p Restart=on-failure -p RestartSec=3 \
+            wayvnc -C "$conf" "${out[@]}" "$ip" "$port" || exit 1
+        sleep 1
+        running && echo "on: $ip:$port" || { echo "wayvnc did not stay up: journalctl --user -u $unit" >&2; exit 1; }
+        ;;
+    off)      systemctl --user stop "$unit.service" 2>/dev/null; echo off ;;
+    status)   if running; then echo "on $(ss -tnH state established "( sport = :$port )" 2>/dev/null | wc -l) client(s)"; else echo off; fi ;;
+    *)        echo "usage: bbkos-mirror on [OUTPUT]|off|status|address|password|setup" >&2; exit 2 ;;
+esac

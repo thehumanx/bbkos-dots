@@ -1,0 +1,188 @@
+#!/usr/bin/python3 -I
+"""bbkos-logind-apply: write the owner's lid and power-button choices into logind's drop-in (docs/modules/lid-power.md).
+
+Runs as root through a sudoers rule that allows exactly this file and no arguments. It is ONE self-contained file installed
+root-owned: it must never import code from the owner's home (anything the owner can write would run as root). The settings
+file is untrusted input: it is read with the owner's own rights, and every value is checked again here against a fixed list,
+so nothing but those words can reach the file it writes.
+
+It owns /etc/systemd/logind.conf.d/bbkos.conf completely. The three choices come from the `session` section of
+~/.config/bbkos/settings.json:
+  lidBattery    HandleLidSwitch               what closing the lid does on battery
+  lidPower      HandleLidSwitchExternalPower  what closing the lid does on the charger
+  powerKeyLong  HandlePowerKeyLongPress       what holding the power button does
+The rest is fixed: a docked lid is ignored (bbkos-lid handles that case) and a short power press is ignored (Hyprland binds it
+to the power menu). The file is replaced atomically, and only when its text would change; then `systemctl reload
+systemd-logind` applies it (logind reloads its configuration without ending any session).
+Prints one JSON line: {applied: {...}, changed: bool, errors: [...]}. Exit 0 on success, 2 when the settings could not be read.
+"""
+import json
+import math
+import os
+import pwd
+import stat
+import subprocess
+import sys
+import tempfile
+
+LID_ACTIONS = ("ignore", "lock", "suspend", "suspend-then-hibernate", "hibernate")
+POWERKEY_ACTIONS = ("ignore", "suspend", "suspend-then-hibernate", "hibernate", "poweroff")
+DEFAULTS = {"lidBattery": "suspend-then-hibernate", "lidPower": "suspend-then-hibernate", "powerKeyLong": "poweroff"}
+ALLOWED = {"lidBattery": LID_ACTIONS, "lidPower": LID_ACTIONS, "powerKeyLong": POWERKEY_ACTIONS}
+LOGIND_KEYS = {"lidBattery": "HandleLidSwitch", "lidPower": "HandleLidSwitchExternalPower",
+               "powerKeyLong": "HandlePowerKeyLongPress"}
+MAX_SETTINGS_BYTES = 65536
+DEFAULT_DIR = "/etc/systemd/logind.conf.d"
+CONF_NAME = "bbkos.conf"
+
+
+class SettingsError(Exception):
+    pass
+
+
+def valid(key, value):
+    """The value when it is one of the allowed words for `key`, else the default."""
+    return value if isinstance(value, str) and value in ALLOWED[key] else DEFAULTS[key]
+
+
+def read_session_settings(path, uid):
+    """The three choices from `path`, each valid or its default. Raises SettingsError when the file is not a regular file, is
+    not owned by `uid`, is over 64 KiB, or is not a JSON object. Opened with the user's own rights (as root the effective uid
+    drops to `uid` for the open and read), so a symlink can never reach a file the user could not read anyway; the real
+    settings.json is a stow symlink into the repo, so symlinks have to work. Ownership and type are checked on the opened
+    file, not on the path."""
+    drop = os.geteuid() == 0 and uid != 0
+    try:
+        if drop:
+            os.seteuid(uid)
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+            with os.fdopen(fd, "rb") as f:
+                st = os.fstat(f.fileno())
+                if not stat.S_ISREG(st.st_mode):
+                    raise SettingsError(f"{path} is not a regular file")
+                if st.st_uid != uid:
+                    raise SettingsError(f"{path} is not owned by the invoking user")
+                if st.st_size > MAX_SETTINGS_BYTES:
+                    raise SettingsError(f"{path} is larger than {MAX_SETTINGS_BYTES} bytes")
+                raw = f.read(MAX_SETTINGS_BYTES + 1)
+        finally:
+            if drop:
+                os.seteuid(0)
+        data = json.loads(raw.decode("utf-8"))
+    except SettingsError:
+        raise
+    except (OSError, ValueError) as e:
+        raise SettingsError(f"cannot read {path}: {e}") from None
+    if not isinstance(data, dict):
+        raise SettingsError(f"{path} is not a JSON object")
+    section = data.get("session")
+    if not isinstance(section, dict):
+        section = {}
+    return {key: valid(key, section.get(key, default)) for key, default in DEFAULTS.items()}
+
+
+def render(session):
+    return ("# bbkOS: the lid and the power button. Written by bbkos-logind-apply from the Lid and power page of the settings\n"
+            "# app (power/bbkos-logind-apply); do not edit by hand, the next change of a setting replaces this file.\n"
+            "[Login]\n"
+            f"{LOGIND_KEYS['lidBattery']}={session['lidBattery']}\n"
+            f"{LOGIND_KEYS['lidPower']}={session['lidPower']}\n"
+            "HandleLidSwitchDocked=ignore\n"
+            "HandlePowerKey=ignore\n"
+            f"{LOGIND_KEYS['powerKeyLong']}={session['powerKeyLong']}\n")
+
+
+def write_if_changed(conf_dir, text):
+    """Replace conf_dir/bbkos.conf atomically with `text`. Returns True when the file changed."""
+    path = os.path.join(conf_dir, CONF_NAME)
+    try:
+        with open(path, encoding="utf-8") as f:
+            if f.read() == text:
+                return False
+    except OSError:
+        pass
+    os.makedirs(conf_dir, mode=0o755, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=conf_dir, prefix=".bbkos.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    return True
+
+
+def reload_logind(runner=subprocess.run):
+    """`systemctl reload systemd-logind`. Returns an error string, or None."""
+    try:
+        res = runner(["/usr/bin/systemctl", "reload", "systemd-logind.service"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError) as e:
+        return f"cannot reload logind: {e}"
+    if res.returncode != 0:
+        lines = [l.strip() for l in (res.stderr or res.stdout or "").splitlines() if l.strip()]
+        return "cannot reload logind: " + (lines[0] if lines else f"exit {res.returncode}")
+    return None
+
+
+def apply_session(session, conf_dir=DEFAULT_DIR, reload=True):
+    res = {"applied": dict(session), "changed": False, "errors": []}
+    try:
+        res["changed"] = write_if_changed(conf_dir, render(session))
+    except OSError as e:
+        res["errors"].append(f"cannot write {conf_dir}/{CONF_NAME}: {e}")
+        return res
+    if res["changed"] and reload:
+        err = reload_logind()
+        if err:
+            res["errors"].append(err)
+    return res
+
+
+def resolve_paths(environ):
+    """(conf dir, settings path override, whether to reload). The overrides exist for tests and are honoured only when not
+    running as root: a root helper must not let the environment redirect its writes."""
+    if os.geteuid() != 0:
+        return (environ.get("BBKOS_LOGIND_DIR", DEFAULT_DIR), environ.get("BBKOS_LOGIND_SETTINGS"),
+                environ.get("BBKOS_LOGIND_NORELOAD") is None)
+    return DEFAULT_DIR, None, True
+
+
+def _fail(message):
+    print(json.dumps({"applied": {}, "changed": False, "errors": [message]}))
+    return 2
+
+
+def main(argv, environ=None):
+    environ = os.environ if environ is None else environ
+    if argv:
+        return _fail("takes no arguments")
+    conf_dir, settings_override, reload = resolve_paths(environ)
+    if settings_override:
+        path, uid = settings_override, os.getuid()
+    else:
+        user = environ.get("SUDO_USER")
+        if not user:
+            return _fail("SUDO_USER is not set: run through sudo")
+        try:
+            pw = pwd.getpwnam(user)
+        except KeyError:
+            return _fail(f"unknown user {user!r}")
+        path, uid = os.path.join(pw.pw_dir, ".config/bbkos/settings.json"), pw.pw_uid
+    try:
+        session = read_session_settings(path, uid)
+    except SettingsError as e:
+        return _fail(str(e))
+    print(json.dumps(apply_session(session, conf_dir, reload)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# bbkos-power-sample -l <label> [-d seconds] [-w warmup-seconds] [-i interval-seconds] [-n "note"]
+# Measures the laptop's average power draw on battery and appends the result to docs/power-log.csv.
+#
+# Two independent numbers are reported, as a cross-check:
+#   readings  average of `power_now` samples (instantaneous, noisy)
+#   energy    battery energy drop over the window divided by its length (the more trustworthy figure)
+# Runtime estimate = energy_full / average power. Target (decision 0003): 8.1 W (7 h) to 9.4 W (6 h).
+#
+# The run keeps the screen from dimming, locking or sleeping (systemd idle/sleep inhibitor), refuses to run on
+# AC power, and warns if the brightness changed during the run.
+set -euo pipefail
+
+bat=/sys/class/power_supply/BAT0
+ac=/sys/class/power_supply/ADP1
+log="${BBKOS_POWER_LOG:-$HOME/.local/share/bbkos/repo/docs/power-log.csv}"
+label=""; duration=600; warmup=60; interval=5; note=""
+
+while getopts "l:d:w:i:n:" opt; do
+    case $opt in
+        l) label=$OPTARG ;; d) duration=$OPTARG ;; w) warmup=$OPTARG ;; i) interval=$OPTARG ;; n) note=$OPTARG ;;
+        *) echo "usage: bbkos-power-sample -l label [-d seconds] [-w warmup] [-i interval] [-n note]" >&2; exit 2 ;;
+    esac
+done
+[ -n "$label" ] || { echo "a label is required (-l)" >&2; exit 2; }
+
+if [ "$(cat $ac/online)" != 0 ]; then echo "on AC power: unplug the charger first" >&2; exit 1; fi
+if [ "$(cat $bat/capacity)" -lt 15 ]; then echo "battery below 15%: too low for a clean run" >&2; exit 1; fi
+
+# Re-run under an inhibitor so hypridle/logind cannot dim, lock or sleep during the measurement.
+if [ -z "${BBKOS_SAMPLE_INHIBITED:-}" ]; then
+    exec env BBKOS_SAMPLE_INHIBITED=1 systemd-inhibit --what=idle:sleep --who=bbkos-power-sample \
+        --why="power measurement: $label" "$0" "$@"
+fi
+
+brightness() { brightnessctl -m | cut -d, -f4 | tr -d '%'; }
+cpu_stat()   { awk '/^cpu /{busy=$2+$3+$4+$7+$8; total=busy+$5+$6; print busy, total}' /proc/stat; }
+effects()    { for o in decoration:blur:enabled decoration:shadow:enabled animations:enabled; do hyprctl getoption $o | head -1 | sed 's/bool: //'; done | paste -sd/ ; }
+
+b_start=$(brightness)
+echo "run '$label': warm-up ${warmup}s, then ${duration}s at ${interval}s intervals; brightness ${b_start}%; do not touch anything"
+sleep "$warmup"
+
+read -r busy0 total0 < <(cpu_stat)
+e0=$(cat $bat/energy_now); t0=$(date +%s.%N)
+readings=()
+end=$(( $(date +%s) + duration ))
+while [ "$(date +%s)" -lt "$end" ]; do
+    readings+=("$(cat $bat/power_now)")
+    sleep "$interval"
+done
+e1=$(cat $bat/energy_now); t1=$(date +%s.%N)
+read -r busy1 total1 < <(cpu_stat)
+b_end=$(brightness)
+
+full=$(cat $bat/energy_full)
+read -r avg_w min_w max_w n < <(printf '%s\n' "${readings[@]}" | awk '{s+=$1; if(NR==1||$1<mn)mn=$1; if($1>mx)mx=$1} END{printf "%.2f %.2f %.2f %d\n", s/NR/1e6, mn/1e6, mx/1e6, NR}')
+energy_w=$(awk -v a="$e0" -v b="$e1" -v t0="$t0" -v t1="$t1" 'BEGIN{printf "%.2f", ((a-b)/1e6)/((t1-t0)/3600)}')
+cpu_pct=$(awk -v b0="$busy0" -v t0="$total0" -v b1="$busy1" -v t1="$total1" 'BEGIN{printf "%.1f", 100*(b1-b0)/(t1-t0)}')
+hours=$(awk -v f="$full" -v w="$energy_w" 'BEGIN{printf "%.1f", (f/1e6)/w}')
+profile=$(powerprofilesctl get 2>/dev/null || echo "?")
+windows=$(hyprctl clients -j | python3 -I -c 'import sys,json; print(len(json.load(sys.stdin)))')
+
+echo
+echo "result '$label'"
+echo "  energy-based average : ${energy_w} W   -> about ${hours} h on a full battery ($(awk -v f="$full" 'BEGIN{printf "%.1f", f/1e6}') Wh)"
+echo "  readings             : avg ${avg_w} W, min ${min_w}, max ${max_w} (${n} samples)"
+echo "  context              : brightness ${b_start}%, cpu busy ${cpu_pct}%, profile ${profile}, effects(blur/shadow/anim) $(effects), windows ${windows}"
+echo "  target               : 8.1 W (7 h) to 9.4 W (6 h)"
+[ "$b_start" = "$b_end" ] || echo "  WARNING: brightness changed during the run (${b_start}% to ${b_end}%): discard this result"
+
+[ -e "$log" ] || echo "date,label,watts_energy,watts_readings,min_w,max_w,samples,hours_est,cpu_busy_pct,brightness_pct,profile,effects,windows,note" > "$log"
+printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"%s"\n' "$(date '+%F %H:%M')" "$label" "$energy_w" "$avg_w" "$min_w" "$max_w" "$n" "$hours" "$cpu_pct" "$b_start" "$profile" "$(effects)" "$windows" "$note" >> "$log"
+echo "  logged to $log"

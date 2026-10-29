@@ -1,0 +1,14 @@
+[Unit]
+Description=Webcam picture controls (bbkos-camera)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+# Applies the camera.* settings now and again each time an app opens the camera (docs/modules/camera.md).
+ExecStart=%h/.local/bin/bbkos-camera watch
+Restart=on-failure
+# No camera, or it was replugged: retry slowly instead of every 5 s forever.
+RestartSec=30
+
+[Install]
+WantedBy=graphical-session.target

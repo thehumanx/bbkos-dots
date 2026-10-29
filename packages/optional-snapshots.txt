@@ -1,0 +1,4 @@
+# --with snapshots: btrfs snapshots before every pacman transaction. Needs a btrfs root.
+snapper
+snap-pac
+grub-btrfs

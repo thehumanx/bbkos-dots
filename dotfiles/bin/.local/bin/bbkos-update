@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# bbkos-update
+# The update routine from docs/modules/update-safety.md, run in a terminal (the bar's update widget opens it through
+# bbkos-tui): list what is pending (with the kernel.org changelog link for a pending kernel, bbkos-kernel-notes),
+# remind about the Arch news, upgrade with yay (repo and AUR together), run
+# bbkos-check, then tell the bar to count again. It stops at yay's prompts: nothing is installed without a confirmation.
+set -uo pipefail
+steps=4     # list, upgrade, check, refresh the bar: shown by bbkos-progress
+echo "Pending repo updates:"
+pending=$(checkupdates 2>/dev/null)
+if [ -n "$pending" ]; then printf '%s\n' "$pending"; else echo "  none (or the check failed)"; fi
+bbkos-progress 1 $steps steps
+echo
+printf '%s\n' "$pending" | bbkos-kernel-notes     # a pending kernel: version jump, kernel.org changelog link, fallback
+echo "Arch news: https://archlinux.org/news/  (read it before a big upgrade)"
+echo
+if yay -Syu; then
+    echo
+    echo "Merge any .pacnew files with: sudo pacdiff"
+    echo
+    bbkos-progress 2 $steps steps
+    echo
+    bbkos-check
+    echo
+    bbkos-progress 3 $steps steps
+else
+    echo "The update did not finish."
+fi
+qs ipc call updates refresh >/dev/null 2>&1 || true
+bbkos-progress $steps $steps steps
+echo
+read -r -p "Press Enter to close. "

@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+# bbkos-check: health check to run after updates (and any time something feels off).
+# Prints one line per check: "ok", "FAIL" (exit status 1 at the end) or "note" (informational).
+# Test hooks: BBKOS_ETC=<dir> searches that directory for .pacnew/.pacsave files instead of /etc.
+#   Theme engine (section 3b): BBKOS_STATE_DIR (generated files), BBKOS_SETTINGS (settings.json), BBKOS_DISPLAYS (displays.json),
+#   BBKOS_QS_DIR (Quickshell config for the QML import audit) override the default paths;
+#   BBKOS_CHECK_ONLY=theme runs only the theme engine section, BBKOS_CHECK_ONLY=kernel only the running-kernel check,
+#   BBKOS_CHECK_ONLY=crashes only the coredump check, BBKOS_CHECK_ONLY=hyprload only the generated-file load record
+#   (BBKOS_HYPR_LOAD_ERRORS overrides its path); the other checks need the live session.
+set -u
+
+failures=0
+ok()   { printf '  ok    %s\n' "$*"; }
+note() { printf '  note  %s\n' "$*"; }
+fail() { printf '  FAIL  %s\n' "$*"; failures=$((failures + 1)); }
+
+finish() {
+    echo
+    if [ "$failures" -eq 0 ]; then echo "all checks passed"; else echo "$failures check(s) FAILED"; fi
+    [ "$failures" -eq 0 ]
+    exit
+}
+
+# 3b. Theme engine and display settings: tool and matugen present, generated files complete and matching settings.json
+#     (freshness by stamp.json, not mtimes), settings readable, no missing QML imports.
+check_theme() {
+    if ! command -v bbkos-theme >/dev/null 2>&1; then fail "bbkos-theme not found on PATH (rest of the theme engine checks skipped)"; return; fi
+    local state=${BBKOS_STATE_DIR:-$HOME/.local/state/bbkos/theme}
+    local settings=${BBKOS_SETTINGS:-$HOME/.config/bbkos/settings.json}
+    local qs=${BBKOS_QS_DIR:-$HOME/.config/quickshell}
+    local f missing="" out fresh_line audit
+
+    if command -v matugen >/dev/null 2>&1; then ok "matugen installed"; else fail "matugen is not installed (pacman -S matugen): wallpaper colours cannot be generated"; fi
+
+    # stamp.json is judged by the freshness check below (missing = note: an old state from before the stamp existed)
+    for f in colors.json hypr-binds.lua hypr-theme.lua hyprlock.conf kitty-theme.conf palette.json; do
+        [ -f "$state/$f" ] || missing="$missing $f"
+    done
+    if [ -z "$missing" ]; then ok "generated theme files present in $state"; else fail "generated theme files missing in $state:$missing (run bbkos-theme apply)"; fi
+
+    if out=$(bbkos-theme status 2>&1); then
+        fresh_line=$(printf '%s\n' "$out" | grep -m1 '^fresh:')
+        case "$fresh_line" in
+            "fresh: yes") ok "generated theme files match settings.json" ;;
+            "fresh: no"*) fail "generated theme files do not match settings.json: run bbkos-theme apply" ;;
+            "fresh: unknown") note "no freshness stamp yet: run bbkos-theme apply once" ;;
+            *) fail "bbkos-theme status printed no freshness line: $(printf '%s' "$out" | head -1)" ;;
+        esac
+    else
+        fail "bbkos-theme status failed: $(printf '%s' "$out" | head -1)"
+    fi
+
+    # WCAG: text 4.5:1 and control parts 3:1 on every surface they sit on (docs/modules/theme.md, "Accessibility")
+    if out=$(bbkos-theme contrast 2>&1); then ok "colour contrast: $(printf '%s' "$out" | head -1)"; else fail "colour contrast: $(printf '%s' "$out" | tail -2 | tr '\n' ' ')"; fi
+
+    if [ -r "$settings" ] && [ -f "$settings" ]; then ok "settings file readable ($settings)"; else fail "settings file missing or unreadable: $settings (Stow link broken? run: stow -R --no-folding -d ~/.local/share/bbkos/repo/dotfiles -t ~ bbkos-settings)"; fi
+
+    local displays=${BBKOS_DISPLAYS:-$HOME/.config/bbkos/displays.json}
+    if [ ! -e "$displays" ]; then ok "no saved display settings (displays.json absent)"
+    elif python3 -I -c 'import json, sys; json.load(open(sys.argv[1]))' "$displays" 2>/dev/null; then ok "display settings readable ($displays)"
+    else fail "display settings unreadable: $displays (invalid JSON; bbkos-display ignores it until fixed or removed)"; fi
+
+    if ! command -v bbkos-qml-audit >/dev/null 2>&1; then
+        fail "bbkos-qml-audit not on PATH: cannot check QML imports"
+    elif audit=$(bbkos-qml-audit "$qs" 2>&1) && printf '%s\n' "$audit" | grep -q '^missing imports: 0$'; then
+        ok "quickshell QML imports complete"
+    else
+        fail "quickshell QML import audit failed ($qs):"; printf '%s\n' "$audit" | head -5 | sed 's/^/          /'
+    fi
+}
+
+# Reboot needed? Compare the running kernel with the installed package of its own flavour (linux-lts or linux).
+# pacman writes the mainline version as 7.2.11.arch1-1, uname as 7.2.11-arch1-1.
+check_kernel() {
+    local running pkg want installed
+    running=$(uname -r)
+    case "$running" in
+        *-lts) pkg=linux-lts; want=${running%-lts} ;;
+        *)     pkg=linux;     want=$running ;;
+    esac
+    installed=$(pacman -Q "$pkg" 2>/dev/null | awk '{print $2}')
+    if [ -n "$installed" ] && [ "$want" = "${installed/.arch/-arch}" ]; then
+        ok "running kernel matches installed $pkg ($installed)"
+    else
+        note "kernel $running running, $pkg $installed installed: reboot to apply an update"
+    fi
+}
+
+# Crashes since this graphical session started (a logout crashing its clients shows up in the NEXT login's history, not here).
+# One line per program: count, name and path. From the JSON listing: the text columns end in SIZE, not EXE (the old
+# `awk '{print $NF}'` printed "1 1.2G" for a Figma crash, 2026-10-28).
+check_crashes() {
+    local session_start dumps
+    session_start=$(systemctl --user show graphical-session.target -p ActiveEnterTimestamp --value 2>/dev/null)
+    dumps=$(coredumpctl list --since "$session_start" --json=short --no-pager 2>/dev/null | python3 -I -c '
+import collections, json, os, sys
+text = sys.stdin.read().strip()
+exes = collections.Counter(d.get("exe") or "?" for d in (json.loads(text) if text else []))
+for exe, n in sorted(exes.items()):
+    print(f"{n:3d} {os.path.basename(exe)} ({exe})")' 2>/dev/null)
+    if [ -z "$dumps" ]; then ok "no crashes (coredumps) in this session"; else fail "coredumps in this session:"; echo "$dumps" | sed 's/^/          /'; fi
+}
+
+# hyprland.lua loads the generated files under pcall, which keeps their errors out of `hyprctl configerrors`; it writes
+# them to hypr-load-errors instead (empty = all loaded; rewritten at every config load).
+check_hypr_load() {
+    local f=${BBKOS_HYPR_LOAD_ERRORS:-$HOME/.local/state/bbkos/hypr-load-errors}
+    if [ ! -e "$f" ]; then note "no record of the generated files loading ($f): written at the next hyprctl reload or login"
+    elif [ ! -s "$f" ]; then ok "hyprland loaded every generated file"
+    else fail "hyprland could not load a generated file (fix it, then hyprctl reload):"; head -5 "$f" | cut -c1-300 | sed 's/^/          /'; fi
+}
+
+echo "bbkos-check $(date '+%F %H:%M')"
+
+case "${BBKOS_CHECK_ONLY:-}" in
+    "") ;;
+    theme) check_theme; finish ;;
+    kernel) check_kernel; finish ;;
+    crashes) check_crashes; finish ;;
+    hyprload) check_hypr_load; finish ;;
+    *) fail "unknown BBKOS_CHECK_ONLY value '${BBKOS_CHECK_ONLY}' (only: theme, kernel, crashes, hyprload)"; finish ;;
+esac
+
+# 1. Unmerged package config files: merge with `pacdiff`.
+unmerged=$(find "${BBKOS_ETC:-/etc}" \( -name '*.pacnew' -o -name '*.pacsave' \) 2>/dev/null)
+if [ -z "$unmerged" ]; then ok "no unmerged .pacnew/.pacsave files"; else fail "unmerged config files (run pacdiff):"; echo "$unmerged" | sed 's/^/          /'; fi
+
+# 2. Failed systemd units.
+sys_failed=$(systemctl --failed --no-legend 2>/dev/null)
+usr_failed=$(systemctl --user --failed --no-legend 2>/dev/null)
+if [ -z "$sys_failed$usr_failed" ]; then ok "no failed systemd units"; else fail "failed units:"; printf '%s\n%s\n' "$sys_failed" "$usr_failed" | sed '/^$/d; s/^/          /'; fi
+
+# 3. Hyprland config errors (Lua config: a Hyprland update can break it).
+cfg=$(hyprctl configerrors 2>/dev/null | sed '/^$/d')
+if [ -z "$cfg" ]; then ok "hyprland config has no errors"; else fail "hyprland config errors:"; echo "$cfg" | sed 's/^/          /'; fi
+check_hypr_load
+
+check_theme
+
+# 4. Session services and Quickshell log (Quickshell is pre-1.0: its API can change between releases).
+for unit in quickshell hypridle cliphist; do
+    if systemctl --user is-active --quiet "$unit.service"; then ok "$unit.service active"; else fail "$unit.service is not active"; fi
+done
+# Only this service run: errors from the previous session's logout (compositor gone, clients abort) are not failures here.
+qs_inv=$(systemctl --user show quickshell.service -p InvocationID --value 2>/dev/null)
+qs_errors=$(journalctl --user "_SYSTEMD_INVOCATION_ID=$qs_inv" -p err --no-pager -q 2>/dev/null | wc -l)
+if [ "$qs_errors" -eq 0 ]; then ok "quickshell logged no errors in this run"; else fail "quickshell logged $qs_errors error line(s): journalctl --user _SYSTEMD_INVOCATION_ID=$qs_inv -p err"; fi
+
+check_crashes
+
+# 5. Lock screen sanity. hyprlock exists only while locked and exits on unlock, so a hyprlock process while
+#    the session is unlocked is a stray: the stock `pidof hyprlock` guard would then skip every later lock.
+last_lock_event=$(journalctl --user -u hypridle.service -b -o cat --no-pager 2>/dev/null | grep -E 'Wayland session got (locked|unlocked)' | tail -1)
+count=$(pgrep -xc hyprlock)
+if [ "$count" -gt 1 ]; then
+    fail "$count hyprlock processes (expected at most 1)"
+elif [ "$count" -eq 1 ] && printf '%s' "$last_lock_event" | grep -q unlocked; then
+    fail "hyprlock is running but the session is unlocked: stray process, kill it (pkill -x hyprlock)"
+else
+    ok "no stray hyprlock"
+fi
+
+# 6. Sleep configuration: a forgotten test drop-in changes how long the laptop waits before hibernating.
+extra=$(ls /etc/systemd/sleep.conf.d/ 2>/dev/null | grep -v '^bbkos\.conf$')
+delay=$(systemd-analyze cat-config systemd/sleep.conf 2>/dev/null | grep -E '^HibernateDelaySec=' | tail -1)
+if [ -n "$extra" ]; then fail "unexpected sleep drop-in(s): $extra ($delay)"; else ok "sleep config as designed ($delay)"; fi
+
+# 6b. Resources that fail slowly: disk space, battery policy, memory protection, off-disk copy of this repo.
+avail_g=$(df --output=avail -BG / | tail -1 | tr -dc 0-9); used_pct=$(df --output=pcent / | tail -1 | tr -dc 0-9)
+if [ "$avail_g" -lt 20 ] || [ "$used_pct" -ge 85 ]; then fail "root filesystem low: ${avail_g} GiB free, ${used_pct} % used (snapshots, Gradle and Android caches grow)"; else ok "root filesystem ${used_pct} % used, ${avail_g} GiB free"; fi
+upower_conf=$(cat /etc/UPower/UPower.conf /etc/UPower/UPower.conf.d/*.conf 2>/dev/null)
+crit=$(printf '%s\n' "$upower_conf" | grep -E '^CriticalPowerAction=' | tail -1 | cut -d= -f2)
+pct_act=$(printf '%s\n' "$upower_conf" | grep -E '^PercentageAction=' | tail -1 | cut -d= -f2 | cut -d. -f1)
+if [ "$crit" = Hibernate ] && [ "${pct_act:-0}" -ge 5 ]; then ok "battery policy: hibernate at ${pct_act} %"; else fail "battery policy is '${crit:-?}' at ${pct_act:-?} % (want Hibernate at 5 % or more): run scripts/task13-hardening.sh"; fi
+if [ "$(systemctl is-enabled systemd-oomd.service 2>/dev/null)" = enabled ]; then ok "systemd-oomd enabled"; else note "no out-of-memory protection: a runaway process (Gradle, a browser) can freeze the machine (decision pending)"; fi
+yay_mb=$(du -sm "$HOME/.cache/yay" 2>/dev/null | cut -f1)
+if [ "${yay_mb:-0}" -gt 300 ]; then note "AUR build leftovers: ${yay_mb} MB in ~/.cache/yay: run bbkos-clean"; else ok "yay cache ${yay_mb:-0} MB"; fi
+if [ -z "$(git -C "$HOME/.local/share/bbkos/repo" remote 2>/dev/null)" ]; then
+    note "~/.local/share/bbkos/repo has no git remote: the docs and dotfiles exist only on this disk"
+else
+    ahead=$(git -C "$HOME/.local/share/bbkos/repo" rev-list --count '@{u}..HEAD' 2>/dev/null || echo "?")
+    dirty=$(git -C "$HOME/.local/share/bbkos/repo" status --porcelain 2>/dev/null | wc -l)
+    if [ "$ahead" = 0 ] && [ "$dirty" -eq 0 ]; then ok "~/.local/share/bbkos/repo is pushed (nothing unpushed, nothing uncommitted)"; else note "~/.local/share/bbkos/repo backup is stale: ${ahead} commit(s) not pushed, ${dirty} uncommitted change(s): git -C ~/.local/share/bbkos/repo push"; fi
+fi
+
+# 6c. Slow failures found in the 2026-10-21 audit (docs/modules/failure-modes.md).
+# Hibernate is the battery safety net (UPower acts at 5 %): it needs the resume device on the kernel command line and
+# swap at least as big as RAM. A recreated swapfile gets a new resume_offset and hibernate then fails silently.
+mem_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+swapfile_kb=$(swapon --show=NAME,SIZE --bytes --noheadings 2>/dev/null | awk '$1 !~ /zram/ {s += $2} END {print int(s / 1024)}')
+if ! grep -q 'resume=' /proc/cmdline; then
+    fail "hibernate: no resume= on the kernel command line (the 5 % battery action would fail)"
+elif [ "${swapfile_kb:-0}" -lt "${mem_kb:-0}" ]; then
+    fail "hibernate: disk swap is $(( ${swapfile_kb:-0} / 1024 )) MiB, smaller than RAM ($(( ${mem_kb:-0} / 1024 )) MiB)"
+elif [ "$(cat /sys/power/resume_offset 2>/dev/null)" != "$(sed -n 's/.*resume_offset=\([0-9]*\).*/\1/p' /proc/cmdline)" ]; then
+    fail "hibernate: /sys/power/resume_offset does not match the kernel command line"
+else
+    ok "hibernate ready: resume= set, disk swap $(( swapfile_kb / 1024 )) MiB >= RAM"
+fi
+# Root helpers are installed COPIES: an edit in the repo does nothing until the installer is run again.
+for pair in "power/bbkos-power-apply:/usr/local/sbin/bbkos-power-apply:install-power-helper.sh" \
+            "power/bbkos-logind-apply:/usr/local/sbin/bbkos-logind-apply:install-logind-helper.sh" \
+            "touchpad/bbkos-touchpad-reload:/usr/local/sbin/bbkos-touchpad-reload:install-touchpad-helper.sh" \
+            "scripts/bbkos-grub-reinstall:/usr/local/bin/bbkos-grub-reinstall:task14-oomd-grub.sh"; do
+    IFS=: read -r src dst installer <<<"$pair"
+    if [ ! -e "$dst" ]; then note "root helper $dst is not installed (sudo scripts/$installer)"
+    elif cmp -s "$HOME/.local/share/bbkos/repo/$src" "$dst"; then ok "root helper $(basename "$dst") matches the repo"
+    else fail "root helper $dst differs from ~/.local/share/bbkos/repo/$src: rerun scripts/$installer with sudo"; fi
+done
+esp_pct=$(df --output=pcent /efi 2>/dev/null | tail -1 | tr -dc 0-9)
+if [ -n "$esp_pct" ] && [ "$esp_pct" -ge 90 ]; then fail "the EFI partition is ${esp_pct} % full: grub-install may fail on the next grub upgrade"; fi
+if [ "$(systemctl is-enabled btrfs-scrub@-.timer 2>/dev/null)" = enabled ]; then ok "monthly btrfs scrub enabled"; else note "no scheduled btrfs scrub: silent corruption is not looked for (sudo systemctl enable --now btrfs-scrub@-.timer)"; fi
+
+# 7. Reboot needed? Compare the running kernel with the installed package.
+check_kernel
+
+# 8. Snapshots (needs ALLOW_USERS in the snapper config, otherwise snapper needs root).
+snaps=$(snapper -c root list --columns number,type,date,description 2>/dev/null | tail -3)
+if [ -n "$snaps" ]; then ok "latest snapshots:"; echo "$snaps" | sed 's/^/          /'; else note "snapshots not readable as a user (set ALLOW_USERS in /etc/snapper/configs/root, or run: sudo snapper -c root list)"; fi
+
+finish

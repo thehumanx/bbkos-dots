@@ -1,0 +1,4 @@
+Packages:
+  Package [com.instagram.android] (6586046):
+    codePath=/data/app/~~Rd5-XifvndbYFQ56pM-_ow==/com.instagram.android-gtZQLa1TnFR3zy5qRYTJ3g==
+    pkgFlags=[ HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE LARGE_HEAP ]

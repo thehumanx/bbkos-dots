@@ -1,0 +1,13 @@
+#!/bin/sh
+# Fake matugen: prints the real sample JSON. Controls (environment):
+#   FAKE_MATUGEN_LOG    append one line per call (the argv)
+#   FAKE_MATUGEN_SLEEP  seconds to sleep before answering
+#   FAKE_MATUGEN_FAIL   non-empty: fail like the real one (rc 1)
+[ -n "${FAKE_MATUGEN_LOG:-}" ] && echo "$*" >> "$FAKE_MATUGEN_LOG"
+[ -n "${FAKE_MATUGEN_SLEEP:-}" ] && sleep "$FAKE_MATUGEN_SLEEP"
+if [ -n "${FAKE_MATUGEN_FAIL:-}" ]; then
+    echo "Error: " >&2
+    echo "   0: Failed to get source color." >&2
+    exit 1
+fi
+exec cat "$(dirname "$0")/../matugen-sample.json"

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# bbkos-brightness {up|down|up1|down1}
+# Changes the brightness of the monitor under the mouse pointer by 5 %, or 1 % at the dark end (up below 5 %, down at 5 % or below; up1 and down1: always 1 %, the precise keys) (the laptop panel on its 1-100 % perceptual scale, see brightness.py,
+# an external monitor over DDC/CI through ddcutil; see `bbkos-display brightness --help`). Then shows the Quickshell
+# OSD (the backlight emits no change events, so the shell is told explicitly) and refreshes that monitor's widget.
+# A monitor that cannot be controlled (no ddcutil, DDC/CI off) gets a notification, never the laptop's brightness.
+set -euo pipefail
+
+case "${1:-}" in
+    up)    arg=(--key up) ;;
+    down)  arg=(--key down) ;;
+    up1)   arg=(--step 1) ;;
+    down1) arg=(--step -1) ;;
+    *)    echo "usage: bbkos-brightness {up|down|up1|down1}" >&2; exit 2 ;;
+esac
+
+if ! out=$(bbkos-display brightness @cursor "${arg[@]}" 2>&1); then
+    notify-send -a bbkos -u low "Brightness" "${out:-could not change the brightness}" >/dev/null 2>&1 || true
+    exit 0
+fi
+read -r name percent < <(python3 -I -c 'import json, sys; d = json.load(sys.stdin); print(d["name"], d["percent"])' <<<"$out")
+qs ipc call osd brightnessOn "$percent" "$name" >/dev/null 2>&1 || true
+qs ipc call display refreshBrightness "$name" >/dev/null 2>&1 || true

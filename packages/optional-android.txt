@@ -1,0 +1,4 @@
+# --with android: the Android apps window and screen mirroring
+android-tools
+android-udev
+scrcpy

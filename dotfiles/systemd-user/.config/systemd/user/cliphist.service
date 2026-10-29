@@ -1,0 +1,17 @@
+[Unit]
+Description=Clipboard history recorder (cliphist)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+# Secrets (password-manager copies) are skipped by bbkos-clip-store, which also keeps one entry per copy.
+# Two watchers, text and images (2026-10-28; cliphist's README runs the same pair), in one unit so a stop wipes both.
+# If either ends, the unit fails and Restart starts both again (and ExecStopPost wipes, as on any stop).
+ExecStart=/usr/bin/bash -c 'wl-paste --type text --watch %h/.local/bin/bbkos-clip-store text & wl-paste --type image --watch %h/.local/bin/bbkos-clip-store image & wait -n; exit 1'
+# History lives only for the session: wipe it when the service stops (logout, shutdown).
+ExecStopPost=/usr/bin/cliphist wipe
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target

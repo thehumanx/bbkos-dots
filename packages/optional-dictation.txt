@@ -1,0 +1,2 @@
+# --with dictation: speech to text on this machine (Voxtype). AUR, built from source.
+voxtype

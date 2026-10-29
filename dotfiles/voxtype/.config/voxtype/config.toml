@@ -1,0 +1,41 @@
+# Voxtype (docs/modules/dictation.md): speech to text on this machine. Based on Omarchy's default config.
+# Started as a systemd user service; Super+Ctrl+X (bbkos-keybinds preset dictation-toggle) runs `voxtype record toggle`.
+
+# The daemon writes "idle", "recording" or "transcribing" here ($XDG_RUNTIME_DIR/voxtype/state); `voxtype record toggle`
+# and `voxtype status` need it.
+state_file = "auto"
+
+[hotkey]
+# Off: the key is a Hyprland bind, so Voxtype never reads the keyboard (no `input` group needed).
+enabled = false
+
+[audio]
+device = "default"
+sample_rate = 16000
+# Safety limit for one recording, in seconds.
+max_duration_secs = 60
+# Pause media players (MPRIS) while recording.
+pause_media = true
+
+[whisper]
+# English only: the .en models are faster and more accurate for English than the multilingual ones.
+model = "small.en"
+language = "en"
+# Load the model when recording starts and free it after (about 600 MB back while idle; ~0.6 s load on the GPU).
+on_demand_loading = true
+translate = false
+
+[output]
+# Type at the cursor (wtype); copy to the clipboard when typing fails.
+mode = "type"
+fallback_to_clipboard = true
+type_delay_ms = 1
+
+[output.notification]
+on_recording_start = false
+on_recording_stop = false
+on_transcription = false
+
+[osd]
+# Off: the floating waveform panel keeps a GTK4 process (about 75 MB) resident. The privacy widget already shows the microphone.
+enabled = false

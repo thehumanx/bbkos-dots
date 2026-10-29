@@ -1,0 +1,1414 @@
+{
+  "version": 1,
+  "binds": [
+    {
+      "id": "launch-terminal",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "Q"
+      },
+      "action": {
+        "type": "preset",
+        "id": "launch-terminal"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "close-window",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "C"
+      },
+      "action": {
+        "type": "preset",
+        "id": "close-window"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "logout",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "M"
+      },
+      "action": {
+        "type": "preset",
+        "id": "logout"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "launch-files",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "E"
+      },
+      "action": {
+        "type": "preset",
+        "id": "launch-files"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "claude-bbkos",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "Return"
+      },
+      "action": {
+        "type": "preset",
+        "id": "claude-bbkos"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-float",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "V"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-float"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "launcher",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "R"
+      },
+      "action": {
+        "type": "preset",
+        "id": "launcher"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "lock",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "L"
+      },
+      "action": {
+        "type": "preset",
+        "id": "lock"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "clipboard",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "V"
+      },
+      "action": {
+        "type": "preset",
+        "id": "clipboard"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "settings-window",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "comma"
+      },
+      "action": {
+        "type": "preset",
+        "id": "settings-window"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "power-panel",
+      "keys": {
+        "mods": [],
+        "key": "XF86PowerOff"
+      },
+      "action": {
+        "type": "preset",
+        "id": "power-panel"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "screenshot-region",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "S"
+      },
+      "action": {
+        "type": "preset",
+        "id": "screenshot-region"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "pseudo",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "P"
+      },
+      "action": {
+        "type": "preset",
+        "id": "pseudo"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-split",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "J"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-split"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "focus-left",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "left"
+      },
+      "action": {
+        "type": "preset",
+        "id": "focus-left"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "focus-right",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "right"
+      },
+      "action": {
+        "type": "preset",
+        "id": "focus-right"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "focus-up",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "up"
+      },
+      "action": {
+        "type": "preset",
+        "id": "focus-up"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "focus-down",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "down"
+      },
+      "action": {
+        "type": "preset",
+        "id": "focus-down"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-1",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "1"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-1"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-1",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "1"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-1"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-2",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "2"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-2"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-2",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "2"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-2"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-3",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "3"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-3"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-3",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "3"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-3"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-4",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "4"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-4"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-4",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "4"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-4"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-5",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "5"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-5"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-5",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "5"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-5"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-6",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "6"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-6"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-6",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "6"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-6"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-7",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "7"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-7"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-7",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "7"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-7"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-8",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "8"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-8"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-8",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "8"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-8"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-9",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "9"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-9"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-9",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "9"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-9"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-10",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "0"
+      },
+      "action": {
+        "type": "preset",
+        "id": "workspace-10"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-workspace-10",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "0"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-workspace-10"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "special-workspace",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "S"
+      },
+      "action": {
+        "type": "preset",
+        "id": "special-workspace"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "move-to-special",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "S"
+      },
+      "action": {
+        "type": "preset",
+        "id": "move-to-special"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "scroll-workspace-next",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "mouse_down"
+      },
+      "action": {
+        "type": "preset",
+        "id": "scroll-workspace-next"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "scroll-workspace-prev",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "mouse_up"
+      },
+      "action": {
+        "type": "preset",
+        "id": "scroll-workspace-prev"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "drag-window",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "mouse:272"
+      },
+      "action": {
+        "type": "preset",
+        "id": "drag-window"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": true
+      },
+      "enabled": true
+    },
+    {
+      "id": "resize-window",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "mouse:273"
+      },
+      "action": {
+        "type": "preset",
+        "id": "resize-window"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": true
+      },
+      "enabled": true
+    },
+    {
+      "id": "volume-up",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioRaiseVolume"
+      },
+      "action": {
+        "type": "preset",
+        "id": "volume-up"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "volume-down",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioLowerVolume"
+      },
+      "action": {
+        "type": "preset",
+        "id": "volume-down"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "volume-mute",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioMute"
+      },
+      "action": {
+        "type": "preset",
+        "id": "volume-mute"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "mic-mute",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioMicMute"
+      },
+      "action": {
+        "type": "preset",
+        "id": "mic-mute"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "brightness-up",
+      "keys": {
+        "mods": [],
+        "key": "XF86MonBrightnessUp"
+      },
+      "action": {
+        "type": "preset",
+        "id": "brightness-up"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "brightness-down",
+      "keys": {
+        "mods": [],
+        "key": "XF86MonBrightnessDown"
+      },
+      "action": {
+        "type": "preset",
+        "id": "brightness-down"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "media-next",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioNext"
+      },
+      "action": {
+        "type": "preset",
+        "id": "media-next"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "media-pause",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioPause"
+      },
+      "action": {
+        "type": "preset",
+        "id": "media-play-pause"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "media-play",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioPlay"
+      },
+      "action": {
+        "type": "preset",
+        "id": "media-play-pause"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "media-prev",
+      "keys": {
+        "mods": [],
+        "key": "XF86AudioPrev"
+      },
+      "action": {
+        "type": "preset",
+        "id": "media-prev"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "cycle-window-next",
+      "keys": {
+        "mods": [
+          "ALT"
+        ],
+        "key": "Tab"
+      },
+      "action": {
+        "type": "preset",
+        "id": "cycle-window-next"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "cycle-window-prev",
+      "keys": {
+        "mods": [
+          "ALT",
+          "SHIFT"
+        ],
+        "key": "Tab"
+      },
+      "action": {
+        "type": "preset",
+        "id": "cycle-window-prev"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-next-tab",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "Tab"
+      },
+      "action": {
+        "type": "preset",
+        "id": "scroll-workspace-next"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "workspace-prev-tab",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "Tab"
+      },
+      "action": {
+        "type": "preset",
+        "id": "scroll-workspace-prev"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "system-menu",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "L"
+      },
+      "action": {
+        "type": "preset",
+        "id": "power-panel"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "record-menu",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "R"
+      },
+      "action": {
+        "type": "preset",
+        "id": "record-menu"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "emoji-picker",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "semicolon"
+      },
+      "action": {
+        "type": "preset",
+        "id": "emoji-picker"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "dictation-toggle",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "X"
+      },
+      "action": {
+        "type": "preset",
+        "id": "dictation-toggle"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-fullscreen",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "F"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-fullscreen"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-maximize",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "ALT"
+        ],
+        "key": "F"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-maximize"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-tiled-fullscreen",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "CTRL"
+        ],
+        "key": "F"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-tiled-fullscreen"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-opaque",
+      "keys": {
+        "mods": [
+          "SUPER"
+        ],
+        "key": "BackSpace"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-opaque"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-gaps",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "BackSpace"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-gaps"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "toggle-bar",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "space"
+      },
+      "action": {
+        "type": "preset",
+        "id": "toggle-bar"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "stage-workspace",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "ALT"
+        ],
+        "key": "S"
+      },
+      "action": {
+        "type": "preset",
+        "id": "stage-workspace"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "ocr-text",
+      "keys": {
+        "mods": [
+          "SUPER",
+          "SHIFT"
+        ],
+        "key": "T"
+      },
+      "action": {
+        "type": "preset",
+        "id": "ocr-text"
+      },
+      "flags": {
+        "locked": false,
+        "repeating": false,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "volume-up-precise",
+      "keys": {
+        "mods": [
+          "ALT"
+        ],
+        "key": "XF86AudioRaiseVolume"
+      },
+      "action": {
+        "type": "preset",
+        "id": "volume-up-precise"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "volume-down-precise",
+      "keys": {
+        "mods": [
+          "ALT"
+        ],
+        "key": "XF86AudioLowerVolume"
+      },
+      "action": {
+        "type": "preset",
+        "id": "volume-down-precise"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "brightness-up-precise",
+      "keys": {
+        "mods": [
+          "ALT"
+        ],
+        "key": "XF86MonBrightnessUp"
+      },
+      "action": {
+        "type": "preset",
+        "id": "brightness-up-precise"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    },
+    {
+      "id": "brightness-down-precise",
+      "keys": {
+        "mods": [
+          "ALT"
+        ],
+        "key": "XF86MonBrightnessDown"
+      },
+      "action": {
+        "type": "preset",
+        "id": "brightness-down-precise"
+      },
+      "flags": {
+        "locked": true,
+        "repeating": true,
+        "mouse": false
+      },
+      "enabled": true
+    }
+  ]
+}

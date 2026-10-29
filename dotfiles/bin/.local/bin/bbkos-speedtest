@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# bbkos-speedtest: internet speed for the Wi-Fi popup (docs/modules/panels.md). `bbkos-speedtest ping` prints the
+# round trip in ms; `bbkos-speedtest down|up` prints the rate in Mbps once a second for SECONDS (default 8) and stops.
+# Method from Omarchy's omarchy-network-speedtest (MIT): parallel curl workers keep the link busy and the rate is read
+# from the interface's own byte counters, so curl's per-transfer figures and TLS overhead do not matter. Endpoints:
+# Cloudflare's public speed test (speed.cloudflare.com/__down and /__up, no token), not the fast.com token Omarchy
+# scrapes. Uses data: about the rate times the seconds (100 Mbps for 8 s is about 100 MB). Exit 1: no network or curl.
+set -euo pipefail
+
+what=${1:-}
+secs=${BBKOS_SPEEDTEST_SECONDS:-8}
+host=https://speed.cloudflare.com
+workers=6
+
+case "$what" in ping|down|up) ;; *) echo "usage: bbkos-speedtest ping|down|up" >&2; exit 2 ;; esac
+command -v curl >/dev/null || { echo "curl is not installed" >&2; exit 1; }
+
+if [ "$what" = ping ]; then
+    # Five TCP connects to the test host; the median, so one slow handshake does not count.
+    for _ in 1 2 3 4 5; do
+        curl -s -o /dev/null --max-time 3 -w '%{time_connect}\n' "$host/__down?bytes=0" || true
+    done | awk '$1 > 0 { v[n++] = $1 * 1000 } END {
+        if (n == 0) { print "no answer" > "/dev/stderr"; exit 1 }
+        asort(v); printf "%.0f\n", v[int((n + 1) / 2)] }'
+    exit
+fi
+
+iface=$(ip route get 1.1.1.1 2>/dev/null | awk '{ for (i = 1; i <= NF; i++) if ($i == "dev") { print $(i + 1); exit } }')
+[ -n "$iface" ] && [ -r "/sys/class/net/$iface/statistics/rx_bytes" ] || { echo "No network" >&2; exit 1; }
+counter=/sys/class/net/$iface/statistics/$([ "$what" = down ] && echo rx_bytes || echo tx_bytes)
+
+pids=()
+main=$$
+cleanup() { for p in "${pids[@]}"; do pkill -TERM -P "$p" 2>/dev/null || true; kill "$p" 2>/dev/null || true; done; }
+trap cleanup EXIT
+trap 'exit 143' TERM HUP INT
+
+# Each worker also watches this script: Quickshell kills it outright (SIGKILL) when the popup closes, so no trap runs,
+# and the workers would go on using data until their own time limit (seen 2026-10-23).
+worker() {
+    local end=$((SECONDS + secs + 1)) c
+    while [ $SECONDS -lt $end ] && kill -0 "$main" 2>/dev/null; do
+        if [ "$what" = down ]; then
+            curl -s -o /dev/null --max-time $((secs + 2)) "$host/__down?bytes=50000000" &
+        else
+            head -c 20000000 /dev/zero | curl -s -o /dev/null --max-time $((secs + 2)) --data-binary @- "$host/__up" &
+        fi
+        c=$!
+        while kill -0 "$c" 2>/dev/null; do
+            kill -0 "$main" 2>/dev/null || { kill "$c" 2>/dev/null; return 0; }
+            sleep 0.3
+        done
+    done
+}
+for ((i = 0; i < workers; i++)); do worker & pids+=("$!"); done
+
+before=$(cat "$counter")
+for ((t = 0; t < secs; t++)); do
+    sleep 1
+    after=$(cat "$counter")
+    awk -v a="$after" -v b="$before" 'BEGIN { r = (a < b) ? 0 : (a - b) * 8 / 1e6; printf (r < 10 ? "%.1f\n" : "%.0f\n"), r }'
+    before=$after
+done

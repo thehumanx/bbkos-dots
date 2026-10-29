@@ -1,0 +1,9 @@
+The MIT licence in LICENSE covers the code, configuration and documentation.
+
+assets/wallpaper.jpg is original artwork by the repository owner. All rights reserved: it is shipped as the default
+wallpaper so the screenshots match what you get, and may not be reused outside this project without permission.
+Replace it with your own (Settings > Appearance, or `bbkos-theme wallpaper set FILE`).
+
+Third-party software this repository installs or builds is under its own licence:
+- omasnap (screenshots, OCR, annotation) is built from source by scripts/install-omasnap.sh: github.com/omacom/omasnap
+- Hyprland, Quickshell, matugen, hyprlock, hypridle and every package in packages/*.txt

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# bbkos-lock-battery
+# The battery line of the lock screen (hyprlock label, see dotfiles/hypr/.config/hypr/hyprlock.conf): level icon and
+# percent, with a charging icon while the charger is connected. Prints nothing on a machine without a battery.
+bat=$(ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -1)
+[ -n "$bat" ] || exit 0
+# hyprlock runs this every second, so read with builtins (no forks)
+read -r pct < "$bat/capacity"
+read -r status < "$bat/status"
+if [ "$status" = Charging ]; then
+    icon="󰂄"
+else
+    if   [ "$pct" -ge 90 ]; then icon="󰁹"
+    elif [ "$pct" -ge 65 ]; then icon="󰂀"
+    elif [ "$pct" -ge 40 ]; then icon="󰁽"
+    elif [ "$pct" -ge 15 ]; then icon="󰁻"
+    else icon="󰁺"
+    fi
+fi
+printf '%s  %s%%' "$icon" "$pct"

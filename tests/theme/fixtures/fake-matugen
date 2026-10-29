@@ -1,0 +1,5 @@
+#!/bin/sh
+# Fake matugen: prints a failure like the real one does for a missing image.
+echo "Failed to get source color." >&2
+echo "Could not get source color from image" >&2
+exit 1

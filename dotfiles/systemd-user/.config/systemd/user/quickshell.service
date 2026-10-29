@@ -1,0 +1,33 @@
+[Unit]
+Description=Quickshell (bbkOS desktop shell)
+# If it cannot stay up there is no bar, no notification daemon, no launcher and no polkit agent: say so
+# through Hyprland itself (hyprctl notify needs no Quickshell).
+OnFailure=bbkos-shell-failed.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+ExecStart=/usr/bin/quickshell
+Restart=on-failure
+# Never an oomd victim: without it there is no bar, notification daemon, launcher or password prompt.
+ManagedOOMPreference=avoid
+RestartSec=2
+Slice=session.slice
+# GPU renderer (Qt default): smooth anti-aliased shapes, and shader effects for phase 3. The software renderer was
+# tried first (about 43 MB less memory) but draws rounded shapes with staircase edges; the owner wants no compromise
+# on visual quality. To go back: add `Environment=QT_QUICK_BACKEND=software` here.
+# Grayscale text smoothing. Qt Quick defaults to RGB-stripe (LCD) smoothing, which shows coloured fringes on the built-in
+# Samsung OLED (PenTile-style subpixels) and on a scaled display. (fontconfig `rgba=none` did not change it.)
+Environment=QSG_DISTANCEFIELD_ANTIALIASING=gray
+# Icon theme for tray items and launcher entries that name theme icons (Adwaita inherits AdwaitaLegacy and hicolor).
+# Without it Qt only searches hicolor and shows a missing-icon checkerboard. Phase 3 (theming) may change the theme.
+Environment=QS_ICON_THEME=Adwaita
+# Application list (launcher): the user manager's XDG_DATA_DIRS was set before Flatpak was installed, so Flatpak apps
+# (exports under %h/.local/share/flatpak and /var/lib/flatpak) were missing. Quickshell reads only this list.
+Environment=XDG_DATA_DIRS=%h/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share
+
+[Install]
+WantedBy=graphical-session.target

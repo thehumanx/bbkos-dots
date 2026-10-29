@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# bbkos-touchpad-reset: bring the touchpad back when it stops sending touches (no cursor, scrolling or gestures).
+# Reloads its I2C HID driver through the root helper installed by scripts/install-touchpad-helper.sh (one sudo run,
+# once). The touchscreen is reset too. Details: docs/modules/touchpad.md.
+helper=${BBKOS_TOUCHPAD_HELPER:-/usr/local/sbin/bbkos-touchpad-reload}
+
+note() { notify-send -a bbkos -u low "Touchpad" "$1" >/dev/null 2>&1 || true; echo "$1"; }
+
+if [ ! -x "$helper" ]; then
+    note "helper not installed: run scripts/install-touchpad-helper.sh with sudo"
+    exit 3
+fi
+if out=$(sudo -n "$helper" 2>&1); then
+    note "reset: ${out:-ok}"
+else
+    rc=$?
+    note "reset failed (exit $rc): ${out:-no output}"
+    exit "$rc"
+fi

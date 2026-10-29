@@ -1,0 +1,80 @@
+# Required. Official repos only. Nothing here is hardware specific.
+# session and compositor
+hyprland
+hyprlock
+hypridle
+hyprsunset
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+uwsm
+polkit
+gnome-keyring
+# shell and theming
+quickshell
+matugen
+adw-gtk-theme
+python-gobject
+# terminal, shell, files
+kitty
+fish
+starship
+stow
+thunar
+thunar-archive-plugin
+tumbler
+ffmpegthumbnailer
+gvfs
+zenity
+# clipboard, screenshots, OCR, recording
+wl-clipboard
+cliphist
+wtype
+grim
+slurp
+tesseract
+tesseract-data-eng
+gpu-screen-recorder
+ffmpeg
+mpv
+imv
+# sound
+pipewire
+pipewire-pulse
+pipewire-alsa
+pipewire-jack
+wireplumber
+gst-plugin-pipewire
+libpulse
+playerctl
+# network, bluetooth, power
+networkmanager
+bluez
+bluez-utils
+bluetui
+power-profiles-daemon
+upower
+iw
+qrencode
+# brightness (laptop panel and DDC/CI monitors)
+brightnessctl
+ddcutil
+# small tools the scripts call
+jq
+socat
+inotify-tools
+libnotify
+usbutils
+git
+# fonts
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+noto-fonts-cjk
+ttf-dejavu
+ttf-liberation
+adwaita-fonts
+adwaita-cursors
+# screenshots tool omasnap is built from source (scripts/install-omasnap.sh); its build dependencies:
+cmake
+ninja
+layer-shell-qt

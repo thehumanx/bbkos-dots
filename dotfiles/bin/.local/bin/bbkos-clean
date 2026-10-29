@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# bbkos-clean [--apply]
+# Reclaims the space AUR builds leave behind, keeping what is worth keeping. Dry run by default.
+#
+# Policy (see docs/decisions/0004-applications.md):
+#   - everything git does not track in an AUR package folder (build trees src/ and pkg/, downloaded source archives
+#     such as a vendor .deb, logs): always deleted, only needed while building. Tracked files are never touched;
+#   - the finished package (*.pkg.tar.*): keep the NEWEST per package, delete older ones. It is the only rollback
+#     copy of an AUR -bin package whose vendor removes old downloads (a rebuild of an old version can fail);
+#   - AUR packages that are no longer installed: the whole cache folder goes;
+#   - yay's git clones (.git) of installed packages are NEVER touched: yay diffs the next PKGBUILD against them,
+#     which is the supply-chain review of every update.
+# Only reports (never deletes): pacman's own cache (paccache.timer handles it), orphans, large files in ~/Downloads.
+#
+# Safety: refuses while yay/makepkg runs; stays inside the yay cache; never follows or deletes through symlinks.
+# Test hooks (only honoured for paths under /tmp): BBKOS_YAY_CACHE=<dir>, BBKOS_INSTALLED_LIST=<file of names>.
+set -u
+
+apply=0
+case "${1:-}" in
+    "") ;;
+    --apply) apply=1 ;;
+    *) echo "usage: bbkos-clean [--apply]" >&2; exit 2 ;;
+esac
+
+human() { numfmt --to=iec --suffix=B "${1:-0}" 2>/dev/null || echo "${1:-0}B"; }
+bytes() { du -sb -- "$1" 2>/dev/null | cut -f1; }
+
+# --- where, and is it safe to touch ---
+default_cache=$(realpath -- "$HOME/.cache/yay" 2>/dev/null || echo "$HOME/.cache/yay")
+cache=$default_cache
+if [ -n "${BBKOS_YAY_CACHE:-}" ]; then
+    cache=$(realpath -- "$BBKOS_YAY_CACHE" 2>/dev/null || true)
+    case "$cache" in /tmp/?*) ;; *) echo "refusing: BBKOS_YAY_CACHE must be a directory under /tmp" >&2; exit 1 ;; esac
+fi
+[ -d "$cache" ] || { echo "no yay cache at $cache: nothing to do"; exit 0; }
+[ "$cache" != "/" ] && [ "$cache" != "$HOME" ] || { echo "refusing: unsafe cache path" >&2; exit 1; }
+
+if pgrep -u "$USER" -x yay >/dev/null || pgrep -u "$USER" -x makepkg >/dev/null; then
+    echo "refusing: yay or makepkg is running (a build in progress must not lose its files)" >&2
+    exit 1
+fi
+
+# --- what counts as installed: package names and package bases (split packages) ---
+if [ -n "${BBKOS_INSTALLED_LIST:-}" ]; then
+    installed=$(cat -- "$BBKOS_INSTALLED_LIST")
+else
+    installed=$( { pacman -Qq; grep -rhx -A1 '%BASE%' /var/lib/pacman/local/*/desc 2>/dev/null | grep -v -e '^%BASE%$' -e '^--$'; } | sort -u )
+fi
+[ -n "$installed" ] || { echo "refusing: the list of installed packages is empty (pacman -Qq failed?), so every folder would look orphaned" >&2; exit 1; }
+is_installed() { printf '%s\n' "$installed" | grep -Fxq -- "$1"; }
+
+mode=$([ "$apply" = 1 ] && echo "APPLYING" || echo "dry run (nothing is deleted; use --apply)")
+echo "bbkos-clean: $mode"
+echo "yay cache: $cache ($(human "$(bytes "$cache")"))"
+echo
+
+total=0
+remove() {   # remove <path> <reason>: count it, delete it only with --apply
+    local path=$1 reason=$2 n
+    n=$(bytes "$path"); n=${n:-0}
+    total=$((total + n))
+    printf '  %-9s %s  (%s)\n' "$(human "$n")" "${path#"$cache"/}" "$reason"
+    [ "$apply" = 1 ] && rm -rf -- "$path"
+}
+
+for dir in "$cache"/*/; do
+    dir=${dir%/}
+    [ -d "$dir" ] && [ ! -L "$dir" ] || continue
+    name=$(basename "$dir")
+
+    # names of the packages built here (from the finished files), to decide "installed or not"
+    built_names=$(ls -1 "$dir"/*.pkg.tar.* 2>/dev/null | sed -E 's|.*/||; s/-[^-]+-[0-9]+(\.[0-9]+)?-[^-]+\.pkg\.tar\..*$//' | sort -u)
+    keep=0
+    is_installed "$name" && keep=1
+    for b in $built_names; do is_installed "$b" && keep=1; done
+
+    if [ "$keep" = 0 ]; then
+        remove "$dir" "no longer installed: whole folder"
+        continue
+    fi
+
+    # Everything git does NOT track, except the finished packages: build trees (src/, pkg/), downloaded source
+    # archives, logs. Tracked files (PKGBUILD, .SRCINFO, local patches and .install scripts) are never touched.
+    if [ -d "$dir/.git" ]; then
+        while IFS= read -r -d '' entry; do
+            entry=${entry%/}
+            case "$entry" in *.pkg.tar.*|.git|*/*) continue ;; esac     # finished packages are handled below; top level only
+            path="$dir/$entry"
+            if [ -L "$path" ]; then echo "  skipped   $name/$entry is a symlink: not touched" >&2; continue; fi
+            if [ -d "$path" ]; then remove "$path" "build tree"; else remove "$path" "downloaded source / build leftover"; fi
+        done < <(git -C "$dir" ls-files -z --others --directory 2>/dev/null)
+    else
+        echo "  skipped   $name is not a git clone: left alone" >&2
+    fi
+
+    # older finished packages: keep the newest one (version order by pacman's own tool)
+    if ls "$dir"/*.pkg.tar.* >/dev/null 2>&1; then
+        old=$(paccache -dvk1 -c "$dir" 2>/dev/null | grep -E '\.pkg\.tar\.' | sed 's/^[[:space:]]*//' | grep -v -e '^==>' -e '^::')
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            case "$f" in /*) ;; *) f="$dir/$f" ;; esac
+            case "$f" in "$dir"/*) [ -f "$f" ] && [ ! -L "$f" ] && remove "$f" "older finished package" ;; esac
+        done <<< "$old"
+    fi
+done
+
+echo
+if [ "$apply" = 1 ]; then
+    echo "freed: $(human "$total")   yay cache now: $(human "$(bytes "$cache")")"
+else
+    echo "would free: $(human "$total")"
+fi
+
+# --- reported only ---
+echo
+echo "not deleted, for your information:"
+printf '  pacman cache      %s (paccache.timer keeps the 3 newest versions; one copy per installed package is normal)\n' "$(du -sh /var/cache/pacman/pkg 2>/dev/null | cut -f1)"
+orphans=$(pacman -Qdtq 2>/dev/null)
+if [ -n "$orphans" ]; then echo "  orphaned packages: $(echo $orphans)   remove with: sudo pacman -Rns \$(pacman -Qdtq)"; else echo "  orphaned packages none"; fi
+big=$(find "$HOME/Downloads" -maxdepth 1 -type f -size +50M 2>/dev/null)
+if [ -n "$big" ]; then echo "  large downloads   (review by hand):"; echo "$big" | while read -r f; do printf '      %s  %s\n' "$(human "$(stat -c %s "$f")")" "${f#"$HOME"/}"; done; fi
+exit 0

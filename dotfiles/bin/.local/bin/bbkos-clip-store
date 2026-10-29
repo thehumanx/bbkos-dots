@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# bbkos-clip-store [text|image]: called by `wl-paste --watch` (cliphist.service runs one watcher for text and one for
+# images) with the new clipboard content on stdin. Stores it in cliphist unless the source marked it secret. Password
+# managers set the `x-kde-passwordManagerHint` clipboard type; cliphist itself does not check for it.
+# How many entries cliphist keeps, and whether images are kept, come from the Privacy and wellbeing page (bbkos-theme
+# renders clipboard.conf; 100 entries and images on without it).
+# One copy offers several types, and both watchers see it. So a copy is stored once:
+# - image mode skips a copy that also offers plain text (rich text with a rendered picture: the text is what was copied),
+#   copies over 10 MB, and everything while `images = false`;
+# - text mode skips a copy that offers an image but no plain text (a browser's "Copy image" also offers an <img> HTML).
+mode=${1:-text}
+types=$(wl-paste --list-types 2>/dev/null)
+drain() { cat >/dev/null; exit 0; }
+grep -qx 'x-kde-passwordManagerHint' <<<"$types" && drain
+
+conf="${BBKOS_STATE_DIR:-$HOME/.local/state/bbkos/theme}/clipboard.conf"
+max=$(sed -n 's/^max-items = \([0-9][0-9]*\)$/\1/p' "$conf" 2>/dev/null | head -n1)
+images=$(sed -n 's/^images = \(true\|false\)$/\1/p' "$conf" 2>/dev/null | head -n1)
+
+if [ "$mode" = image ]; then
+    [ "$images" = false ] && drain
+    grep -qx 'text/plain\(;charset=utf-8\)\?' <<<"$types" && drain
+    limit=$((10 * 1024 * 1024))
+    tmp=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/bbkos-clip.XXXXXX") || drain
+    trap 'rm -f "$tmp"' EXIT
+    head -c $((limit + 1)) >"$tmp"
+    cat >/dev/null                               # anything past the limit
+    [ "$(stat -c %s "$tmp")" -gt "$limit" ] && exit 0
+    cliphist -max-items "${max:-100}" store <"$tmp"
+    exit $?
+fi
+
+if grep -q '^image/' <<<"$types" && ! grep -qx 'text/plain\(;charset=utf-8\)\?' <<<"$types"; then
+    drain
+fi
+exec cliphist -max-items "${max:-100}" store

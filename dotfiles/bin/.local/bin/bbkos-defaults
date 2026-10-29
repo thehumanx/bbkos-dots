@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""bbkos-defaults: default apps for links, folders, images, video, music, PDFs, text and mail (docs/modules/settings-app.md)."""
+import os
+import sys
+
+sys.dont_write_bytecode = True  # the package is Stow-linked into the repo
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "lib"))
+
+from bbkos_theme.defaultapps import main  # noqa: E402
+
+sys.exit(main(sys.argv[1:]))
