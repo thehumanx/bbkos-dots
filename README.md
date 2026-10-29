@@ -89,10 +89,12 @@ uwsm start hyprland-uwsm.desktop
 
 | | |
 |---|---|
-| `Super+Q` terminal · `Super+E` files · `Super+C` close · `Super+V` float | `Super+R` launcher · `Super+,` settings · `Super+L` system menu |
-| `Super+1…0` workspace · `Super+Shift+1…0` move window · `Alt+Tab` cycle | `Super+Alt+S` stage mode · `Super+F` fullscreen · `Super+S` scratch workspace |
-| `Super+Shift+S` screenshot · `Super+Shift+T` copy text from screen (OCR) · `Super+Shift+R` record | `Super+Ctrl+V` clipboard · `Super+;` emoji · `Super+Ctrl+X` dictation |
-| `Super+Ctrl+L` lock | `Super+Shift+Space` hide the bar |
+| **Apps** | `Super+Q` terminal · `Super+E` files · `Super+R` launcher · `Super+,` settings · `Super+L` system menu |
+| **Windows** | `Super+C` close · `Super+V` float · `Super+F` fullscreen · `Alt+Tab` cycle · `Super+Alt+S` stage mode |
+| **Workspaces** | `Super+1…0` go to · `Super+Shift+1…0` move the window there · `Super+S` scratch workspace |
+| **Capture** | `Super+Shift+S` screenshot · `Super+Shift+T` copy text from the screen (OCR) · `Super+Shift+R` record menu |
+| **Tools** | `Super+Ctrl+V` clipboard history · `Super+;` emoji · `Super+Ctrl+X` dictation (opt-in) |
+| **Session** | `Super+Ctrl+L` lock · `Super+Shift+Space` hide the bar |
 
 All of them are editable in Settings > Keyboard > Shortcuts, or `bbkos-keybinds`.
 
