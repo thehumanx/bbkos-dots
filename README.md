@@ -28,6 +28,7 @@ The parts that set this desktop apart. Each one is a switch you can turn off.
 - **Global menu.** `Super+R` is one search box for apps, web apps, commands, settings pages *and single settings*, plus a calculator and a web search; it ranks like Raycast and learns what you open. Inspired by typecraft's Raycast-style launcher for Linux ([oma-cast](https://github.com/typecraft-dev/oma-cast)); the ranking follows the behaviour its spec documents, the code is written from scratch.
 - **Notification panel.** The shell is the notification daemon, so history is part of the desktop: the bell in the bar shows the unread count and opens a sheet down the right edge. Read state is manual (a click marks one read, "Mark all read", two-click "Clear all"), a right click closes a popup without triggering its action, and there is a do-not-disturb switch, per-app mute and a critical-urgency style. Short state notices (charger, sound output, VPN) are small toasts that never enter the history.
 - **Bar popups.** Battery, sound, Wi-Fi, Bluetooth, display, calendar and timer open as small cards under the widget you clicked, in the same look as the settings window. Inspired by Omarchy's widget popups.
+- **Privacy indicator.** A warning-coloured glyph appears in the bar only while an app is using the microphone, the camera or a screen share, and takes no space the rest of the time. It reads PipeWire's streams and, for the camera, also notices programs that open `/dev/video*` themselves (Vivaldi, Electron apps, most call clients), which PipeWire never sees. Each of the three can be switched off in Settings > Privacy and wellbeing, and the page lists which app is using what right now. Inspired by the indicators in GNOME, COSMIC and DankMaterialShell.
 
 ## What is in it
 
@@ -37,6 +38,56 @@ The parts that set this desktop apart. Each one is a switch you can turn off.
 - **Laptop:** battery and power-profile popups, lid actions, optional root helpers for power limits, charge mode and a touchpad stall fix.
 - **Extras (opt in):** local dictation (Voxtype), Android app manager, screen sharing over VNC, btrfs snapshots.
 - **Agent skill:** `.claude/skills/bbkos` plus `AGENTS.md`, so Claude Code (or any agent) can change the desktop without breaking it. See [Using an agent](#using-an-agent).
+
+## Settings at a glance
+
+`Super+,` opens the settings window: 16 pages in four groups, 233 searchable rows. Every value lives in `~/.config/bbkos/settings.json`; `bbkos-theme set section.key value` changes the same thing from a terminal.
+
+| Group | Page (tabs) | What you can change |
+|---|---|---|
+| **Look** | **Appearance** (Wallpaper and colours, Style, Terminal) | wallpaper picker; dark or light, or switch by time of day; colour scheme (9 styles), contrast, accent strength; grid mode, font, text size, radii, gaps, popup shadow, reduced motion; kitty font, padding and opacity |
+| | **Bar** (Layout, Look, Widgets) | position (any edge), thickness, floating, hugging, widget order by drag; opacity, blur, pills, icon style; clock format, hover date, calendar week start, week numbers and moon, music widget width |
+| | **Windows** (Look, Behaviour, Stage mode) | gaps, border, rounding, opacity, shadow, blur, animation speed; focus follows mouse, workspace switching; stage mode default and the rail's size, position and look |
+| | **Lock screen** | avatar picture, position and size of every element (clock, date, welcome text, password field, battery), blur, brightness with auto-dim, 12/24 h |
+| **Desktop** | **Notifications** | do not disturb, popup timeout and corner, history size, per-app mute, critical style |
+| | **Apps** (Default apps, Startup, Launcher) | default browser, terminal, files, media; apps that start at login; menu web-search engine, calculator, forget what it learned |
+| | **Capture and camera** | screenshot folder and editor; recording area, audio, quality and folder; webcam exposure, white balance, power-line frequency |
+| | **Privacy and wellbeing** | mic, camera and screen-sharing indicators; clipboard history (text and images); screen time and break reminders |
+| **Devices** | **Network** | Wi-Fi, saved connections, Tailscale, screen mirroring to a phone |
+| | **Displays** | per-monitor scale, resolution, layout, brightness (DDC/CI for external ones), night-light schedule |
+| | **Sound** | outputs, inputs, volume, per-app volume |
+| | **Power and sleep** (When idle, Lid and power button, Power profiles) | idle dim, lock and sleep timers, keep-awake; lid and power-button actions; profile tuning (CPU energy preference, turbo, power cap, battery charge mode) with the root helper |
+| | **Keyboard** (Typing, Shortcuts, Dictation) | layout, repeat rate; rebind any shortcut; dictation status (service, backend, model, language; read-only) |
+| | **Mouse and touchpad** (Mouse and cursor, Touchpad, Gestures) | speed, acceleration, natural scrolling, cursor theme and size; tap, scroll, disable while typing; what three- and four-finger swipes do |
+| **System** | **Accessibility** | reduced motion, contrast, larger text and cursor, slow keys |
+| | **About and system** (About and updates, Reset) | system info and update check; reset a section, a page or everything |
+
+Anything not in the window is a plain key in the JSON file; `bbkos-theme defaults` prints them all with their defaults.
+
+## Bar widgets at a glance
+
+Sixteen widgets, placed in the start, centre and end of the bar. Reorder them by dragging in Settings > Bar > Layout; the icon sets and "icons only" are in Bar > Look. Widgets marked *when* hide themselves the rest of the time.
+
+| Widget | Shows | Click · scroll · hover | Shown |
+|---|---|---|---|
+| **Overview** | grid icon, accent while the overview is open | click opens or closes the workspace overview | always |
+| **Workspaces** | one number per workspace | click activates | always |
+| **Clock** | day, date and time (`Sun 25, 5:26`) | click opens the calendar; hover shows the full date | always |
+| **Music** | title of the song playing, any MPRIS player | click opens the player's app, middle click skips, scroll sets the volume; hover shows previous, play or pause, next | *when* a song plays or is paused (horizontal bars) |
+| **Timer** | countdown, dim when paused, flashing red when done | click opens the timer popup: pause, +1 min, +5 min, reset | *when* a timer runs |
+| **Updates** | icon and the number of pending repo updates | click opens a terminal running `bbkos-update` | *when* updates are pending |
+| **Tray** | one icon per app that registers (black icons are recoloured to stay visible) | left click activates, middle click secondary, right click the app's menu | *when* an app registers an icon |
+| **Display** | monitor icon and this monitor's brightness | click opens the display popup; scroll changes brightness by 5 % | always |
+| **Audio** | speaker icon and volume | click opens the sound popup, middle click mutes, scroll changes volume by 5 % | always |
+| **Bluetooth** | icon by state: off, connected (accent), idle | click opens the Bluetooth popup | *when* an adapter exists |
+| **Network** | Wi-Fi name with signal bars, wired globe, or `off`, `connecting…`, `offline` | click opens the Wi-Fi popup | always |
+| **Battery** | icon and charge, warn and crit colours when low | click opens the battery and power-profile popup | *when* a battery exists |
+| **Notifications** | bell and unread count (`99+` above 99) | click opens the history sheet | always |
+| **Recording** | red dot and elapsed time | click stops and saves | *when* recording |
+| **Privacy** | amber glyphs for microphone, camera, screen share | none | *when* an app uses one |
+| **Settings** | gear, accent while the window is open | click opens or closes the settings window | always |
+
+While a widget's popup is open it gets a highlighted plate. The popup opens under the widget you clicked, on any bar edge. Details and how to add a widget: `docs/modules/bar.md`.
 
 ## Install
 
@@ -123,56 +174,6 @@ All of them are editable in Settings > Keyboard > Shortcuts, or `bbkos-keybinds`
 | Go back to defaults | `bbkos-theme reset` (everything) or `reset SECTION` |
 
 Your settings live in `~/.config/bbkos/settings.json`, a copy that the settings app writes to. `git pull` never touches it.
-
-## Settings at a glance
-
-`Super+,` opens the settings window: 16 pages in four groups, 233 searchable rows. Every value lives in `~/.config/bbkos/settings.json`; `bbkos-theme set section.key value` changes the same thing from a terminal.
-
-| Group | Page (tabs) | What you can change |
-|---|---|---|
-| **Look** | **Appearance** (Wallpaper and colours, Style, Terminal) | wallpaper picker; dark or light, or switch by time of day; colour scheme (9 styles), contrast, accent strength; grid mode, font, text size, radii, gaps, popup shadow, reduced motion; kitty font, padding and opacity |
-| | **Bar** (Layout, Look, Widgets) | position (any edge), thickness, floating, hugging, widget order by drag; opacity, blur, pills, icon style; clock format, hover date, calendar week start, week numbers and moon, music widget width |
-| | **Windows** (Look, Behaviour, Stage mode) | gaps, border, rounding, opacity, shadow, blur, animation speed; focus follows mouse, workspace switching; stage mode default and the rail's size, position and look |
-| | **Lock screen** | avatar picture, position and size of every element (clock, date, welcome text, password field, battery), blur, brightness with auto-dim, 12/24 h |
-| **Desktop** | **Notifications** | do not disturb, popup timeout and corner, history size, per-app mute, critical style |
-| | **Apps** (Default apps, Startup, Launcher) | default browser, terminal, files, media; apps that start at login; menu web-search engine, calculator, forget what it learned |
-| | **Capture and camera** | screenshot folder and editor; recording area, audio, quality and folder; webcam exposure, white balance, power-line frequency |
-| | **Privacy and wellbeing** | mic, camera and screen-sharing indicators; clipboard history (text and images); screen time and break reminders |
-| **Devices** | **Network** | Wi-Fi, saved connections, Tailscale, screen mirroring to a phone |
-| | **Displays** | per-monitor scale, resolution, layout, brightness (DDC/CI for external ones), night-light schedule |
-| | **Sound** | outputs, inputs, volume, per-app volume |
-| | **Power and sleep** (When idle, Lid and power button, Power profiles) | idle dim, lock and sleep timers, keep-awake; lid and power-button actions; profile tuning (CPU energy preference, turbo, power cap, battery charge mode) with the root helper |
-| | **Keyboard** (Typing, Shortcuts, Dictation) | layout, repeat rate; rebind any shortcut; dictation status (service, backend, model, language; read-only) |
-| | **Mouse and touchpad** (Mouse and cursor, Touchpad, Gestures) | speed, acceleration, natural scrolling, cursor theme and size; tap, scroll, disable while typing; what three- and four-finger swipes do |
-| **System** | **Accessibility** | reduced motion, contrast, larger text and cursor, slow keys |
-| | **About and system** (About and updates, Reset) | system info and update check; reset a section, a page or everything |
-
-Anything not in the window is a plain key in the JSON file; `bbkos-theme defaults` prints them all with their defaults.
-
-## Bar widgets at a glance
-
-Sixteen widgets, placed in the start, centre and end of the bar. Reorder them by dragging in Settings > Bar > Layout; the icon sets and "icons only" are in Bar > Look. Widgets marked *when* hide themselves the rest of the time.
-
-| Widget | Shows | Click · scroll · hover | Shown |
-|---|---|---|---|
-| **Overview** | grid icon, accent while the overview is open | click opens or closes the workspace overview | always |
-| **Workspaces** | one number per workspace | click activates | always |
-| **Clock** | day, date and time (`Sun 25, 5:26`) | click opens the calendar; hover shows the full date | always |
-| **Music** | title of the song playing, any MPRIS player | click opens the player's app, middle click skips, scroll sets the volume; hover shows previous, play or pause, next | *when* a song plays or is paused (horizontal bars) |
-| **Timer** | countdown, dim when paused, flashing red when done | click opens the timer popup: pause, +1 min, +5 min, reset | *when* a timer runs |
-| **Updates** | icon and the number of pending repo updates | click opens a terminal running `bbkos-update` | *when* updates are pending |
-| **Tray** | one icon per app that registers (black icons are recoloured to stay visible) | left click activates, middle click secondary, right click the app's menu | *when* an app registers an icon |
-| **Display** | monitor icon and this monitor's brightness | click opens the display popup; scroll changes brightness by 5 % | always |
-| **Audio** | speaker icon and volume | click opens the sound popup, middle click mutes, scroll changes volume by 5 % | always |
-| **Bluetooth** | icon by state: off, connected (accent), idle | click opens the Bluetooth popup | *when* an adapter exists |
-| **Network** | Wi-Fi name with signal bars, wired globe, or `off`, `connecting…`, `offline` | click opens the Wi-Fi popup | always |
-| **Battery** | icon and charge, warn and crit colours when low | click opens the battery and power-profile popup | *when* a battery exists |
-| **Notifications** | bell and unread count (`99+` above 99) | click opens the history sheet | always |
-| **Recording** | red dot and elapsed time | click stops and saves | *when* recording |
-| **Privacy** | amber glyphs for microphone, camera, screen share | none | *when* an app uses one |
-| **Settings** | gear, accent while the window is open | click opens or closes the settings window | always |
-
-While a widget's popup is open it gets a highlighted plate. The popup opens under the widget you clicked, on any bar edge. Details and how to add a widget: `docs/modules/bar.md`.
 
 ## Update
 
