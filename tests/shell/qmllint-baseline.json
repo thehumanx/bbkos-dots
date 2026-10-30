@@ -1,7 +1,7 @@
 {
   "Theme.qml": {
     "import": 3,
-    "unqualified": 39
+    "unqualified": 43
   },
   "components/ActionPicker.qml": {
     "import": 2,
@@ -15,7 +15,7 @@
     "unqualified": 4
   },
   "components/BarItem.qml": {
-    "unqualified": 19
+    "unqualified": 21
   },
   "components/Button.qml": {
     "unqualified": 16
@@ -99,11 +99,11 @@
     "unqualified": 17
   },
   "modules/bar/Bar.qml": {
-    "import": 29,
+    "import": 30,
     "missing-property": 4,
     "required": 3,
     "uncreatable-type": 1,
-    "unqualified": 95,
+    "unqualified": 107,
     "unresolved-type": 9,
     "unused-imports": 1
   },
@@ -115,7 +115,7 @@
     "unused-imports": 1
   },
   "modules/bar/BarSection.qml": {
-    "unqualified": 15
+    "unqualified": 17
   },
   "modules/bar/BatteryWidget.qml": {
     "import": 2,
@@ -187,6 +187,11 @@
     "import": 3,
     "unqualified": 8
   },
+  "modules/bar/WindowTitle.qml": {
+    "import": 1,
+    "unqualified": 4,
+    "unresolved-type": 1
+  },
   "modules/bar/Workspaces.qml": {
     "import": 2,
     "required": 2,
@@ -204,10 +209,15 @@
     "uncreatable-type": 1,
     "unqualified": 23
   },
+  "modules/frame/ScreenFrame.qml": {
+    "import": 2,
+    "uncreatable-type": 1,
+    "unqualified": 8
+  },
   "modules/launcher/Launcher.qml": {
     "import": 4,
     "missing-property": 14,
-    "unqualified": 18
+    "unqualified": 24
   },
   "modules/launcher/MenuWindow.qml": {
     "import": 20,
@@ -359,9 +369,9 @@
     "unqualified": 6
   },
   "modules/settings/BarLayoutEditor.qml": {
-    "import": 11,
+    "import": 12,
     "required": 3,
-    "unqualified": 38,
+    "unqualified": 43,
     "unresolved-type": 3
   },
   "modules/settings/IdleTimeline.qml": {
@@ -428,6 +438,10 @@
     "import": 14,
     "unused-imports": 1
   },
+  "modules/settings/PageGrid.qml": {
+    "import": 3,
+    "unused-imports": 1
+  },
   "modules/settings/PageIdle.qml": {
     "import": 8,
     "unqualified": 7
@@ -477,13 +491,17 @@
     "import": 20,
     "unqualified": 20
   },
+  "modules/settings/PageRail.qml": {
+    "import": 9,
+    "unused-imports": 1
+  },
   "modules/settings/PageReset.qml": {
     "import": 5,
     "unqualified": 10,
     "unresolved-type": 1
   },
   "modules/settings/PageShell.qml": {
-    "import": 12,
+    "import": 10,
     "unqualified": 1,
     "unused-imports": 1
   },
@@ -495,7 +513,7 @@
     "unresolved-type": 3
   },
   "modules/settings/PageStage.qml": {
-    "import": 19,
+    "import": 13,
     "unused-imports": 1
   },
   "modules/settings/PageStartup.qml": {
@@ -534,15 +552,25 @@
     "unqualified": 42,
     "unresolved-type": 7
   },
-  "modules/stage/Stage.qml": {
+  "modules/stage/DockGrid.qml": {
     "import": 4,
+    "missing-property": 2,
+    "unqualified": 29
+  },
+  "modules/stage/DockTile.qml": {
+    "import": 4,
+    "unqualified": 27,
+    "unresolved-type": 4
+  },
+  "modules/stage/Stage.qml": {
+    "import": 14,
     "missing-property": 4,
     "uncreatable-type": 1,
-    "unqualified": 34
+    "unqualified": 90
   },
   "modules/stage/StageCard.qml": {
-    "import": 3,
-    "unqualified": 19,
+    "import": 1,
+    "unqualified": 21,
     "unresolved-type": 2
   },
   "modules/stage/StillImage.qml": {
@@ -590,6 +618,11 @@
   },
   "services/Displays.qml": {
     "import": 1
+  },
+  "services/Dock.qml": {
+    "import": 3,
+    "missing-property": 7,
+    "unqualified": 3
   },
   "services/KeybindStore.qml": {
     "import": 1

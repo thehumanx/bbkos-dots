@@ -4,7 +4,8 @@ import qs
 import qs.components
 import qs.services
 
-// Where each bar widget sits: its section (Left, Centre, Right) and its place in that section. Drag a widget by its
+// Where each bar widget sits: its section (Left, Centre, Right) and its place in that section, and whether it is on the bar
+// at all (the switch at the start of each row, settings bar.hidden). Drag a widget by its
 // grip onto another widget (it takes that spot) or onto a section heading (it goes to the end of that section). The
 // section buttons do the same without dragging. Settings bar.layout is the order on the bar; writes go through
 // SettingsStore like every other control.
@@ -20,7 +21,7 @@ ColumnLayout {
     readonly property var sectionNames: [{ id: "start", label: "Left" }, { id: "center", label: "Centre" },
                                          { id: "end", label: "Right" }]
     readonly property var widgetNames: ({
-        overview: "Overview", workspaces: "Workspaces", clock: "Clock", media: "Music", timer: "Timer", updates: "Updates", tray: "Tray", display: "Display brightness", audio: "Audio",
+        overview: "Overview", workspaces: "Workspaces", title: "Window title", clock: "Clock", media: "Music", timer: "Timer", updates: "Updates", tray: "Tray", display: "Display brightness", audio: "Audio",
         bluetooth: "Bluetooth", network: "Network", battery: "Battery", notifications: "Notifications", record: "Recording indicator", privacy: "Privacy indicator", settings: "Settings button"
     })
     // Where each widget's own settings are ("page/tab#row" for SettingsStore.openPage and reveal); a widget missing here has none.
@@ -43,6 +44,14 @@ ColumnLayout {
                 if (e.startsWith(sec.id + ":")) out.push({ header: false, section: sec.id, widget: e.slice(sec.id.length + 1) })
         }
         return out
+    }
+
+    // Widgets switched off (settings bar.hidden): they keep their place in bar.layout and their row here, dimmed.
+    readonly property var hidden: SettingsStore.shown("bar.hidden") ?? []
+    function setShown(widget: string, on: bool): void {
+        const h = hidden.filter(w => w !== widget)
+        if (!on) h.push(widget)
+        SettingsStore.set("bar.hidden", h)
     }
 
     property string dragWidget: ""
@@ -160,10 +169,15 @@ ColumnLayout {
                         }
                     }
 
+                    Toggle {                                   // on the bar or switched off
+                        checked: root.hidden.indexOf(row.modelData.widget) < 0
+                        onToggled: v => root.setShown(row.modelData.widget, v)
+                    }
                     Txt {
                         text: root.widgetNames[row.modelData.widget] ?? row.modelData.widget ?? ""
                         elide: Text.ElideRight
                         Layout.fillWidth: true
+                        opacity: root.hidden.indexOf(row.modelData.widget) < 0 ? 1 : 0.45
                     }
                     Button {                                   // the widget's own settings, on whichever page holds them
                         readonly property string target: root.widgetSettings[row.modelData.widget] ?? ""

@@ -296,7 +296,7 @@ def _settings_file_ok(path):
 
 
 def _run(settings_path, state_dir, share_dir, *, mutate=None, wallpaper_src=None,
-         clear_wallpaper=False, only=None, out_dir=None, reload=True, runner=None):
+         clear_wallpaper=False, only=None, out_dir=None, reload=True, runner=None, force_reload=False):
     if only not in ONLY:
         raise ApplyError(f"--only must be shape or colors, not {only!r}")
     settings_path, state_dir, share_dir = (Path(p).absolute() for p in
@@ -331,7 +331,11 @@ def _run(settings_path, state_dir, share_dir, *, mutate=None, wallpaper_src=None
             pairs = [(out_dir / n, t) for n, t in texts.items()] + [(out_dir / STAMP, stamp_text(s))]
             commit_files(stage_files(pairs))
             return warns
-        pairs = [(state_dir / n, t) for n, t in texts.items()]
+        # Only the generated files whose text changes are written: Hyprland's autoreload watches the files it loaded, and a
+        # rewritten but identical hypr-theme.lua reloaded it (every window re-applied) for a bar setting (2026-10-31). The
+        # same set decides which consumers reload (reload.reload_all).
+        written = {n for n, t in texts.items() if _read_text(state_dir / n) != t}
+        pairs = [(state_dir / n, t) for n, t in texts.items() if n in written]
         conf = _omasnap_conf_path(settings_path)
         if conf is not None:
             conf.parent.mkdir(parents=True, exist_ok=True)
@@ -378,7 +382,7 @@ def _run(settings_path, state_dir, share_dir, *, mutate=None, wallpaper_src=None
         except OSError as e:
             warns.append(f"cannot update settings backup: {_why(e)}")
     if reload:
-        warns += R.reload_all(state_dir, settings=s)
+        warns += R.reload_all(state_dir, settings=s, changed=None if force_reload else written)
         if _owner_home():                  # the camera is the owner's hardware, not a temp home's (tests/shell)
             try:
                 warns += [f"camera: {w}" for w in CAM.apply(s["camera"])]
@@ -395,7 +399,15 @@ def apply(settings_path, state_dir, share_dir, *, only=None, out_dir=None, reloa
         return _run(settings_path, state_dir, share_dir, only=only, out_dir=out_dir,
                     reload=False, runner=runner)
     with locked(state_dir):
-        return _run(settings_path, state_dir, share_dir, only=only, reload=reload, runner=runner)
+        return _run(settings_path, state_dir, share_dir, only=only, reload=reload, runner=runner, force_reload=True)
+
+
+def _read_text(path):
+    """A file's text, or None when it is missing or unreadable (then it counts as changed)."""
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
 
 
 def _owner_home():

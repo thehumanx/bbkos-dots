@@ -11,7 +11,7 @@ One installer that looks at your hardware, a settings app, an agent skill, and a
 
 Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, radii, blur, fonts, lock screen, keybinds, touchpad, power) is one value in one JSON file, edited from a settings window or the `bbkos-theme` command. Built on Hyprland's new **Lua config** (0.55+), Quickshell, matugen and uwsm.
 
-| **Settings app** (`Super+,`): 16 pages, search, reset per page | **Launcher** (`Super+R`): apps, commands and every single setting |
+| **Settings app** (`Super+,`): 17 pages, search, reset per page | **Launcher** (`Super+R`): apps, commands and every single setting |
 |---|---|
 | ![settings](assets/screenshots/settings.png) | ![launcher](assets/screenshots/launcher.jpg) |
 | **Bar popups**: battery and sound (calendar, Wi-Fi, Bluetooth, display and timer too) | **Tiling** with kitty, fish and starship |
@@ -21,9 +21,10 @@ Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, ra
 
 The parts that set this desktop apart. Each one is a switch you can turn off.
 
-- **Grid mode.** One toggle (Settings > Appearance > Style) turns the whole desktop into flat cells with hairline borders: bar widgets, windows, popups and stage cards touch, with no gaps, shadows or rounded corners (popups and controls can keep their round corners). Inspired by the key grid of my Android keyboard, [Omakey](https://github.com/thehumanx/omakey). On in the default look.
-- **Stage mode.** A workspace opens windows one at a time, full size, and the others wait as thumbnail cards in a rail at the edge; click a card to bring it forward. Inspired by macOS Stage Manager. It works *per workspace*: the default is a setting, `Super+Alt+S` or the overview switch flips one workspace, and the rail's size, position and look have their own settings page. On in the default look.
-- **Settings app for the details.** `Super+,` opens a real window with 16 pages in four groups and a search box that finds any single setting, with "Reset these" per section and a reset for the page you are on. If the look, behaviour or hardware can be changed, it is in there; nothing is hidden in a file you have to know about.
+- **Grid mode.** One toggle (Settings > bbkOS > Grid mode) turns the desktop into flat cells with one-pixel borders: the bar's widgets and the rail are touching cells, a single line runs along all four screen edges, and popups have no shadows or rounded corners (they can keep their round corners). Windows keep your own margin and corner radius, so each one sits as a rounded card inside the grid. Every line lands on a whole screen pixel, also at fractional scales. Inspired by the key grid of my Android keyboard, [Omakey](https://github.com/thehumanx/omakey). On in the default look.
+- **Stage mode.** A workspace opens windows one at a time, full size, and the others wait as thumbnail cards in a rail at the edge; click a card to bring it forward. Inspired by macOS Stage Manager. It works *per workspace*: the default is a setting, `Super+Alt+S` or the overview switch flips one workspace, and the rail's size, position and look are on Settings > bbkOS. On in the default look.
+- **Rail and pinned apps.** The rail also holds your pinned apps: click a tile to bring the app forward or start it, `+` to pin one from the menu, hover and `×` to unpin; a dot shows which ones are running. Put the rail on any screen edge, along its whole length or only as long as its contents, and align it (and its tiles and cards) to the start, centre or end; on the top or bottom it is a single row. Outside grid mode it follows the bar's look: background, blur, rounded corners, floating and pill style. Pinned apps are on in grid mode and a switch of their own otherwise.
+- **Settings app for the details.** `Super+,` opens a real window with 17 pages in five groups (the first, bbkOS, gathers what is particular to this desktop: grid mode, the rail and pinned apps, stage mode) and a search box that finds any single setting, with "Reset these" per section and a reset for the page you are on. If the look, behaviour or hardware can be changed, it is in there; nothing is hidden in a file you have to know about.
 - **Workspace overview.** Click the grid icon at the start of the bar, or swipe three fingers up: the workspaces along the top, the selected one's windows drawn at their real positions below, drag a window onto another workspace to move it, `Esc` to close. A Mission Control-style layout built in Quickshell, over the blurred wallpaper.
 - **Global menu.** `Super+R` is one search box for apps, web apps, commands, settings pages *and single settings*, plus a calculator and a web search; it ranks like Raycast and learns what you open. Inspired by typecraft's Raycast-style launcher for Linux ([oma-cast](https://github.com/typecraft-dev/oma-cast)); the ranking follows the behaviour its spec documents, the code is written from scratch.
 - **Notification panel.** The shell is the notification daemon, so history is part of the desktop: the bell in the bar shows the unread count and opens a sheet down the right edge. Read state is manual (a click marks one read, "Mark all read", two-click "Clear all"), a right click closes a popup without triggering its action, and there is a do-not-disturb switch, per-app mute and a critical-urgency style. Short state notices (charger, sound output, VPN) are small toasts that never enter the history.
@@ -41,13 +42,14 @@ The parts that set this desktop apart. Each one is a switch you can turn off.
 
 ## Settings at a glance
 
-`Super+,` opens the settings window: 16 pages in four groups, 233 searchable rows. Every value lives in `~/.config/bbkos/settings.json`; `bbkos-theme set section.key value` changes the same thing from a terminal.
+`Super+,` opens the settings window: 17 pages in five groups, 236 searchable rows. Every value lives in `~/.config/bbkos/settings.json`; `bbkos-theme set section.key value` changes the same thing from a terminal.
 
 | Group | Page (tabs) | What you can change |
 |---|---|---|
-| **Look** | **Appearance** (Wallpaper and colours, Style, Terminal) | wallpaper picker; dark or light, or switch by time of day; colour scheme (9 styles), contrast, accent strength; grid mode, font, text size, radii, gaps, popup shadow, reduced motion; kitty font, padding and opacity |
-| | **Bar** (Layout, Look, Widgets) | position (any edge), thickness, floating, hugging, widget order by drag; opacity, blur, pills, icon style; clock format, hover date, calendar week start, week numbers and moon, music widget width |
-| | **Windows** (Look, Behaviour, Stage mode) | gaps, border, rounding, opacity, shadow, blur, animation speed; focus follows mouse, workspace switching; stage mode default and the rail's size, position and look |
+| **bbkOS** | **bbkOS** (Grid mode, Rail and pinned apps, Stage mode) | grid mode and round controls; pinned apps, the rail's edge, thickness, hugging, alignment, padding; stage mode default and the window cards |
+| **Look** | **Appearance** (Wallpaper and colours, Style, Terminal) | wallpaper picker; dark or light, or switch by time of day; colour scheme (9 styles), contrast, accent strength; font, text size, radii, gaps, popup shadow, reduced motion; kitty font, padding and opacity |
+| | **Bar** (Layout, Look, Widgets) | position (any edge), thickness, floating, hugging, widget order by drag, switch any widget off; opacity, blur, pills, icon style; clock format, hover date, calendar week start, week numbers and moon, music widget width |
+| | **Windows** (Look, Behaviour) | gaps, border, rounding, opacity, shadow, blur, animation speed; focus follows mouse, workspace switching |
 | | **Lock screen** | avatar picture, position and size of every element (clock, date, welcome text, password field, battery), blur, brightness with auto-dim, 12/24 h |
 | **Desktop** | **Notifications** | do not disturb, popup timeout and corner, history size, per-app mute, critical style |
 | | **Apps** (Default apps, Startup, Launcher) | default browser, terminal, files, media; apps that start at login; menu web-search engine, calculator, forget what it learned |
@@ -66,12 +68,13 @@ Anything not in the window is a plain key in the JSON file; `bbkos-theme default
 
 ## Bar widgets at a glance
 
-Sixteen widgets, placed in the start, centre and end of the bar. Reorder them by dragging in Settings > Bar > Layout; the icon sets and "icons only" are in Bar > Look. Widgets marked *when* hide themselves the rest of the time.
+Seventeen widgets, placed in the start, centre and end of the bar. Reorder them by dragging in Settings > Bar > Layout, where the switch at the start of each row takes a widget off the bar (it keeps its place for when you switch it back on); the icon sets and "icons only" are in Bar > Look. Widgets marked *when* hide themselves the rest of the time.
 
 | Widget | Shows | Click · scroll · hover | Shown |
 |---|---|---|---|
 | **Overview** | grid icon, accent while the overview is open | click opens or closes the workspace overview | always |
 | **Workspaces** | one number per workspace | click activates | always |
+| **Window title** | the focused window's icon and title, in a fixed-width cell | none | horizontal bars |
 | **Clock** | day, date and time (`Sun 25, 5:26`) | click opens the calendar; hover shows the full date | always |
 | **Music** | title of the song playing, any MPRIS player | click opens the player's app, middle click skips, scroll sets the volume; hover shows previous, play or pause, next | *when* a song plays or is paused (horizontal bars) |
 | **Timer** | countdown, dim when paused, flashing red when done | click opens the timer popup: pause, +1 min, +5 min, reset | *when* a timer runs |
@@ -180,6 +183,8 @@ Your settings live in `~/.config/bbkos/settings.json`, a copy that the settings 
 ```sh
 git pull && ./install.sh --no-packages    # re-link, re-render, regenerate the theme
 ```
+
+What changed in each update: [CHANGELOG.md](CHANGELOG.md).
 
 ## Uninstall
 

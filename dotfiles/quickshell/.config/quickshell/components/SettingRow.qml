@@ -11,7 +11,8 @@ import "../modules/settings/Pages.js" as Pages
 // With a `key` (a settings.py key) the row also:
 // - shows a small accent dot after the label while the value differs from the default; on hover the dot becomes a reset
 //   button that needs a second click within 4 s ("Reset to 12"), like every reset (docs/design.md section 5);
-// - shows "Set by grid mode" in place of the control while grid mode replaces this key (SettingsStore.gridLocked).
+// - shows "Set by grid mode" in place of the control while grid mode replaces this key (SettingsStore.gridLocked);
+// - with `lockedBy` ("the bar style"), shows "Set by the bar style" in place of the control for a key something else decides.
 // `describe(value)` turns a value into the words of "Reset to ..."; the Setting* controls override it.
 Item {
     id: root
@@ -19,6 +20,7 @@ Item {
     property string hint: ""
     property real labelWidth: 260
     property string key: ""
+    property string lockedBy: ""                  // a key that no longer applies on its own: "Set by " + this, no control
     // A place where this setting really lives ("appearance/style", or "appearance/style#Font size" to light up that row
     // there): shown under the hint as a link (the Accessibility page gathers rows from other pages).
     property string link: ""
@@ -26,6 +28,7 @@ Item {
 
     readonly property bool modified: key !== "" && SettingsStore.modified(key)
     readonly property bool gridLocked: key !== "" && SettingsStore.gridLocked(key)
+    readonly property bool locked: gridLocked || lockedBy !== ""
     property bool armed: false
     property bool flash: false                    // set by the search for a moment: the row lights up once
     function describe(v): string { return String(v) }
@@ -157,15 +160,15 @@ Item {
         }
         RowLayout {
             id: slot
-            visible: !root.gridLocked
+            visible: !root.locked
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             spacing: 8
         }
         Txt {
             id: lockedNote
-            visible: root.gridLocked
-            text: "Set by grid mode  ·  " + root.describe(SettingsStore.gridValue(root.key))
+            visible: root.locked
+            text: root.gridLocked ? "Set by grid mode  ·  " + root.describe(SettingsStore.gridValue(root.key)) : "Set by " + root.lockedBy
             color: Theme.dim
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter

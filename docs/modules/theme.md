@@ -11,13 +11,15 @@ settings.json  --(bbkos-theme: validate, clamp)-->  matugen palette (only if col
                                                       |
                                render in memory (tokens, contrast floors, OKLCH ANSI colours)
                                                       |
-              per-file atomic replace into ~/.local/state/bbkos/theme/
+              per-file atomic replace into ~/.local/state/bbkos/theme/ (only the files whose text changed)
    colors.json   hypr-theme.lua   kitty-theme.conf   gtk.css   palette.json   stamp.json
         |               |                 |
  Quickshell        hyprctl reload    SIGUSR1 to kitty
  FileView watch    (and loaded at     (include in kitty.conf)
  (ThemeStore)       login by bbkos_load)
 ```
+
+**Only what changed is written and reloaded (2026-10-31).** Owner: "everytime i make any of the changes on this page or other pages, the windows reloads". Every settings change used to rewrite every generated file and run a full `hyprctl reload`, which re-applies every window (they flashed), even for a bar setting that changes only `colors.json` (confirmed by a dry run: `hypr-theme.lua`, `hypr-binds.lua` and `kitty-theme.conf` byte-identical). Rewriting alone was enough to reload Hyprland: its autoreload (`misc:disable_autoreload` false) watches the files it loaded, and an identical but replaced `hypr-theme.lua` set it off about a second later. Now `apply._run` writes only the generated files whose text changed and passes that set to `reload.reload_all`, which runs `hyprctl reload` only when `hypr-theme.lua` or `hypr-binds.lua` changed and signals kitty only when `kitty-theme.conf` did (`HYPR_FILES`, `KITTY_FILES`); GTK, idle, cursor and night light already skipped an unchanged choice. An explicit `bbkos-theme apply` still reloads everything. Measured on the live session (Hyprland's `configreloaded` events, 3.5 s after each change): `shell.barHeight` and `stage.railPadding` changes 0, `windows.gapsOut` 1 each.
 
 | Path | Tracked | Purpose |
 |---|---|---|
@@ -81,8 +83,8 @@ The tool clamps; the UI uses the same ranges. Keys are flat (`windows.shadowEnab
 | `shell.barItemPad` | 0 | 0-24 step 2; extra space inside each widget along the bar, in every bar mode, added to an individual pill's own 8 px |
 | `shell.barFloat` | 0 | 0-24 step 2; space between the bar and the screen edges (0 = attached) |
 | `shell.barRadius` | 0 | 0-24 step 2; corner radius of the bar itself, capped at half its thickness |
-| `shell.gridRoundControls` | false | bool; (2026-10-29.) grid mode keeps the saved `radius`, `controlRadius` and `pillRadius` (popups, buttons, controls round) instead of squaring them; the bar, windows and stage cards stay square (`grid-mode.md`) |
-| `shell.gridMode` | false | bool; flat grid look: while on, the renderers use `settings.GRID_OVERRIDES` (gaps, shadows, bar, window and stage radii 0; popup and control radii too unless `gridRoundControls`; individual pills, 1 px window border) in place of the saved values, which stay as they are (`grid-mode.md`) |
+| `shell.gridRoundControls` | false | bool; (2026-10-29.) grid mode keeps the saved `radius`, `controlRadius` and `pillRadius` (popups, buttons, controls round) instead of squaring them; the bar stays square; windows, the pinned tiles and the rail's cards follow the window corner radius (`grid-mode.md`) |
+| `shell.gridMode` | false | bool; flat grid look: while on, the renderers use `settings.GRID_OVERRIDES` (gaps, shadows, bar and stage radii 0; popup and control radii too unless `gridRoundControls`; individual pills, 1 px window border, `gapsIn` half of `gapsOut` so the gap between tiled windows equals the margin around them; stage rail padding and tile gap = the margin, dock on. `windows.gapsOut` and `windows.rounding` are not overridden: your margin and corner radius apply) in place of the saved values, which stay as they are (`grid-mode.md`) |
 | `shell.barHug` | false | bool; the bar is only as long as its widgets and sits in the middle of the edge |
 | `shell.popupShadow` | 0.5 | 0.0-1.0; strength of the tinted shadow under popups, pickers, notifications and the OSD (0 = none), `modules/motion.md` |
 | `shell.reduceMotion` | false | bool; fades only: no popup grow, card slide, press scale, window pop-in or workspace slide (Hyprland too) |
@@ -96,6 +98,7 @@ The tool clamps; the UI uses the same ranges. Keys are flat (`windows.shadowEnab
 | `windows.blurEnabled` / `blurSize` / `blurPasses` | true / 3 / 1 | bool / 1-12 / 1-4 |
 | `windows.animations` | true | bool |
 | `bar.layout` | left: workspaces; centre: clock; right: the rest (`settings.py` `BAR_LAYOUT_DEFAULT`) | list of `section:widget` entries, sections start/center/end; each widget once; order in a list is the order on the bar; unknown and repeated entries dropped, missing widgets appended at their default section |
+| `bar.hidden` | empty | list of widget names switched off (2026-10-31): left off the bar (not created) but kept in `bar.layout`, so one switched on again is back in its place; unknown and repeated names dropped; `bbkos-theme set bar.hidden tray,updates`, an empty value shows them all |
 | `bar.iconGap` | 2 | 1-6 spaces between a widget's icon and its text (`bar.md`) |
 | `bar.iconsOnly` | false | bool; every bar widget draws its icon only, and notifications and updates show a dot instead of a count (`bar.md`) |
 | `capture.autosave` / `directory` / `editorMode` | true / `~/Pictures/Screenshots` / overlay | bool / `~/...` or absolute path / overlay, window; written to `~/.config/omasnap/omasnap.conf` by `apply` (`capture.md`) |
@@ -179,7 +182,7 @@ Pixel-perfect rules for shell sizes (even sizes, `Theme.hair` hairlines, radius 
 
 Before this change the shell used one accent (`primary`) and plain text colours everywhere, so a palette looked monochrome. The owner's palette made it worse: scheme `vibrant` with contrast 1.0 turns every scheme colour (primary, secondary, tertiary, error, ...) almost white (`#b4fdff`, `#e1f2ff`, `#ffece9`).
 
-New tokens in `colors.json`: `secondary`, `tertiary` (two more accent hues), `accentSoft`, `secondarySoft`, `tertiarySoft` (deep shades, for backgrounds) and `surfaceHigh` (raised surface). Where they come from:
+New tokens in `colors.json`: `gridEdge` (2026-10-30: grid mode's opaque cell border, `grid-mode.md`), `secondary`, `tertiary` (two more accent hues), `accentSoft`, `secondarySoft`, `tertiarySoft` (deep shades, for backgrounds) and `surfaceHigh` (raised surface). Where they come from:
 - `palette.py` reads two tones of matugen's **primary tonal palette** (`palettes.primary.<tone>`, which does not collapse with the contrast setting): `tone_primary` (tone 80 dark / 40 light) and `soft_primary` (tone 30 dark / 90 light), plus `colors.surface_container_high`. A matugen output without `palettes` falls back to `primary`. A `palette.json` written before this change lacks the new keys and is regenerated by `apply` (`P.ROLES` has 19 entries).
 - `render.tints`: `secondary` / `tertiary` are `tone_primary` with its OKLCH hue turned -40 / +40 degrees (same lightness and chroma, chroma only cut to fit the gamut), floored at 3:1 like the accent; the `*Soft` ones are the same rotation of `soft_primary`. matugen's own secondary and tertiary tones were tried first and rejected: nearly grey (`#b0cccc`, `#b4c7e9`) for this wallpaper, so the widgets would not have changed visibly. A grey wallpaper keeps every tint grey (test).
 - For the owner's wallpaper: accent `#b4fdff`, secondary `#79d9a5` (green-teal), tertiary `#7dccff` (sky blue), accentSoft `#004f51`.

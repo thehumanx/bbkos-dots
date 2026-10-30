@@ -62,19 +62,27 @@ Scope {
             }
             BarContrast { id: barContrast; screen: win.modelData; strip: win.bodyStrip }
 
+            // The width of the overview cell, the first one: the workspaces cell after it fills up to the stage rail's width (Dock.alignBar).
+            property real overviewW: 0
+
             // Which widgets sit in each section, in order: from settings bar.layout ("section:widget" entries, the
             // list order sets the order within a section). settings.py always writes a complete, valid list.
             readonly property var layout: {
                 const v = SettingsStore.shown("bar.layout")
                 return Array.isArray(v) ? v : []
             }
+            // Widgets switched off in settings bar.hidden are left out (not created at all); bar.layout keeps their place.
+            readonly property var hiddenWidgets: SettingsStore.shown("bar.hidden") ?? []
             function widgetsIn(section: string): var {
                 return layout.filter(e => e.startsWith(section + ":")).map(e => e.slice(section.length + 1))
+                             .filter(w => hiddenWidgets.indexOf(w) < 0)
             }
 
             // One component per widget. A widget's own show/hide rule (battery, bluetooth) stays with it.
-            Component { id: overviewWidget; BarItem { highlighted: OverviewState.open && (OverviewState.screen === "" || OverviewState.screen === win.modelData.name); OverviewWidget { screenName: win.modelData.name } } }
-            Component { id: workspacesWidget; BarItem { Workspaces {} } }
+            Component { id: overviewWidget; BarItem { onWidthChanged: win.overviewW = width; highlighted: OverviewState.open && (OverviewState.screen === "" || OverviewState.screen === win.modelData.name); OverviewWidget { screenName: win.modelData.name } } }
+            Component { id: workspacesWidget; BarItem { minAlong: !Dock.alignBar ? 0 : win.hiddenWidgets.indexOf("overview") >= 0 ? Theme.whole(Dock.railWidth)
+                                                                   : Math.max(0, Theme.whole(Dock.railWidth) - win.overviewW + Theme.hair);   /* ends where the rail's line does: its last pixel (RailGeometry snaps the rail to whole pixels), the cells overlapping by one hair */ Workspaces {} } }
+            Component { id: titleWidget; BarItem { active: !Theme.barVertical; WindowTitle {} } }
             Component { id: clockWidget; BarItem { highlighted: PanelState.isOn("calendar", win.modelData.name); Clock { screenName: win.modelData.name } } }
             Component { id: mediaWidget; BarItem { active: Media.present && !Theme.barVertical; MediaWidget { screenName: win.modelData.name } } }
             Component { id: timerWidget; BarItem { active: Countdown.active; highlighted: PanelState.isOn("timer", win.modelData.name); TimerWidget { screenName: win.modelData.name } } }
@@ -90,7 +98,7 @@ Scope {
             Component { id: privacyWidget; BarItem { active: Privacy.any; PrivacyWidget {} } }
             Component { id: settingsWidget; BarItem { highlighted: SettingsStore.windowOpen; SettingsWidget {} } }
             readonly property var widgetComponents: ({
-                overview: overviewWidget, workspaces: workspacesWidget, clock: clockWidget, media: mediaWidget, timer: timerWidget, updates: updatesWidget, tray: trayWidget, display: displayWidget,
+                overview: overviewWidget, workspaces: workspacesWidget, title: titleWidget, clock: clockWidget, media: mediaWidget, timer: timerWidget, updates: updatesWidget, tray: trayWidget, display: displayWidget,
                 audio: audioWidget, bluetooth: bluetoothWidget, network: networkWidget, battery: batteryWidget,
                 notifications: notificationsWidget, settings: settingsWidget, record: recordWidget, privacy: privacyWidget
             })

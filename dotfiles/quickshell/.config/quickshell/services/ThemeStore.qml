@@ -21,7 +21,7 @@ Singleton {
         outline: "#a7a8b3", borderActive1: "#33ccff", borderActive2: "#00ff99", borderInactive: "#595959",
         // Wallpaper tints (bbkos-theme `tints`): two more accent hues, the deep shade of each, a raised surface.
         secondary: "#9ece6a", tertiary: "#bb9af7", accentSoft: "#2a3a5c", secondarySoft: "#2f3d22", tertiarySoft: "#3d2f5c",
-        surfaceHigh: "#25252e"
+        surfaceHigh: "#25252e", gridEdge: "#3b3b44"
     })
     // [default, min, max]: the schema ranges of docs/specs (section 4), with a little slack for fonts.
     readonly property var shellLimits: ({

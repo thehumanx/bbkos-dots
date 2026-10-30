@@ -22,10 +22,12 @@ Item {
         const name = desktopEntry && desktopEntry.icon ? desktopEntry.icon : appId
         return name !== "" ? Quickshell.iconPath(name, "application-x-executable") : ""
     }
-    readonly property real captionHeight: rail.showTitle || rail.showIcon ? 22 : 0
+    // No caption on a card under 60 px tall (a top or bottom rail is one tile thick): the picture alone.
+    readonly property real captionHeight: (rail.showTitle || rail.showIcon) && height >= 60 ? 22 : 0
 
-    width: rail.cardWidth
-    height: rail.cardHeight
+    // Across the rail its thickness less the padding, along it stage.cardHeight, on every edge.
+    width: rail.sideRail ? rail.crossSize : rail.cardHeight
+    height: rail.sideRail ? rail.cardHeight : rail.crossSize
     // Enter: grows in with a short fade (off with the animations setting).
     opacity: 1
     scale: hovered && rail.animations ? 1.03 : 1
@@ -106,7 +108,7 @@ Item {
         radius: card.rail.cardRadius
         color: "transparent"
         border.width: card.hovered ? 2 : Theme.hair
-        border.color: card.hovered ? Theme.accent : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.22)
+        border.color: card.hovered ? Theme.accent : Theme.gridMode ? Theme.cardEdge : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.22)
     }
 
     MouseArea {

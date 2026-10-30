@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import qs
 
 // One of the bar's three groups (start, centre, end). It fills the bar along its length, and lays its BarItems out from
@@ -39,7 +38,10 @@ Item {
         color: Theme.pillBg
     }
 
-    GridLayout {
+    // A Grid positioner, not a GridLayout: Qt Quick Layouts round every cell's size and the spacing to whole logical pixels, which
+    // at a fractional scale are not whole physical ones, so the shared grid-mode hairlines drifted and some drew two pixels wide
+    // (measured 2026-10-31: a 31 px cell laid out 32 px, the -hair spacing as -1 logical). The positioner keeps the sizes as given.
+    Grid {
         id: grid
         // Plain x/y rather than anchors: anchors that flip to undefined when the bar changes position can leave the group
         // stranded until the shell reloads. Along the bar the group sits at its edge (or centred), across it it centres.
@@ -48,12 +50,16 @@ Item {
         readonly property real alongPos: root.hug ? root.hugPos
             : root.align === "start" ? root.inset
             : root.align === "end" ? along - alongSize - root.inset
-            : (along - alongSize) / 2
+            : Theme.gridMode ? Theme.whole((along - alongSize) / 2) : (along - alongSize) / 2   // grid: on a whole pixel
         x: root.vertical ? (root.width - width) / 2 : alongPos
         y: root.vertical ? alongPos : (root.height - height) / 2
-        columns: root.vertical ? 1 : 1000
+        // One line of cells; the other count is 0 (computed). A Grid with more columns than items adds one empty column and
+        // its spacing (12 px too wide outside grid mode, found in review 2026-10-31), the same way the rail's 1000 rows did.
+        columns: root.vertical ? 1 : 0
+        rows: root.vertical ? 0 : 1
         // Grid mode: cells overlap by one hairline, so two neighbours share one line instead of drawing two.
         rowSpacing: Theme.gridMode ? -Theme.hair : Theme.barItemGap
         columnSpacing: Theme.gridMode ? -Theme.hair : Theme.barItemGap
+        verticalItemAlignment: Grid.AlignVCenter     // what the GridLayout did
     }
 }

@@ -379,6 +379,53 @@ class CameraHomeTest(unittest.TestCase):
         self.run_update(pwd.getpwuid(os.getuid()).pw_dir).assert_called_once()
 
 
+class ChangedOnlyReloadTest(unittest.TestCase):
+    """Owner (2026-10-31): every settings change reloaded Hyprland, so the windows flashed even for a bar setting. A settings
+    change now reloads Hyprland and kitty only when a file they read changed; an explicit apply still reloads everything."""
+
+    def changed_by(self, mutate):
+        from unittest import mock
+        e = Env(self)
+        A.update(e.settings, e.state, e.share, lambda s: s, runner=ok_runner([]), reload=False)    # a first full render
+        with mock.patch.object(A.R, "reload_all", return_value=[]) as ra:
+            A.update(e.settings, e.state, e.share, mutate, runner=ok_runner([]), reload=True)
+        return ra.call_args.kwargs.get("changed")
+
+    def test_a_bar_setting_changes_no_hyprland_or_kitty_file(self):
+        def bar(s):
+            s["shell"]["barHeight"] += 2
+            return s
+        changed = self.changed_by(bar)
+        self.assertIsNotNone(changed)
+        self.assertIn("colors.json", changed)
+        self.assertFalse({"hypr-theme.lua", "hypr-binds.lua", "kitty-theme.conf"} & changed)
+
+    def test_a_window_setting_changes_hypr_theme(self):
+        def gaps(s):
+            s["windows"]["gapsOut"] = 3 if s["windows"]["gapsOut"] != 3 else 5
+            return s
+        self.assertIn("hypr-theme.lua", self.changed_by(gaps))
+
+    def test_unchanged_generated_files_are_not_rewritten(self):
+        """Hyprland's autoreload watches the files it loaded: rewriting an unchanged hypr-theme.lua reloaded it anyway."""
+        e = Env(self)
+        A.update(e.settings, e.state, e.share, lambda s: s, runner=ok_runner([]), reload=False)
+        before = (e.state / "hypr-theme.lua").stat()
+        def bar(s):
+            s["shell"]["barHeight"] += 2
+            return s
+        A.update(e.settings, e.state, e.share, bar, runner=ok_runner([]), reload=False)
+        after = (e.state / "hypr-theme.lua").stat()
+        self.assertEqual((before.st_ino, before.st_mtime_ns), (after.st_ino, after.st_mtime_ns))
+
+    def test_explicit_apply_reloads_everything(self):
+        from unittest import mock
+        e = Env(self)
+        with mock.patch.object(A.R, "reload_all", return_value=[]) as ra:
+            A.apply(e.settings, e.state, e.share, runner=ok_runner([]))
+        self.assertIsNone(ra.call_args.kwargs.get("changed"))
+
+
 class ReloadTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -402,6 +449,13 @@ class ReloadTest(unittest.TestCase):
         self.assertEqual(lines[0], ["reload"])
         self.assertEqual(lines[1], ["configerrors"])
         self.assertEqual(warns, [])
+
+    def test_unchanged_hyprland_files_skip_the_reload(self):
+        d = self.state_with_lua()
+        R.reload_all(d, env=self.env, proc_root=self.base / "noproc", changed={"colors.json"})
+        self.assertFalse(self.log.exists() and self.log.read_text().strip(), "hyprctl ran for a change Hyprland does not read")
+        R.reload_all(d, env=self.env, proc_root=self.base / "noproc", changed={"hypr-binds.lua"})
+        self.assertEqual(self.log.read_text().splitlines()[0], "reload")
 
     def test_reload_warns_on_configerrors(self):
         d = self.state_with_lua()

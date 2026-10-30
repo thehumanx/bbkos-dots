@@ -10,6 +10,12 @@ Item {
     id: root
     default property alias content: holder.data
     property bool active: true
+    // Grid mode lines the first cells up with the stage rail (Bar.qml): the size along the bar this cell should have. A widget that
+    // fits it (within one pixel) takes exactly that size; a bigger one keeps its own.
+    property real minAlong: 0
+    readonly property real alongNatural: (vertical ? holder.childrenRect.height : holder.childrenRect.width) + 2 * pad
+    readonly property real alongFit: minAlong > 0 && alongNatural <= minAlong + 1 ? minAlong : alongNatural
+    readonly property real alongSize: Theme.gridMode ? Theme.wholeUp(alongFit) : alongFit   // grid: whole pixels (Theme.wholeUp)
     // The widget's popup or window is open: an accent-tinted plate sits behind it, so it is clear which
     // widget opened what. The widget's own colours are not touched.
     property bool highlighted: false
@@ -24,8 +30,8 @@ Item {
     readonly property int pad: (pill ? 8 : 0) + Theme.barItemPad
 
     visible: active
-    implicitWidth: vertical ? cross : holder.childrenRect.width + 2 * pad
-    implicitHeight: vertical ? holder.childrenRect.height + 2 * pad : cross
+    implicitWidth: vertical ? cross : alongSize
+    implicitHeight: vertical ? alongSize : cross
 
     Rectangle {
         anchors.fill: parent

@@ -21,7 +21,7 @@ SCHEMES = ("content", "expressive", "fidelity", "fruit-salad", "monochrome",
 # Bar widgets and their default section. The bar layout is a list of "section:widget" entries; a widget appears once,
 # and its place in the list sets its order within its section (see _coerce_layout).
 BAR_SECTIONS = ("start", "center", "end")
-BAR_WIDGETS = {"overview": "start", "workspaces": "start", "clock": "center", "media": "center", "timer": "center", "updates": "center", "record": "end", "privacy": "end", "tray": "end", "display": "end",
+BAR_WIDGETS = {"overview": "start", "workspaces": "start", "title": "start", "clock": "center", "media": "center", "timer": "center", "updates": "center", "record": "end", "privacy": "end", "tray": "end", "display": "end",
                "audio": "end", "bluetooth": "end", "network": "end", "battery": "end", "notifications": "end",
                "settings": "end"}
 BAR_LAYOUT_DEFAULT = [f"{sec}:{w}" for w, sec in BAR_WIDGETS.items()]
@@ -74,12 +74,19 @@ _AVATAR_PATH = re.compile(r"^/[^#\x00-\x1f]*/avatar-[0-9a-f]{12}\.(png|jpg|jpeg|
 
 # Stage mode (modules/stage): every workspace uses Hyprland's monocle layout, so each window opens alone and full size,
 # and a rail of thumbnail cards for the other windows of the workspace sits at one edge of the monitor.
-STAGE_POSITIONS = ("left", "right")
+STAGE_POSITIONS = ("left", "right", "top", "bottom")
+STAGE_ALIGNS = ("start", "centre", "end")
 STAGE_ORDERS = ("recent", "opened")
 STAGE_DEFAULTS = {
     "enabled": False, "railPosition": "left", "railWidth": 150, "railPadding": 12, "railOpacity": 0.0,
     "cardHeight": 100, "cardGap": 12, "cardRadius": 10, "showTitle": True, "showIcon": True,
     "order": "recent", "refreshSeconds": 3, "showWithOneWindow": False, "reserveSpace": True, "animations": True,
+    # Pinned apps (modules/stage/Dock.qml, docs/modules/dock.md): a grid of app tiles at the top of the rail, shown on every
+    # workspace, not only stage ones. Grid mode switches it on (GRID_OVERRIDES). dockApps are desktop-file ids, set from the rail.
+    "dock": False, "dockApps": [],
+    # The rail hugs its contents like shell.barHug (only as long as its tiles and cards). railAlign: where the tiles and cards
+    # sit along a full-length rail, and where a hugging rail sits along its edge.
+    "railHug": False, "railAlign": "start",
 }
 
 # Screenshots (omasnap, docs/modules/capture.md): written into ~/.config/omasnap/omasnap.conf by `bbkos-theme apply`.
@@ -214,7 +221,8 @@ DEFAULTS = {
                  "wsSwipeDirectionLock": True, "wsSwipeCreateNew": True, "wsSwipeForever": False,
                  "swipe3Up": "none", "swipe3Down": "none",
                  "swipe4Up": "none", "swipe4Down": "none", "swipe4Left": "none", "swipe4Right": "none"},
-    "bar": {"layout": list(BAR_LAYOUT_DEFAULT), "iconsOnly": False, "iconGap": 2, **{f"icon{w}": v for w, v in BAR_ICON_DEFAULTS.items()}},
+    # bar.hidden: widgets switched off (kept apart from bar.layout, so a widget switched on again is back in its place).
+    "bar": {"layout": list(BAR_LAYOUT_DEFAULT), "hidden": [], "iconsOnly": False, "iconGap": 2, **{f"icon{w}": v for w, v in BAR_ICON_DEFAULTS.items()}},
     "stage": dict(STAGE_DEFAULTS),
     "capture": dict(CAPTURE_DEFAULTS),
     "camera": dict(CAMERA_DEFAULTS),
@@ -322,6 +330,7 @@ RANGES = {
     "touchpad.swipe4Left": ("enum", SWIPE_ACTIONS),
     "touchpad.swipe4Right": ("enum", SWIPE_ACTIONS),
     "bar.layout": ("layout", BAR_LAYOUT_ALLOWED),
+    "bar.hidden": ("widgetlist", tuple(BAR_WIDGETS)),
     "bar.iconGap": ("int", 1, 6, 1),                  # spaces between a widget's icon and its text
     "bar.iconsOnly": ("bool",),                       # widgets draw their icon only; a dot instead of a count (notifications, updates)
     **{f"bar.icon{w}": ("enum", styles) for w, styles in BAR_ICON_STYLES.items()},
@@ -366,6 +375,10 @@ RANGES = {
     "stage.showWithOneWindow": ("bool",),
     "stage.reserveSpace": ("bool",),
     "stage.animations": ("bool",),
+    "stage.dock": ("bool",),
+    "stage.dockApps": ("applist",),
+    "stage.railHug": ("bool",),
+    "stage.railAlign": ("enum", STAGE_ALIGNS),
     **{f"lock.{e}Show": ("bool",) for e in LOCK_ELEMENTS},
     **{f"lock.{e}{a}": ("int", -1200, 1200, 1) for e in LOCK_ELEMENTS for a in ("X", "Y")},
     **{f"lock.{e}Size": ("int", *LOCK_SIZE_RANGE.get(e, (8, 200)), 1) for e in LOCK_ELEMENTS},
@@ -505,6 +518,14 @@ def _coerce(dotted, value):
     bad = (default, f"{dotted}: invalid value, using {default!r}")
     if kind == "layout":
         return _coerce_layout(value)
+    if kind == "widgetlist":
+        if not isinstance(value, list):
+            return bad
+        out = []
+        for v in value:
+            if isinstance(v, str) and v in spec[1] and v not in out:
+                out.append(v)
+        return out, (f"{dotted}: unknown or repeated names ignored" if len(out) != len(value) else None)
     if kind == "applist":
         if not isinstance(value, list):
             return bad
@@ -557,17 +578,35 @@ def _coerce(dotted, value):
 # Grid mode (shell.gridMode, docs/modules/grid-mode.md): while on, the renderers see these values instead of the owner's,
 # so every consumer of the generated files (the shell, Hyprland, hyprlock) follows from one place and the saved values stay
 # as they are: switching the mode off puts the owner's look back.
+# windows.gapsOut and windows.rounding are NOT overridden (2026-10-30): the owner's margin around the windows and corner radius apply in grid
+# mode too, so there is one variable for each and the windows can be a rounded card inside the square bar and rail cells.
+# The rail's padding and tile gap follow it too (grid_rail_gap).
+# windows.gapsIn follows the margin (grid_gaps_in): Hyprland puts gaps_in on each side of a window, so the gap between two tiled
+# windows is twice it, and half the margin makes that gap the same as the margin around them.
 GRID_OVERRIDES = {
     "shell": {"gap": 0, "barRadius": 0, "barFloat": 0, "barItemGap": 0,
               "barHug": False, "barPills": "individual", "popupShadow": 0.0},
-    "windows": {"gapsIn": 0, "gapsOut": 0, "rounding": 0, "shadowEnabled": False, "borderSize": 1},
+    "windows": {"shadowEnabled": False, "borderSize": 1},   # gapsIn: grid_gaps_in()
     "lock": {"fieldRadius": 0},
-    "stage": {"cardGap": 0, "cardRadius": 0},
+    "stage": {"dock": True},   # railPadding and cardGap: grid_rail_gap(); cardRadius: the window rounding (effective())
 }
 # The corners of popups, buttons and controls: squared by grid mode unless shell.gridRoundControls is on.
 GRID_ROUND_OFF = {
     "shell": {"radius": 0, "controlRadius": 0, "pillRadius": 0},
 }
+
+
+def grid_gaps_in(gaps_out):
+    """gaps_in that makes the gap between two tiled windows equal to the margin around them (gaps_out). The mirror in
+    services/SettingsStore.qml (gridValue) is the same arithmetic."""
+    return (int(gaps_out) + 1) // 2
+
+
+def grid_rail_gap(gaps_out):
+    """The rail's padding and the gap between its tiles and cards in grid mode: the margin around the windows (gaps_out), so the
+    pinned apps and the windows share one spacing. Capped at the rail settings' own maximum. The mirror in
+    services/SettingsStore.qml (gridValue) and modules/stage/Stage.qml is the same arithmetic."""
+    return min(int(gaps_out), 32)
 
 
 def grid_overrides(settings):
@@ -586,6 +625,9 @@ def effective(settings):
     out = copy.deepcopy(settings)
     for section, values in grid_overrides(settings).items():
         out[section].update(values)
+    out["windows"]["gapsIn"] = grid_gaps_in(out["windows"]["gapsOut"])
+    out["stage"]["railPadding"] = out["stage"]["cardGap"] = grid_rail_gap(out["windows"]["gapsOut"])
+    out["stage"]["cardRadius"] = out["windows"]["rounding"]       # the rail's tiles and cards are rounded like the windows
     return out
 
 
@@ -714,6 +756,11 @@ def set_value(settings, dotted, text):
         value = text.strip()
         if value not in spec[1]:
             raise ValueError(f"{dotted}: expected one of {', '.join(spec[1])}, got {text!r}")
+    elif kind == "widgetlist":
+        value = [e.strip() for e in text.split(",") if e.strip()]
+        for e in value:
+            if e not in spec[1]:
+                raise ValueError(f"{dotted}: unknown widget {e!r} (one of {', '.join(spec[1])})")
     elif kind == "applist":
         value = [e for e in text.split(",") if e.strip()]
         if _app_names(value)[1]:

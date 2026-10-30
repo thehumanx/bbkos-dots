@@ -114,10 +114,10 @@ Re-measured 2026-10-18 with today's full config, fresh start each, same method: 
 Seen at 8-12x zoom: with the GPU renderer, shapes are smooth only if they land on whole physical pixels.
 - Use **even logical sizes, margins and offsets** (even x 1.5 is a whole pixel; 3 px = 4.5 physical blurs the edge). Examples fixed: toggle 40x24 with a 16 px knob and 4 px margin; slider 16 px handle in a 20 px row; OSD bar 8 px tall.
 - Radii: cards, popups and dialogs use `Theme.radius`; rows, buttons and inputs `Theme.controlRadius` (the two 8 px cards `Theme.controlRadius + 2`); pills (toggle, slider, OSD bar) keep half their own height. All theme sizes are even (the settings step by 2).
-- Use **`Theme.hair`** (one physical pixel in logical units, 1/devicePixelRatio) for hairlines, separators and borders. A 1 logical px line is 1.5 physical px and renders soft.
+- Use **`Theme.hair`** (one physical pixel in logical units, 1 / the Hyprland monitor scale, `Theme.scaleOf(screen)`) for hairlines, separators and borders. A 1 logical px line is more than one physical pixel at a fractional scale and renders soft. Do not use `ShellScreen.devicePixelRatio` for it: that is the output's integer scale (2 on this panel at 1.0667, read 2026-10-30), and the hairline it gave, 0.5 logical, was 0.53 physical px, drawn or dropped by where it fell (the cause of the grid mode's doubled joints and missing edge lines). `Theme.whole(v)` and `Theme.wholeUp(v)` round a length to whole physical pixels, `Theme.exactOn(screen, v)` says whether one already is.
 - Text: Qt Quick defaults to RGB-stripe (LCD) smoothing, which shows coloured fringes on the Samsung OLED panel (EDID `ATNA40CT01`). `QSG_DISTANCEFIELD_ANTIALIASING=gray` in the unit fixes it. (`Text.QtRendering` and a fontconfig `rgba=none` file were tried and changed nothing; the fontconfig file was removed again.)
 - Check new shapes with `grim -g "x,y WxH"` (logical coordinates) and `ffmpeg -vf scale=iw*8:ih*8:flags=neighbor` to see individual pixels.
-- Limit: `Theme.hair` reads the first screen's scale; a monitor with a different scale gets 1 px lines that are slightly off, not broken.
+- Limit: `Theme.hair` reads the first screen's scale; a monitor with a different scale gets 1 px lines that are slightly off, not broken (`Theme.scaleOf(screen)` gives each screen's own; the grid frame uses it).
 
 ## Verified by test (2026-10-18)
 

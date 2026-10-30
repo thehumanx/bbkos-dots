@@ -67,6 +67,55 @@ class SettingsTest(unittest.TestCase):
                          (320, "left", 1.0))
         self.assertTrue(warns)
 
+    def test_bar_widgets_can_be_hidden(self):
+        self.assertEqual(S.DEFAULTS["bar"]["hidden"], [])
+        out, warns = S.validate({"version": 1, "bar": {"hidden": ["tray", "nope", "tray", "clock"]}})
+        self.assertEqual(out["bar"]["hidden"], ["tray", "clock"])     # unknown and repeated names dropped
+        self.assertTrue(warns)
+        s = S.set_value(S.DEFAULTS, "bar.hidden", "updates, media")
+        self.assertEqual(s["bar"]["hidden"], ["updates", "media"])
+        with self.assertRaises(ValueError):
+            S.set_value(S.DEFAULTS, "bar.hidden", "nope")
+        self.assertEqual(S.set_value(S.DEFAULTS, "bar.hidden", "")["bar"]["hidden"], [])
+
+    def test_rail_goes_on_any_edge_and_can_hug(self):
+        st = S.DEFAULTS["stage"]
+        self.assertEqual((st["railHug"], st["railAlign"]), (False, "start"))
+        out, _ = S.validate({"version": 1, "stage": {"railPosition": "bottom", "railHug": True, "railAlign": "end"}})
+        self.assertEqual((out["stage"]["railPosition"], out["stage"]["railHug"], out["stage"]["railAlign"]), ("bottom", True, "end"))
+
+    def test_rail_align_rejects_unknown_values(self):
+        out, warns = S.validate({"version": 1, "stage": {"railAlign": "middle"}})
+        self.assertEqual(out["stage"]["railAlign"], "start")
+        self.assertTrue(warns)
+
+    def test_dock_is_off_and_empty_by_default_and_grid_mode_switches_it_on(self):
+        self.assertEqual((S.DEFAULTS["stage"]["dock"], S.DEFAULTS["stage"]["dockApps"]), (False, []))
+        g = S.effective(S.set_value(S.DEFAULTS, "shell.gridMode", "true"))
+        self.assertTrue(g["stage"]["dock"])
+        self.assertEqual((g["stage"]["railPadding"], g["stage"]["cardGap"]), (20, 20))    # the default margin, 20: the rail follows it
+        self.assertEqual(g["stage"]["dockApps"], [])           # grid mode never touches the pins
+
+    def test_the_rail_spacing_follows_the_window_margin_in_grid_mode(self):
+        self.assertEqual((S.grid_rail_gap(8), S.grid_rail_gap(0), S.grid_rail_gap(40)), (8, 0, 32))      # capped at the rail's own maximum
+        s = S.set_value(S.set_value(S.DEFAULTS, "shell.gridMode", "true"), "windows.gapsOut", "8")
+        g = S.effective(s)
+        self.assertEqual((g["stage"]["railPadding"], g["stage"]["cardGap"]), (8, 8))
+        self.assertEqual((s["stage"]["railPadding"], s["stage"]["cardGap"]), (12, 12))                  # the saved values stay
+
+    def test_dock_apps_are_a_cleaned_list_of_names(self):
+        s = S.set_value(S.DEFAULTS, "stage.dockApps", "kitty,org.xfce.Thunar")
+        self.assertEqual(s["stage"]["dockApps"], ["kitty", "org.xfce.Thunar"])
+        self.assertEqual(S.validate({"version": 1, "stage": {"dockApps": ["kitty", "a,b", "", "kitty", "zen"]}})[0]["stage"]["dockApps"], ["kitty", "zen"])
+        with self.assertRaises(ValueError):
+            S.set_value(S.DEFAULTS, "stage.dockApps", "kitty,kitty")
+
+    def test_the_window_title_widget_sits_after_the_workspaces_by_default(self):
+        lay = S.DEFAULTS["bar"]["layout"]
+        self.assertEqual(lay[lay.index("start:workspaces") + 1], "start:title")
+        out, _ = S.validate({"version": 1, "bar": {"layout": ["start:overview", "start:workspaces"]}})
+        self.assertIn("start:title", out["bar"]["layout"])     # an older saved layout gains it
+
     def test_stage_set_value_toggles_the_mode(self):
         out = S.set_value(S.DEFAULTS, "stage.enabled", "on")
         self.assertTrue(out["stage"]["enabled"])
@@ -143,9 +192,18 @@ class SettingsTest(unittest.TestCase):
         s = S.set_value(s, "shell.radius", "20")
         g = S.effective(s)
         self.assertEqual((g["shell"]["radius"], g["shell"]["gap"], g["shell"]["barItemGap"], g["shell"]["barFloat"]), (0, 0, 0, 0))
-        self.assertEqual((g["stage"]["cardGap"], g["stage"]["cardRadius"]), (0, 0))
+        self.assertEqual((g["stage"]["cardGap"], g["stage"]["cardRadius"]), (20, 10))    # the margin and the window rounding (defaults)
         self.assertEqual(g["shell"]["barPills"], "individual")
-        self.assertEqual((g["windows"]["gapsIn"], g["windows"]["gapsOut"], g["windows"]["rounding"], g["windows"]["borderSize"]), (0, 0, 0, 1))
+        self.assertEqual(g["windows"]["borderSize"], 1)
+        # The margin around the windows and their corner radius are the owner's own, in grid mode too (2026-10-30); the gap
+        # between tiled windows follows the margin (Hyprland doubles gaps_in between two windows, so it is half of it).
+        self.assertEqual((g["windows"]["gapsOut"], g["windows"]["rounding"], g["windows"]["gapsIn"]), (20, 10, 10))
+        self.assertEqual(S.grid_gaps_in(8), 4)
+        self.assertEqual(S.grid_gaps_in(7), 4)            # odd margins round up
+        self.assertEqual(S.grid_gaps_in(0), 0)
+        s8 = S.set_value(S.set_value(s, "windows.gapsOut", "8"), "windows.rounding", "6")
+        self.assertEqual((S.effective(s8)["windows"]["gapsOut"], S.effective(s8)["windows"]["rounding"], S.effective(s8)["windows"]["gapsIn"]), (8, 6, 4))
+        self.assertEqual(s8["windows"]["gapsIn"], 5)       # the saved inner gap is untouched
         self.assertFalse(g["windows"]["shadowEnabled"])
         self.assertEqual(g["lock"]["fieldRadius"], 0)
         self.assertEqual(s["shell"]["radius"], 20)                  # the owner's value is untouched
@@ -158,8 +216,8 @@ class SettingsTest(unittest.TestCase):
         s = S.set_value(s, "shell.radius", "20")
         g = S.effective(s)
         self.assertEqual((g["shell"]["radius"], g["shell"]["controlRadius"], g["shell"]["pillRadius"]), (20, 6, 8))
-        self.assertEqual((g["shell"]["barRadius"], g["windows"]["rounding"], g["stage"]["cardRadius"], g["stage"]["cardGap"]), (0, 0, 0, 0))
-        self.assertEqual((g["shell"]["gap"], g["windows"]["gapsIn"]), (0, 0))
+        self.assertEqual((g["shell"]["barRadius"], g["stage"]["cardRadius"]), (0, 10))
+        self.assertEqual(g["shell"]["gap"], 0)
         off = S.effective(S.set_value(s, "shell.gridRoundControls", "false"))
         self.assertEqual((off["shell"]["radius"], off["shell"]["controlRadius"], off["shell"]["pillRadius"]), (0, 0, 0))
 

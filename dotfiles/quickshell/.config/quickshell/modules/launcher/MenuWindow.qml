@@ -17,6 +17,7 @@ PanelWindow {
     property var results: []
     property string armedId: ""                 // a destructive command waiting for its second Enter
     property bool form: false                   // the Create web app form instead of the list
+    property bool pinMode: false                // picking an app to pin to the dock: the grid opens at once
     property bool grid: false                   // All apps: every app and web app as an icon grid (Tab)
     property var apps: []                       // the grid's items, alphabetical, filtered by the query
     readonly property int columns: 6
@@ -33,6 +34,7 @@ PanelWindow {
     function openForm() { form = true; formStatus = ""; nameField.text = ""; urlField.text = ""; nameField.forceActiveFocus() }
     function closeForm() { form = false; input.forceActiveFocus() }
     function pick(index: int) { if (index >= 0 && index < list.count) win.activated(win.results[index]) }
+    Component.onCompleted: if (pinMode) showGrid(true)
     function showGrid(on: bool) { grid = on; appGrid.currentIndex = 0; list.currentIndex = 0; input.forceActiveFocus() }
     // The highlighted item and how arrows move, in whichever view is showing.
     function current(): var { return grid ? (appGrid.currentIndex >= 0 ? apps[appGrid.currentIndex] : null)
@@ -77,7 +79,7 @@ PanelWindow {
                 implicitHeight: 34
 
                 Txt {
-                    text: "Search apps, commands and settings"
+                    text: win.pinMode ? "Pick an app to pin" : "Search apps, commands and settings"
                     visible: input.text === ""
                     color: Theme.dim
                     font.pixelSize: Theme.fontSize + 2
@@ -262,7 +264,8 @@ PanelWindow {
 
             Txt {
                 visible: !win.form
-                text: win.grid ? "Enter open   Arrows move   Delete uninstall   Tab back to results   Esc close"
+                text: win.pinMode ? "Enter pin   Arrows move   Esc close"
+                    : win.grid ? "Enter open   Arrows move   Delete uninstall   Tab back to results   Esc close"
                                : "Enter open   Ctrl+1-9 quick pick   Tab all apps   Delete uninstall   Esc close"
                 color: Theme.dim
                 opacity: 0.7

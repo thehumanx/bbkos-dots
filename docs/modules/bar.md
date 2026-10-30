@@ -50,6 +50,8 @@ Popups, notifications and the OSD follow the bar: `Theme.barEdge` / `Theme.barIn
 
 ## Grid mode (2026-10-26)
 
+The `title` widget (2026-10-30, `dock.md`) shows the focused window's icon and title in a fixed-width cell after the workspaces; horizontal bars only. In grid mode with the dock on, the overview and workspaces cells add up to the rail's width so the title cell's edge meets the rail's (`dock.md`).
+
 With `shell.gridMode` (`grid-mode.md`) every widget is a cell the full thickness of the bar, drawn with a hairline border (`Theme.cardEdge`) and touching its neighbours (they overlap by one hairline so a shared line is drawn once); a line also runs along the bar's inner edge, and the empty space between the start, centre and end groups (and beside them) is filled with empty cells in the same style, so the bar reads as one seamless row (2026-10-28; `Bar.qml` `gridFills`). Checked at top, bottom, left and right on both screens; the gap's colour went from the bare bar (4,37,51) to the cell colour (16,42,53 beside a clock cell of 15,44,55). No float, no radius, no hug, no gap between widgets, whatever the saved values are.
 
 ## Icons only (2026-10-26)
@@ -62,7 +64,7 @@ The bar window is the bar plus the space it floats off its edge (`Theme.barHeigh
 
 ## Hide or show (2026-10-21)
 
-`Super+Shift+Space` (preset `toggle-bar`), or `qs ipc call bar toggle|hide|unhide`. State is `services/BarState.qml` (runtime only: a shell restart brings the bar back). Hidden, the bar window is unmapped, so its reserved edge is freed and windows reflow, and `Theme.barInset` is 0, so panels, notifications, the OSD, the overview and the stage rail move to the screen edge. The overview's bar-strip catcher window is not shown at inset 0. (`show` is not usable as an IPC function name: `qs ipc call bar show` printed the help instead of calling it, hence `unhide`.) Verified 2026-10-21: layer present/absent via `hyprctl layers` and a power panel screenshot at top, bottom, left and right. Not verified: the overview and notifications with the bar hidden, a second monitor.
+`Super+Shift+Space` (preset `toggle-bar`), or `qs ipc call bar toggle|hide|unhide`. State is `services/BarState.qml` (runtime only: a shell restart brings the bar back). Hidden, the bar window is unmapped, so its reserved edge is freed and windows reflow (the stage rail is mapped again when the bar returns, so it lands after the bar: `dock.md`), and `Theme.barInset` is 0, so panels, notifications, the OSD, the overview and the stage rail move to the screen edge. The overview's bar-strip catcher window is not shown at inset 0. (`show` is not usable as an IPC function name: `qs ipc call bar show` printed the help instead of calling it, hence `unhide`.) Verified 2026-10-21: layer present/absent via `hyprctl layers` and a power panel screenshot at top, bottom, left and right. Not verified: the overview and notifications with the bar hidden, a second monitor.
 
 ## Bar blur (2026-10-21)
 
@@ -79,6 +81,9 @@ Widgets lean toward the wallpaper tints through `Txt.tone(Theme.accentN)` (`Them
 While a widget's popup or window is open, its `BarItem` draws a plate behind it: the accent at 30% (`BarItem.highlighted`, 120 ms fade; a little wider than the box along the bar when there are no pills). `Bar.qml` sets `highlighted` per widget: the panel widgets from `PanelState.isOn(panel, screenName)` (the screen the panel opened on; a panel opened with no screen, by the power key or IPC, matches the focused monitor), the overview icon from `OverviewState`, the gear from `SettingsStore.windowOpen`. Checked by screenshot for the Wi-Fi, audio and battery panels, the gear and the overview icon, with pills off, individual pills and a left bar. Not checked: grouped pills, bottom and right bars, a second monitor.
 
 ## Layout and adding a widget
+
+Any widget can be switched off (2026-10-31): the switch at the start of its row in Bar › Layout, or `bbkos-theme set bar.hidden tray,updates` (`settings.py` `bar.hidden`). A hidden widget is not created at all and leaves no pill or grid cell (the empty cells close up), but keeps its place in `bar.layout`. A popup whose widget is hidden still opens from its key or IPC, in the screen corner (Popup placement). With the overview hidden in grid mode the workspaces cell alone lines up with the rail.
+
 
 `Bar.qml` places three `BarSection`s (start, centre, end) per screen; each item sits in a `BarItem`. The two components own everything the settings change (orientation, pill, radius, thickness), so a new widget needs no styling code:
 

@@ -15,12 +15,13 @@ Find the doc for your topic here, then read it in full before changing anything 
 - `docs/modules/desktop-tools.md`: Module: desktop tools. Hyprland changes (`hyprland.lua`): `Super+L`, `Print`, `Shift+Print`; `misc.force_default_wallpaper = 0`, `disable_hyprland_logo = true`, `background_color = 0…
 - `docs/modules/dictation.md`: Dictation (Voxtype). Press `Super+Ctrl+X`, speak English, press it again: the words are typed into the focused window
 - `docs/modules/displays.md`: Display widget (bar + panel). Click the monitor/brightness widget in the bar (icon and percentage, left of the volume widget): a popup opens under it
+- `docs/modules/dock.md`: Module: pinned apps (dock) and the window title. Pinned apps are a grid of app tiles at the start of the stage rail, always shown, that start an app or bring its window to the front; a bar widget shows the fo…
 - `docs/modules/dotfiles.md`: Module: dotfiles (GNU Stow). All but `quickshell` are linked with `--no-folding`; the full table is in `dotfiles/README.md`
 - `docs/modules/emoji.md`: Emoji picker. `Super+;` (preset `emoji-picker`, `qs ipc call emoji toggle`) opens a search box and a grid of emoji; **Enter or a click types the emoji
 - `docs/modules/failure-modes.md`: Failure modes and edge cases. Audit of 2026-10-18, started after two avoidable problems were found by accident (apps killed with a Quickshell restart; logout killing the compositor first)
 - `docs/modules/fish.md`: Module: fish shell. Link with `--no-folding` for anything that writes state into its own directory:
 - `docs/modules/fwupd.md`: Module: fwupd (firmware updates). `fwupd` installed
-- `docs/modules/grid-mode.md`: Grid mode. One switch (`shell.gridMode`, Appearance › Style, "Grid mode"; the Shell page until 2026-10-28) that turns the whole desktop into flat, touching cells separate…
+- `docs/modules/grid-mode.md`: Grid mode. One switch (`shell.gridMode`, bbkOS › Grid mode since 2026-10-31; Appearance › Style before, the Shell page until 2026-10-28) that turns the desktop into flat,…
 - `docs/modules/grub.md`: Module: GRUB. `GRUB_DEFAULT=saved` with `GRUB_SAVEDEFAULT=true`: GRUB cannot write its environment file on btrfs, so it would silently not remember the choice
 - `docs/modules/idle.md`: Idle and lock (the idle timers). Added 2026-10-24
 - `docs/modules/input.md`: Keyboard, mouse and cursor. Added 2026-10-24

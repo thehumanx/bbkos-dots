@@ -278,7 +278,7 @@ light theme. The closing side has no animation by design (see Behaviour · Open 
 
 The right end of the overview header has a "Stage mode for workspace N" switch (2026-10-21; it replaced the
 "Workspace N · count" text). Since 2026-10-23 it switches only the workspace shown below (`OverviewState.selected`)
-until the next boot, through `StageState`; the default for every workspace is on the Stage mode settings page. See
+until the next boot, through `StageState`; the default for every workspace is on bbkOS › Stage mode. See
 `stage.md`.
 
 ## Nice to have (not done)

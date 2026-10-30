@@ -50,5 +50,17 @@ class SettingsPagesTest(unittest.TestCase):
         self.assertEqual(index.rows(qml), [("Mode", "Pick one", "Card"), ("On", "", "Card")])
 
 
+    def test_bbkos_page_gathers_grid_rail_and_stage(self):
+        """Owner (2026-10-31): what is particular to bbkOS is on one page, bbkOS, with these three tabs."""
+        self.assertEqual([p for p, _, _ in self.places if p.startswith("bbkos/")], ["bbkos/grid", "bbkos/rail", "bbkos/stage"])
+        rows = lambda f: [r[0] for r in index.rows((SETTINGS / f).read_text(encoding="utf-8"))]
+        self.assertEqual(rows("PageGrid.qml"), ["Grid mode", "Round popups and controls in grid mode"])
+        for label in ("Pinned apps", "Side", "Thickness", "Hug its contents", "Alignment"):
+            self.assertIn(label, rows("PageRail.qml"))
+        self.assertIn("Card length", rows("PageStage.qml"))
+        self.assertNotIn("Grid mode", rows("PageShell.qml"))
+        self.assertFalse(any(p == "windows/stage" for p, _, _ in self.places))
+
+
 if __name__ == "__main__":
     unittest.main()

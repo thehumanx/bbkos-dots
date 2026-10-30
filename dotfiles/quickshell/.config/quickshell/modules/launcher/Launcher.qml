@@ -14,6 +14,12 @@ import "Commands.js" as Commands
 Scope {
     id: root
     property bool open: false
+    // Pin mode (the dock's "+" tile): the menu lists apps only, and picking one pins it instead of starting it.
+    property bool pinMode: false
+    Connections {
+        target: Dock
+        function onPickRequested() { root.pinMode = true; root.open = true }
+    }
 
     // Desktop entries load lazily on first use; load them now so the first open is complete.
     Component.onCompleted: void DesktopEntries.applications
@@ -64,7 +70,7 @@ Scope {
             }
         }
     }
-    onOpenChanged: if (open) { loadUsage(); webappList.running = true }
+    onOpenChanged: { if (open) { loadUsage(); webappList.running = true } else pinMode = false }
 
     // Apps must NOT run inside quickshell.service's cgroup: a Quickshell restart or crash would kill every app
     // started from here. `uwsm app` starts each one in its own systemd scope under app.slice.
@@ -122,6 +128,10 @@ Scope {
     function activate(item, query: string) {
         if (item.confirm && root.armed !== item.id) { root.armed = item.id; disarm.restart(); return }
         root.armed = ""
+        if (root.pinMode) {                                  // pin mode picks an app and nothing else
+            if (item.entry) { Dock.pin(item.entry.id); root.open = false }
+            return
+        }
         if (item.id !== "calc" && item.id !== "search") remember(item.id, query)
         if (item.entry) { launchEntry(item.entry); root.open = false; return }
         const r = item.run || {}
@@ -149,7 +159,7 @@ Scope {
     // lists what goes, unneeded dependencies included, and asks Y/n. Core packages and apps from no package manager
     // are refused with a notification.
     function uninstall(item) {
-        if (!item || !item.entry) return
+        if (!item || !item.entry || root.pinMode) return        // pin mode only picks
         const key = "uninstall:" + item.id
         if (root.armed !== key) { root.armed = key; disarm.restart(); return }
         root.armed = ""
@@ -191,6 +201,7 @@ Scope {
         target: "launcher"
         function toggle(): void { root.open = !root.open }
         function close(): void { root.open = false }
+        function pin(): void { Dock.pickRequested() }          // what the dock's "+" tile does: the menu in pin mode
         function forget(): void { root.forgetUsage() }          // the Launcher page's "Forget what the menu learned"
         function launch(id: string): void {            // scripting and tests: qs ipc call launcher launch kitty
             const e = DesktopEntries.byId(id)
@@ -206,7 +217,7 @@ Scope {
         function create(name: string, url: string): void { if (menu.item) { menu.item.openForm(); root.createWebApp(name, url) } }
         // Carry out the result with this id for this query, as Enter would (twice for a command that asks to confirm).
         function run(id: string, query: string): string {
-            const r = root.search(query).find(x => x.id === id)
+            const r = (root.pinMode ? root.appsFor(query) : root.search(query)).find(x => x.id === id)
             if (!r) return "not found"
             root.activate(r, query)
             return root.armed === id ? "armed" : "done"
@@ -224,7 +235,8 @@ Scope {
         active: root.open
 
         MenuWindow {
-            results: root.search(query)
+            pinMode: root.pinMode
+            results: root.pinMode ? root.appsFor(query) : root.search(query)
             apps: grid ? root.appsFor(query) : []
             armedId: root.armed
             onActivated: item => root.activate(item, query)

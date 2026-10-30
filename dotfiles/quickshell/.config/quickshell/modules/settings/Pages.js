@@ -3,19 +3,28 @@
 // bbkOS menu (launcher/Commands.js) and the search index (scripts/build-settings-index.py reads `page:` names here) use it.
 // Each page: id, label, group, icon (Nerd Font glyph, one per page), keywords for the search, and tabs. A page with
 // one tab shows no tab bar. Each tab: id, label, page (the Page*.qml component that draws it), keywords.
-// A place in the window is "page" or "page/tab" (`qs ipc call settings page windows/stage`, SettingsStore.openPage).
+// A place in the window is "page" or "page/tab" (`qs ipc call settings page bbkos/stage`, SettingsStore.openPage).
 // Reorganised 2026-10-28 from 30 flat pages to these 16 (docs/modules/settings-app.md, "Reorganisation").
 
-var GROUPS = ["Look", "Desktop", "Devices", "System"]
+var GROUPS = ["bbkOS", "Look", "Desktop", "Devices", "System"]
 
 var PAGES = [
+    // What is particular to bbkOS, on one page (owner, 2026-10-31): grid mode, the rail with the pinned apps, stage mode.
+    { id: "bbkos", label: "bbkOS", group: "bbkOS", icon: "\uf303",
+      keywords: "bbkos rice signature features",
+      tabs: [
+        { id: "grid", label: "Grid mode", page: "PageGrid", keywords: "grid mode flat cells hairline borders square round controls" },
+        { id: "rail", label: "Rail and pinned apps", page: "PageRail",
+          keywords: "rail dock pinned apps pin tiles side edge top bottom left right thickness hug alignment centre padding reserve" },
+        { id: "stage", label: "Stage mode", page: "PageStage", keywords: "stage manager mode tiling monocle cards previews refresh" }] },
+
     { id: "appearance", label: "Appearance", group: "Look", icon: "",
       keywords: "theme look style",
       tabs: [
         { id: "wallpaper", label: "Wallpaper and colours", page: "PageWallpaper",
           keywords: "wallpaper background image colour color theme palette dark light mode accent contrast scheme schedule automatic folder icons tint" },
         { id: "style", label: "Style", page: "PageShell",
-          keywords: "shell grid mode font text size radius corners gap popup shadow reduce motion" },
+          keywords: "shell font text size radius corners gap popup shadow reduce motion" },
         { id: "terminal", label: "Terminal", page: "PageTerminal", keywords: "kitty terminal font padding opacity" }] },
     { id: "bar", label: "Bar", group: "Look", icon: "",
       keywords: "bar panel",
@@ -32,8 +41,7 @@ var PAGES = [
         { id: "look", label: "Look", page: "PageWindows",
           keywords: "gaps border rounding opacity shadow blur animation speed resize grab" },
         { id: "behaviour", label: "Behaviour", page: "PageBehavior",
-          keywords: "focus follow mouse click activate workspace switch back snap floating" },
-        { id: "stage", label: "Stage mode", page: "PageStage", keywords: "stage manager mode rail tiling monocle cards" }] },
+          keywords: "focus follow mouse click activate workspace switch back snap floating" }] },
     { id: "lock", label: "Lock screen", group: "Look", icon: "",
       keywords: "lock screen hyprlock avatar picture photo profile image clock blur welcome password",
       tabs: [{ id: "editor", label: "Lock screen", page: "PageLock", keywords: "" }] },

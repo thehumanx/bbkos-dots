@@ -104,6 +104,7 @@
       "end:settings",
       "end:privacy"
     ],
+    "hidden": [],
     "iconsOnly": false,
     "iconGap": 3,
     "iconWifi": "bars",
@@ -128,7 +129,11 @@
     "refreshSeconds": 0,
     "showWithOneWindow": false,
     "reserveSpace": true,
-    "animations": true
+    "animations": true,
+    "dock": false,
+    "dockApps": [],
+    "railHug": false,
+    "railAlign": "start"
   },
   "capture": {
     "autosave": false,

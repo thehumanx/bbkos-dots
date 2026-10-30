@@ -21,7 +21,7 @@ ColumnLayout {
         const walk = item => {
             for (const c of item.children) {
                 if (!c.visible) continue
-                if (typeof c.key === "string" && c.key !== "" && c.modified === true && c.gridLocked !== true && !out.includes(c.key)) out.push(c.key)
+                if (typeof c.key === "string" && c.key !== "" && c.modified === true && c.locked !== true && !out.includes(c.key)) out.push(c.key)
                 walk(c)
             }
         }

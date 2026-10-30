@@ -16,7 +16,8 @@
     "accentSoft": "#015300",
     "secondarySoft": "#4c4400",
     "tertiarySoft": "#004f46",
-    "surfaceHigh": "#272b25"
+    "surfaceHigh": "#272b25",
+    "gridEdge": "#484c45"
   },
   "ansi": [
     "#1d211b",

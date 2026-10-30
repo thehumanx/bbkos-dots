@@ -10,9 +10,10 @@ Owner request: "the settings app has grown a lot and the options are scattered a
 
 | Group | Page (id) | Tabs (id: page file) | Was |
 |---|---|---|---|
+| bbkOS (2026-10-31) | bbkOS (`bbkos`) | Grid mode (`grid`: PageGrid), Rail and pinned apps (`rail`: PageRail), Stage mode (`stage`: PageStage) | Grid mode on Appearance › Style; the rail and stage mode on Windows › Stage mode |
 | Look | Appearance (`appearance`) | Wallpaper and colours (`wallpaper`: PageWallpaper), Style (`style`: PageShell), Terminal (`terminal`: PageTerminal) | Wallpaper and colours, Shell, Terminal |
 | | Bar (`bar`) | Layout (PageBarLayout), Look (PageBarLook), Widgets (PageBarWidgets: clock, calendar, music) | Bar, Date and time, the music card of Sound |
-| | Windows (`windows`) | Look (PageWindows), Behaviour (PageBehavior), Stage mode (PageStage) | Windows, Window behaviour, Stage mode |
+| | Windows (`windows`) | Look (PageWindows), Behaviour (PageBehavior) | Windows, Window behaviour (Stage mode moved to bbkOS, 2026-10-31) |
 | | Lock screen (`lock`) | one (PageLock) | Lock screen |
 | Desktop | Notifications (`notifications`) | one | Notifications |
 | | Apps (`apps`) | Default apps (PageApps), Startup (PageStartup), Launcher (PageLauncher) | Default apps, Startup apps, Launcher |
@@ -225,12 +226,18 @@ freedesktop file `xdg-open`, GTK, Qt and Thunar read. Verified: the page on scre
 app that cannot open the kind). Not verified: a change made from the page by a click (the owner's choices were not
 changed), apps that read only their own settings (some browsers ask to be the default themselves).
 
+## bbkOS page (2026-10-31)
+
+Owner: what is particular to bbkOS ("what's distinct with this rice") is on one page, first in the sidebar in a group of its own, and the window opens on it when no place is asked for (it is the first entry of `Pages.js`). Settings were moved, not copied: Grid mode (`PageGrid`: grid mode and round popups and controls, from Appearance › Style), Rail and pinned apps (`PageRail`: pinned apps, side, thickness, hug, alignment, padding, background opacity, reserve space, from Windows › Stage mode) and Stage mode (`PageStage`, below). The search index, the menu entries and `qs ipc call settings page bbkos/rail` follow `Pages.js`. Nepali calendar, screen-time breaks and dictation stay on their pages.
+
 ## Stage mode page (2026-10-21)
 
-Eleventh sidebar entry (`PageStage`, index 10, `qs ipc call settings page 10`): "Stage mode by default" (`stage.enabled`,
+Since 2026-10-31 the tab bbkOS › Stage mode (`bbkos/stage`); until then Windows › Stage mode, and before 2026-10-28 the eleventh sidebar entry (`PageStage`, `qs ipc call settings page 10`). Since 2026-10-31 the rail rows are on bbkOS › Rail and pinned apps; this page keeps: "Stage mode by default" (`stage.enabled`,
 the mode every workspace starts in; since 2026-10-23 one workspace can differ until the next boot, see `stage.md`) and
-every size and look of the rail (side, width, padding, background opacity, reserve space, show with one window, card
-height, gap, corner radius, title, icon, order, animations, refresh interval). The rail controls are always active (a
+every size and look of the rail (pinned apps, side on any of four edges, thickness, hug its contents and the position
+along the edge, padding, background opacity (since 2026-10-31 "Set by the bar style": a row with `lockedBy`, shown like a
+grid-locked row and skipped by "Reset these"), reserve space, show with one window, card length, gap, corner radius,
+title, icon, order, animations, refresh interval). The rail controls are always active (a
 workspace can be in stage mode while the default is off). Keys and ranges mirror `settings.py` `stage.*`.
 
 ## Hyprland rule (spec 8 item 5)
@@ -337,7 +344,7 @@ The mock is an approximation of hyprlock (font metrics, blur strength). Position
 | `revert` | `SettingsStore.revertToOpen` |
 | `snapshotInfo` | Test hook (Task 13): JSON `{wallpaper, state}` of the wallpaper snapshot (`wallpaper` is `""` when there is none or it failed) |
 | `snapDirFor ENV` | Test hook (Task 13): the pure path guard, returns the snapshot directory for an `XDG_RUNTIME_DIR` value or `""` |
-| `page PLACE` | Open the window at `page` or `page/tab` (`Pages.js` ids, for example `windows/stage`); an unknown place logs a WARN. Until 2026-10-28 `page N` took a sidebar index |
+| `page PLACE` | Open the window at `page` or `page/tab` (`Pages.js` ids, for example `bbkos/stage`); an unknown place logs a WARN. Until 2026-10-28 `page N` took a sidebar index |
 | `where` | Test hook (2026-10-28): the place shown, `""` while closed |
 | `search TEXT` | Test hook: types into the sidebar search box |
 | `pick` | Test hook (2026-10-28): Enter in the search box (opens the first hit) |

@@ -40,7 +40,7 @@ Singleton {
     signal folderRefreshRequested()
     // Asks the open window to show a place: "page" or "page/tab" (modules/settings/Pages.js).
     signal pageRequested(string place)
-    // The place the window shows ("windows/stage"), "" while it is closed. Written by the window; test hook `settings where`.
+    // The place the window shows ("bbkos/stage"), "" while it is closed. Written by the window; test hook `settings where`.
     property string place: ""
     // The label of a row the open page should scroll to and light up once (a search hit); the page clears it.
     property string reveal: ""
@@ -164,6 +164,11 @@ Singleton {
     function gridValue(key: string): var {
         if (typeof key !== "string") return undefined
         const [section, name] = key.split(".")
+        // The gap between tiled windows follows the margin around them: settings.py grid_gaps_in(), same arithmetic.
+        if (key === "windows.gapsIn") return Math.floor((Number(shown("windows.gapsOut")) + 1) / 2)
+        // The stage rail's padding and tile gap are the same margin (settings.py grid_rail_gap(), capped at 32).
+        if (key === "stage.railPadding" || key === "stage.cardGap") return Math.min(32, Number(shown("windows.gapsOut")))
+        if (key === "stage.cardRadius") return Number(shown("windows.rounding"))      // the rail's tiles and cards are rounded like the windows
         const o = gridOverrides[section]
         if (o !== undefined && o !== null && name in o) return o[name]
         const r = gridRoundOff[section]

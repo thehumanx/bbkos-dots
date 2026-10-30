@@ -5,9 +5,11 @@ one at a time, full size, instead of tiling them, and the other windows of the w
 thumbnail cards along one edge. A click on a card brings that window to the front. `stage.enabled` (Settings, "Stage
 mode by default") is the mode every workspace starts in; the overview switch ("Stage mode for workspace N"),
 `Super+Alt+S` or `qs ipc call stagews set NAME true|false` switch one workspace until the next boot. Every size and look
-of the rail is on the Stage mode settings page. Source:
+of the rail is on bbkOS › Stage mode and bbkOS › Rail and pinned apps (Windows › Stage mode until 2026-10-31). Source:
 `dotfiles/quickshell/.config/quickshell/modules/stage/{Stage,StageCard,StillImage}.qml`, `services/StageState.qml`,
-`modules/settings/PageStage.qml`, `bbkos_theme/{settings,render,keybinds}.py`.
+`modules/settings/{PageStage,PageRail}.qml`, `bbkos_theme/{settings,render,keybinds}.py`.
+
+Since 2026-10-30 the rail can also hold a grid of pinned apps above the cards and show on every workspace: `dock.md`. Since 2026-10-31 it goes on any of the four edges, full length or hugging its contents, and outside grid mode it takes the bar's style (`dock.md`, "Placement and style").
 
 ## Per workspace (2026-10-23)
 
@@ -21,7 +23,7 @@ of the rail is on the Stage mode settings page. Source:
 - **Until reboot:** the choices are in `$XDG_RUNTIME_DIR/bbkos-stage.json` (`{"9": false}`, only workspaces that differ
   from the default), a tmpfs emptied at shutdown. They survive a shell restart and a Hyprland reload (both checked).
   Changing the default clears them (every workspace follows the new default).
-- **Rail and keys:** the rail shows on a monitor only while its active workspace is a stage workspace
+- **Rail and keys:** the rail shows on a monitor only while its active workspace is a stage workspace (with the dock on, `dock.md`, it shows on every workspace and only its cards follow this rule)
   (`StageState.isStage(name)`); `Super`+arrows read the active workspace's own layout
   (`hl.get_active_workspace().tiled_layout`, `keybinds.py`) when pressed.
 - **Test hooks:** `qs ipc call stagews status | set NAME BOOL | toggle NAME` (`""` = the focused workspace);
@@ -67,13 +69,17 @@ of the rail is on the Stage mode settings page. Source:
 | Key | Range / values | Default |
 |---|---|---|
 | `enabled` | on/off: the default for every workspace | off |
-| `railPosition` | left, right | left |
-| `railWidth` | 100-320 step 10 | 150 |
-| `railPadding` | 0-32 step 2 | 12 |
-| `railOpacity` | 0.0-1.0 (rail background) | 0.0 |
-| `cardHeight` | 60-240 step 10 | 100 |
-| `cardGap` | 0-32 step 2 | 12 (0 while grid mode is on: the previews touch) |
-| `cardRadius` | 0-24 step 2 | 10 |
+| `railPosition` | left, right, top, bottom ("Side") | left |
+| `railWidth` | 100-320 step 10: a side rail's thickness, and so the tile size on every edge; a top or bottom rail is one row of tiles thick ("Thickness") | 150 |
+| `railHug` | on/off: only as long as its tiles and cards ("Hug its contents") | off |
+| `railAlign` | start, centre, end: where the tiles and cards sit along a full-length rail, and where a hugging rail sits along its edge ("Alignment") | start |
+| `railPadding` | 0-32 step 2 | 12 (the window margin while grid mode is on) |
+| `dock` | on/off: pinned apps at the start of the rail, shown on every workspace (`dock.md`; "Pinned apps") | off (on in grid mode) |
+| `dockApps` | desktop-file ids of the pinned apps | empty |
+| `railOpacity` | 0.0-1.0 | 0.0; not read since 2026-10-31: the rail takes the bar's background in both modes (the row says "Set by the bar style") |
+| `cardHeight` | 60-240 step 10: a card's length along the rail ("Card length") | 100 |
+| `cardGap` | 0-32 step 2 | 12 (the window margin while grid mode is on) |
+| `cardRadius` | 0-24 step 2 | 10 (the window rounding while grid mode is on) |
 | `showTitle`, `showIcon` | on/off | on |
 | `order` | recent, opened | recent |
 | `refreshSeconds` | 0-30 | 3 |
@@ -81,7 +87,7 @@ of the rail is on the Stage mode settings page. Source:
 | `reserveSpace` | on/off | on |
 | `animations` | on/off (card hover grow) | on |
 
-`bbkos-theme set stage.railWidth 180`, `bbkos-theme reset stage`; each card of Windows › Stage mode has "Reset these" (the Reset page's "Stage mode" row until 2026-10-28). The CLI and the
+`bbkos-theme set stage.railWidth 180`, `bbkos-theme reset stage`; each card of bbkOS › Stage mode and bbkOS › Rail and pinned apps has "Reset these" (the Reset page's "Stage mode" row until 2026-10-28). The CLI and the
 settings page use the same keys.
 
 ## Prior art

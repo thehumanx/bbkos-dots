@@ -110,7 +110,7 @@ class TokensTest(unittest.TestCase):
                 self.assertEqual(set(t), {"bg", "surface", "fg", "dim", "accent", "warn", "crit",
                                           "outline", "borderActive1", "borderActive2",
                                           "borderInactive", "secondary", "tertiary", "accentSoft",
-                                          "secondarySoft", "tertiarySoft", "surfaceHigh", "ansi"})
+                                          "secondarySoft", "tertiarySoft", "surfaceHigh", "gridEdge", "ansi"})
                 for k in ("fg", "dim", "accent", "warn", "crit", "secondary", "tertiary"):
                     self.assertGreaterEqual(contrast.ratio(t[k], t["bg"]), 4.5, k)
                 self.assertEqual(len(t["ansi"]), 16)
@@ -263,7 +263,7 @@ class ColorsJsonTest(unittest.TestCase):
         self.assertEqual(list(d["colors"]), ["bg", "surface", "fg", "dim", "accent", "warn", "crit",
                                               "outline", "borderActive1", "borderActive2",
                                               "borderInactive", "secondary", "tertiary", "accentSoft",
-                                              "secondarySoft", "tertiarySoft", "surfaceHigh"])
+                                              "secondarySoft", "tertiarySoft", "surfaceHigh", "gridEdge"])
         for k, v in d["colors"].items():
             self.assertEqual(v, t[k])
         self.assertEqual(d["ansi"], t["ansi"])
@@ -326,12 +326,14 @@ class HyprLuaTest(unittest.TestCase):
     def test_grid_mode_renders_flat_windows_and_a_light_inactive_border(self):
         s = make_settings("dark")
         s["shell"]["gridMode"] = True
+        s["windows"]["gapsOut"] = 8             # the owner's margin and corner radius apply in grid mode (2026-10-30)
+        s["windows"]["rounding"] = 6
         g = settings.effective(s)
         t = render.tokens(make_palette("dark"), g)
         text = render.render_hypr_lua(t, g)
-        for line in ("gaps_in = 0,", "gaps_out = 0,", "border_size = 1,", "rounding = 0,", "shadow = { enabled = false,"):
+        for line in ("gaps_in = 4,", "gaps_out = 8,", "border_size = 1,", "rounding = 6,", "shadow = { enabled = false,"):
             self.assertIn(line, text)
-        self.assertIn(f'inactive_border = "rgba({t["fg"].lstrip("#")}40)"', text)
+        self.assertIn(f'inactive_border = "rgba({t["gridEdge"].lstrip("#")}ff)"', text)   # one opaque colour, as the shell's cell edge
         self.assertEqual(self.run_lua_text(text), 0)
         off = render.render_hypr_lua(t, make_settings("dark"))      # grid off: the owner's values, the palette border
         self.assertIn("gaps_out = 20,", off)

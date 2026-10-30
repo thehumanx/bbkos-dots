@@ -4,6 +4,7 @@ import "modules/bar"
 import "modules/notifications"
 import "modules/overview"
 import "modules/stage"
+import "modules/frame"
 import "modules/osd"
 import "modules/toast"
 import "modules/launcher"
@@ -31,6 +32,7 @@ ShellRoot {
     Panels {}
     Overview {}
     Stage {}
+    ScreenFrame {}
     CaptivePortal {}
     BatteryAlerts {}
     ThemeIpc {}

@@ -35,7 +35,7 @@ and his articles "Great animations" and "7 practical animation tips" (emilkowal.
 | `durLarge` | 300 ms | the overview opening (closing is 260) |
 | `reduceMotion` | `shell.reduceMotion` | fades only |
 | `shadow`, `shadowStrength`, `shadowPad` (32) | `shell.popupShadow` | the card shadow, see below |
-| `cardEdge` | `fg` at 8 % | hairline edge of every floating card |
+| `cardEdge` | `fg` at 8 % (grid mode: the opaque `gridEdge`) | hairline edge of every floating card |
 
 In QML a curve is `easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeOut`. No module writes its own
 duration or curve; the exceptions are the wallpaper cross-fade (400 ms, rare and decorative), the timer's done flash, and

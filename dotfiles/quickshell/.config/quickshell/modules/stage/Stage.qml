@@ -5,7 +5,9 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs
 import qs.services
+import "../bar"
 import "../overview/OverviewModel.js" as Model
+import "RailGeometry.js" as Geo
 
 // Stage mode (docs/modules/stage.md), per workspace: a stage workspace uses Hyprland's monocle layout (the default from
 // stage.enabled via render.py, a per-workspace choice via StageState), so each window opens alone and full size. This
@@ -30,13 +32,23 @@ Scope {
         function refresh(): void { root.refreshNow(); root.captureVersion++ }
         // Test hook: what a click on that window's rail card does (the first screen's rail), cursor handling included.
         function focus(address: string): void { if (rails.instances.length > 0) rails.instances[0].panel.focusWindow(address) }
+        // Test hooks for the pinned apps: what a click on that app's tile does, and the unpin ×.
+        function dockclick(id: string): void { if (rails.instances.length > 0) rails.instances[0].panel.dockActivate(id) }
+        function undock(id: string): void { Dock.unpin(id) }
+        function dock(): string {
+            return JSON.stringify({ on: Dock.on, apps: Dock.apps, running: Dock.running, alignBar: Dock.alignBar,
+                                    resolved: rails.instances.length > 0 ? rails.instances[0].panel.dockResolved() : [] })     // the pins whose tile found its desktop entry
+        }
         function status(): string {
             const out = []
             for (let i = 0; i < rails.instances.length; i++) {
                 const r = rails.instances[i].panel
                 out.push({ screen: r.screenName, workspace: r.workspace ? r.workspace.name : "", stage: r.stageHere,
                            windows: r.windows.length, front: r.frontAddress, frame: r.frame, toplevels: r.workspace ? r.workspace.toplevels.values.length : -1,
-                           cards: r.cardModel.count, visible: r.railVisible })
+                           cards: r.cardModel.count, visible: r.railVisible, edge: r.position, hug: r.hug,
+                           body: { x: r.railStrip.x, y: r.railStrip.y, width: r.railStrip.width, height: r.railStrip.height },
+                           style: { radius: r.bodyRadius, blur: r.blurActive, pills: Theme.barPills },
+                           tile: r.tile, padding: r.padding, dockSize: { width: r.dockWidth, height: r.dockHeight } })
             }
             return JSON.stringify({ enabled: root.enabled, overrides: StageState.overrides, screens: out })
         }
@@ -89,6 +101,17 @@ Scope {
             required property var modelData
             property alias panel: win
 
+            // Hyprland lays layer windows out in the order they were mapped, and the first takes the edge: a rail that stays
+            // mapped while the bar is hidden and shown again ends up before the bar, takes the full height and pushes the bar
+            // aside (and covers its edge line). So when the bar comes back the rail is unmapped and mapped again, after it.
+            property bool remapping: false
+            Connections {
+                target: BarState
+                function onHiddenChanged() { if (!BarState.hidden) unmapTimer.restart() }
+            }
+            Timer { id: unmapTimer; interval: 250; onTriggered: { per.remapping = true; mapTimer.restart() } }
+            Timer { id: mapTimer; interval: 120; onTriggered: per.remapping = false }
+
             PanelWindow {
                 id: win
 
@@ -109,7 +132,8 @@ Scope {
                 readonly property string frontAddress: front ? front.address : ""
                 // The other windows: most recently used first, or in the order Hyprland lists them.
                 readonly property var others: {
-                    const list = windows.filter(w => w.address !== frontAddress)
+                    // A pinned app's window shows as its tile in the dock above, so it is not a card as well.
+                    const list = windows.filter(w => w.address !== frontAddress && !(Dock.on && Dock.isPinnedWindow(w.appId)))
                     if (root.opt("order", "recent") === "recent") {
                         list.sort((a, b) => a.focus - b.focus)
                     } else {
@@ -118,20 +142,37 @@ Scope {
                     }
                     return list
                 }
-                readonly property bool railVisible: stageHere
-                    && (windows.length >= 2 || (windows.length >= 1 && root.opt("showWithOneWindow", false) === true))
+                // The dock (pinned apps) shows on every workspace; without it the rail shows only on a stage workspace with windows to list.
+                readonly property bool railVisible: Dock.on || (stageHere
+                    && (windows.length >= 2 || (windows.length >= 1 && root.opt("showWithOneWindow", false) === true)))
 
                 // Looks, all from settings.
                 readonly property string position: root.opt("railPosition", "left")
-                readonly property int railWidth: root.opt("railWidth", 150)
-                readonly property int padding: root.opt("railPadding", 12)
-                readonly property int cardHeight: root.opt("cardHeight", 100)
-                readonly property int gap: Theme.gridMode ? 0 : root.opt("cardGap", 12)
-                readonly property int cardRadius: Theme.gridMode ? 0 : root.opt("cardRadius", 10)
+                readonly property bool sideRail: Geo.vertical(position)          // left or right: the rail's length runs down the screen
+                // A live change of edge left the layer where it was (measured in the test shell, 2026-10-31: left to right and right to
+                // bottom kept the old place): map the window again, as after the bar comes back. A blink of 120 ms, only on a change.
+                onPositionChanged: { per.remapping = true; mapTimer.restart() }
+                readonly property bool hug: root.opt("railHug", false) === true  // only as long as its contents, at railAlign along the edge
+                readonly property string align: root.opt("railAlign", "start")   // the contents along a full rail, the body when hugging
+                readonly property int railWidth: root.opt("railWidth", 150)      // a side rail's thickness; sets the tile size on every edge
+                readonly property int padding: Theme.gridMode ? Theme.gridMargin : root.opt("railPadding", 12)
+                readonly property int cardHeight: root.opt("cardHeight", 100)   // a card's length along the rail, on every edge
+                readonly property int gap: Theme.gridMode ? Theme.gridMargin : root.opt("cardGap", 12)   // grid: the window margin, for the padding too
+                readonly property int cardRadius: Theme.gridMode ? Theme.gridWindowRadius : root.opt("cardRadius", 10)   // grid: the windows' corner radius
                 readonly property bool showTitle: root.opt("showTitle", true) === true
                 readonly property bool showIcon: root.opt("showIcon", true) === true
                 readonly property bool animations: root.opt("animations", true) === true
-                readonly property real cardWidth: Math.max(40, railWidth - 2 * padding)
+                // A tile is the same size on every edge: half of a side rail's inside, less the gap (DockGrid's two columns).
+                readonly property real tile: Math.round((Math.max(40, railWidth - 2 * padding) - gap) / 2)
+                // The rail's thickness: railWidth on a side; on the top or bottom one row of tiles and the padding (owner, 2026-10-31).
+                readonly property real railThick: sideRail ? railWidth : tile + 2 * padding
+                readonly property real crossSize: sideRail ? Math.max(40, railWidth - 2 * padding) : tile   // tiles and cards across the rail
+                readonly property real cardWidth: crossSize
+                readonly property real float: Theme.gridMode ? 0 : Theme.barFloat       // grid mode floats nothing
+                readonly property real px: Theme.gridMode ? Theme.hair : 1               // grid: whole physical pixels for the hairlines
+                readonly property real thickness: railThick + float
+                readonly property real bodyRadius: Theme.gridMode ? 0 : Math.min(Theme.barRadius, railThick / 2)
+                readonly property bool blurActive: railBlur.active
                 readonly property int captureVersion: root.captureVersion
 
                 // Stable cards: a ListModel diffed against `others`, so a refresh never recreates a screenshot.
@@ -165,6 +206,14 @@ Scope {
                         if (Model.normalizeAddress(list[i].address) === address) return list[i]
                     return null
                 }
+                function dockResolved(): var { return dockGrid.resolved() }
+                readonly property real dockWidth: dockGrid.width
+                readonly property real dockHeight: dockGrid.height
+                // A pinned app's tile: focus its window when it has one, start it otherwise.
+                function dockActivate(id: string): void {
+                    if (id in Dock.running) focusWindow(Dock.running[id])
+                    else Dock.launch(id)
+                }
                 function focusWindow(address) {
                     const target = Model.normalizeAddress(address)
                     // Focusing a window warps the cursor to its centre (Hyprland cursor.no_warps is off). From the rail the
@@ -176,51 +225,160 @@ Scope {
                 }
 
                 screen: per.modelData
-                visible: railVisible
+                visible: railVisible && !per.remapping
                 anchors {
-                    top: true
-                    bottom: true
-                    left: win.position === "left"
-                    right: win.position === "right"
+                    top: win.position !== "bottom"
+                    bottom: win.position !== "top"
+                    left: win.position !== "right"
+                    right: win.position !== "left"
                 }
                 // A reserving rail is placed inside the usable area, which the compositor already keeps clear of the bar
                 // (an extra margin put it 36 px too low). Without reserving it spans the whole monitor edge, so it
                 // takes the bar's inset like the overview does.
                 readonly property bool reserve: root.opt("reserveSpace", true) === true
+                // Grid mode, reserving, and only where the bar's thickness is not a whole number of physical pixels on this screen
+                // (Theme.barHeight is rounded to one, so normally never): one logical pixel clear of the bar. A fractional bar edge
+                // shares its last row with the rail's first; whenever the rail repainted (a tile's hover animation) the compositor
+                // redrew that row from the rail alone and the bar's edge line vanished (screen recordings, 2026-10-30; dock.md).
+                readonly property int gridPad: Theme.gridMode && reserve && !Theme.exactOn(per.modelData, Theme.barInset) ? 1 : 0
+                readonly property var marginSet: Geo.windowMargins({ edge: position, reserve: reserve, barPosition: Theme.barPosition,
+                                                                     barInset: Theme.barInset, gridPad: gridPad })
                 margins {
-                    top: !reserve && Theme.barPosition === "top" ? Theme.barInset : 0
-                    bottom: !reserve && Theme.barPosition === "bottom" ? Theme.barInset : 0
-                    left: !reserve && win.position === "left" && Theme.barPosition === "left" ? Theme.barInset : 0
-                    right: !reserve && win.position === "right" && Theme.barPosition === "right" ? Theme.barInset : 0
+                    top: win.marginSet.top
+                    bottom: win.marginSet.bottom
+                    left: win.marginSet.left
+                    right: win.marginSet.right
                 }
-                implicitWidth: railWidth
+                // The window spans its whole edge and reserves the same thickness whether the body hugs or not (as end-4's dock and
+                // Bar.qml do), so nothing is re-laid out when an app is pinned; input goes to the body only.
+                implicitWidth: sideRail ? thickness : 0
+                implicitHeight: sideRail ? 0 : thickness
                 exclusionMode: reserve ? ExclusionMode.Normal : ExclusionMode.Ignore
-                exclusiveZone: railWidth
+                exclusiveZone: thickness
                 WlrLayershell.layer: WlrLayer.Top
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
                 WlrLayershell.namespace: "bbkos-stage"
-                color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, root.opt("railOpacity", 0.0))
+                color: "transparent"
+                mask: Region { item: body }
 
-                Flickable {
-                    id: flick
-                    anchors.fill: parent
-                    contentWidth: width
-                    contentHeight: Math.max(height, column.height + 2 * win.padding)
-                    interactive: contentHeight > height
-                    clip: true
+                readonly property rect bodyRect: {
+                    const b = Geo.body({ edge: position, hug: hug, align: align, float: float, thickness: railThick,
+                                         windowLength: sideRail ? win.height : win.width,
+                                         contentLength: (sideRail ? content.height : content.width) + 2 * padding, px: px })
+                    return Qt.rect(b.x, b.y, b.width, b.height)
+                }
+                // Where the body sits on its screen, in logical pixels: what the blur looks at (the bar's own arithmetic, Bar.qml bodyStrip).
+                readonly property rect railStrip: {
+                    const o = Geo.windowOrigin({ edge: position, screenWidth: per.modelData.width, screenHeight: per.modelData.height,
+                                                 windowThickness: thickness, barPosition: Theme.barPosition, barInset: Theme.barInset })
+                    return Qt.rect(o.x + bodyRect.x, o.y + bodyRect.y, bodyRect.width, bodyRect.height)
+                }
 
-                    Column {
-                        id: column
-                        x: win.padding
-                        width: win.cardWidth
-                        spacing: win.gap
-                        // Centred when it fits (like macOS), from the top with scrolling when it does not.
-                        y: Math.max(win.padding, (flick.height - height) / 2)
+                Rectangle {
+                    id: body
+                    x: win.bodyRect.x
+                    y: win.bodyRect.y
+                    width: win.bodyRect.width
+                    height: win.bodyRect.height
+                    // The bar's background in both modes (barBg, blurred like the bar; stage.railOpacity is no longer read), with the
+                    // bar's corners outside grid mode; grid mode puts the bar's cell fill over it (below), so the two read as one style.
+                    color: railBlur.active ? "transparent" : Theme.barBg
+                    radius: win.bodyRadius
 
-                        Repeater {
-                            model: cardList
+                    BarBlur {
+                        id: railBlur
+                        anchors.fill: parent
+                        z: -1
+                        screenWidth: per.modelData.width
+                        screenHeight: per.modelData.height
+                        strip: win.railStrip
+                        radius: body.radius
+                    }
+                    Rectangle {                    // grid mode: one big empty cell over that, like the bar's empty stretches (Bar.qml gridFills)
+                        z: 0
+                        visible: Theme.gridMode
+                        anchors.fill: parent
+                        color: Theme.pillBg
+                    }
+                    Rectangle {                    // grid mode: the line along the rail's inner edge, like the bar's
+                        z: 1
+                        visible: Theme.gridMode
+                        color: Theme.cardEdge
+                        width: win.sideRail ? Theme.hair : parent.width
+                        height: win.sideRail ? parent.height : Theme.hair
+                        x: win.position === "left" ? parent.width - Theme.hair : 0
+                        y: win.position === "top" ? parent.height - Theme.hair : 0
+                    }
+                    // Grid mode, hugging: the body is one cell, so it draws its two ends along the edge too. The screen's own edges
+                    // are drawn by modules/frame alone, above the rail.
+                    // Not where the body reaches an end of its window: there the bar's line or the screen frame is already drawn.
+                    Repeater {
+                        model: Theme.gridMode && win.hug ? 2 : 0
+                        Rectangle {
+                            required property int index
+                            readonly property real start: win.sideRail ? win.bodyRect.y : win.bodyRect.x
+                            readonly property real end: start + (win.sideRail ? win.bodyRect.height : win.bodyRect.width)
+                            readonly property real windowLength: win.sideRail ? win.height : win.width
+                            visible: index === 0 ? start > 0.5 : end < windowLength - 0.5
+                            z: 1
+                            color: Theme.cardEdge
+                            width: win.sideRail ? body.width : Theme.hair
+                            height: win.sideRail ? Theme.hair : body.height
+                            x: win.sideRail || index === 0 ? 0 : body.width - Theme.hair
+                            y: !win.sideRail || index === 0 ? 0 : body.height - Theme.hair
+                        }
+                    }
 
-                            StageCard { rail: win }
+                    Flickable {
+                        id: flick
+                        anchors.fill: parent
+                        contentWidth: win.sideRail ? width : Math.max(width, content.width + 2 * win.padding)
+                        contentHeight: win.sideRail ? Math.max(height, content.height + 2 * win.padding) : height
+                        flickableDirection: win.sideRail ? Flickable.VerticalFlick : Flickable.HorizontalFlick
+                        interactive: win.sideRail ? contentHeight > height : contentWidth > width
+                        clip: true
+
+                        // Laid out along the rail: a column on a side rail, a row on a top or bottom one.
+                        Grid {
+                            id: content
+                            // One line of children; the other count is left at 0 (computed): a Grid given 1000 rows reserves the spacing of
+                            // every one of them (a column 8122 px tall for five tiles, 2026-10-31).
+                            columns: win.sideRail ? 1 : 0
+                            rows: win.sideRail ? 0 : 1
+                            spacing: win.gap
+                            // Along a full-length rail the tiles and cards sit at stage.railAlign (start, centre or end); from the start with
+                            // scrolling when they do not fit. A hugging body is placed by RailGeometry instead, so its contents start at once.
+                            readonly property real room: win.sideRail ? flick.height : flick.width
+                            readonly property real len: win.sideRail ? height : width
+                            readonly property real alongPos: win.hug || win.align === "start" ? win.padding
+                                : win.align === "end" ? Math.max(win.padding, room - len - win.padding)
+                                : Math.max(win.padding, (room - len) / 2)
+                            x: win.sideRail ? win.padding : alongPos
+                            y: win.sideRail ? alongPos : win.padding
+
+                            DockGrid { id: dockGrid; visible: Dock.on; rail: win }
+
+                            // The line between the pinned apps and the open windows after them, edge to edge across the rail; only while
+                            // there are cards to separate. The grid's spacing puts the same gap on both sides of it. An Item holds it,
+                            // since the Grid places its children and the line reaches past the padding.
+                            Item {
+                                visible: Dock.on && cardList.count > 0
+                                width: win.sideRail ? win.crossSize : 1
+                                height: win.sideRail ? 1 : win.crossSize
+                                Rectangle {
+                                    x: win.sideRail ? -win.padding : 0
+                                    y: win.sideRail ? 0 : -win.padding
+                                    width: win.sideRail ? win.railThick : 1
+                                    height: win.sideRail ? 1 : win.railThick   // one logical pixel draws one crisp physical row here; a fractional hairline height was dropped
+                                    color: Theme.cardEdge
+                                }
+                            }
+
+                            Repeater {
+                                model: cardList
+
+                                StageCard { rail: win }
+                            }
                         }
                     }
                 }

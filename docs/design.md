@@ -9,7 +9,7 @@ Companion docs: `principles.md` (how changes are made), `modules/theme.md` (the 
 1. **One source of truth for the look.** Every colour, size, radius and font comes from `Theme` (`dotfiles/quickshell/.config/quickshell/Theme.qml`), which is bound to the generated theme written by `bbkos-theme`. No literal colours, no literal fonts, no private copies of a token in a module.
 2. **Everything configurable goes through the settings table.** A look or behaviour the owner may want to change is a key in `bbkos_theme/settings.py` (`DEFAULTS` + `RANGES`), shown on a settings page, and changed with `bbkos-theme set`. Never hand-edit generated files.
 3. **The wallpaper drives the colour.** Colours are derived from the wallpaper (matugen) and leaned toward by the `shell.tint` setting. A feature must look right for any palette, light or dark, and for any `shell.barPosition`.
-3a. **Grid mode is a second look, not a second theme.** `shell.gridMode` (`modules/grid-mode.md`) makes the renderers hand over radii, gaps and shadows as 0, so use the tokens (`Theme.radius`, `Theme.controlRadius`, `Theme.barItemGap`, `Theme.cardEdge`) and never a literal radius or gap, or the new thing stays rounded in grid mode; where a literal is unavoidable (a knob, a bar), write `Theme.gridSquare ? 0 : N` (`Theme.gridSquare` = grid mode without `shell.gridRoundControls`, so popups and controls may stay round; use `Theme.gridMode` only for things that are always square: the bar, windows, stage cards).
+3a. **Grid mode is a second look, not a second theme.** `shell.gridMode` (`modules/grid-mode.md`) makes the renderers hand over radii, gaps and shadows as 0, so use the tokens (`Theme.radius`, `Theme.controlRadius`, `Theme.barItemGap`, `Theme.cardEdge`) and never a literal radius or gap, or the new thing stays rounded in grid mode; where a literal is unavoidable (a knob, a bar), write `Theme.gridSquare ? 0 : N` (`Theme.gridSquare` = grid mode without `shell.gridRoundControls`, so popups and controls may stay round; use `Theme.gridMode` only for things that are always square: the bar; windows, the pinned tiles and the stage cards keep the owner's corner radius, and windows their margin).
 4. **Cheap when idle.** Event-driven (D-Bus, inotify, Wayland events, IPC) over timers. Windows, scanners and processes exist only while shown (`LazyLoader`, `Process.running` bound to visibility). Continuous animation, blur and polling need a written reason (`principles.md`, resource impact).
 5. **Fail closed, and say so.** Bad input falls back to a default with a warning; a missing helper shows "not installed", not a crash; a failure produces one readable line, never a silent no-op.
 6. **Calm and compact.** Few colours at a time, hairlines instead of heavy borders, text at one size, motion only where it explains a state change.
@@ -33,7 +33,7 @@ Tokens, in `Theme.qml`. Use the token that names the *role*, not the one that lo
 | `control` | raised shade inside a popup: buttons, chips, hover rows |
 | `surfaceHigh` | a raised surface outside a popup |
 | `pillBg` | background behind bar widgets in pill mode |
-| `cardEdge` | hairline edge of every floating card (popup, picker, notification, OSD): `fg` at 8 % |
+| `cardEdge` | hairline edge of every floating card (popup, picker, notification, OSD): `fg` at 8 %; in grid mode the opaque `gridEdge` |
 | `shadow` | tinted shadow under floating cards (`CardShadow`), strength from `shell.popupShadow` |
 | `barBg` | the bar itself (opacity follows `shell.barOpacity`) |
 

@@ -40,7 +40,7 @@ Scope {
         function refreshFolder(): void { SettingsStore.folderRefreshRequested() }          // test hook
         function clearWallpaper(): void { SettingsStore.clearWallpaper() }
         function revert(): void { SettingsStore.revertToOpen() }
-        function page(place: string): void { SettingsStore.openPage(place) }              // "windows" or "windows/stage"
+        function page(place: string): void { SettingsStore.openPage(place) }              // "windows" or "bbkos/stage"
         function where(): string { return SettingsStore.place }                            // test hook: the place shown
         function snapDirFor(env: string): string { return SettingsStore.snapDirFor(env) }  // test hook: the pure path guard
         // Test hook: the wallpaper snapshot taken at window open (state: none = window closed, pending, ready, failed,
@@ -171,6 +171,8 @@ Scope {
             readonly property var components: ({
                 PageWallpaper: cPageWallpaper,
                 PageShell: cPageShell,
+                PageGrid: cPageGrid,
+                PageRail: cPageRail,
                 PageTerminal: cPageTerminal,
                 PageBarLayout: cPageBarLayout,
                 PageBarLook: cPageBarLook,
@@ -204,6 +206,8 @@ Scope {
             })
             Component { id: cPageWallpaper; PageWallpaper {} }
             Component { id: cPageShell; PageShell {} }
+            Component { id: cPageGrid; PageGrid {} }
+            Component { id: cPageRail; PageRail {} }
             Component { id: cPageTerminal; PageTerminal {} }
             Component { id: cPageBarLayout; PageBarLayout {} }
             Component { id: cPageBarLook; PageBarLook {} }

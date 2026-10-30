@@ -344,12 +344,21 @@ def reload_nightlight(state_dir, env, settings, which=shutil.which, real_home=No
     return []
 
 
-def reload_all(state_dir, *, env=None, proc_root="/proc", kitty_comm=None, kill=os.kill, settings=None):
-    """Reload Hyprland and kitty from state_dir. Returns warnings."""
+# The generated files Hyprland reads (hyprland.lua loads them) and the one kitty reads.
+HYPR_FILES = frozenset({"hypr-theme.lua", "hypr-binds.lua"})
+KITTY_FILES = frozenset({"kitty-theme.conf"})
+
+
+def reload_all(state_dir, *, env=None, proc_root="/proc", kitty_comm=None, kill=os.kill, settings=None, changed=None):
+    """Reload Hyprland and kitty from state_dir. Returns warnings. `changed`: the generated file names whose text changed
+    in this apply; Hyprland and kitty are reloaded only when one of their files is among them (a full `hyprctl reload`
+    re-applies every window, which flashed them for a bar setting, 2026-10-31). None reloads everything (an explicit apply).
+    The other steps already do nothing when their choice is unchanged."""
     env = dict(os.environ if env is None else env)
     comm = kitty_comm or env.get("BBKOS_KITTY_COMM") or "kitty"
-    warns = reload_hyprland(state_dir, env)
-    warns += reload_kitty(state_dir, proc_root, comm, kill)
+    warns = reload_hyprland(state_dir, env) if changed is None or HYPR_FILES & set(changed) else []
+    if changed is None or KITTY_FILES & set(changed):
+        warns += reload_kitty(state_dir, proc_root, comm, kill)
     warns += reload_gtk(state_dir, env)
     warns += reload_hypridle(state_dir, env)
     warns += reload_cursor(state_dir, env, settings)
