@@ -5,7 +5,7 @@
 **A wallpaper-themed Hyprland + Quickshell desktop for Arch Linux.**
 One installer that looks at your hardware, a settings app, an agent skill, and an uninstaller that puts everything back.
 
-![hero](assets/screenshots/hero.jpg)
+![hero](assets/screenshots/grid-mode.jpg)
 
 </div>
 
@@ -13,7 +13,7 @@ Colours come from the wallpaper. Every look and behaviour setting (bar, gaps, ra
 
 | **Grid mode** (the default look): one-pixel cells, the rail with pinned apps hugging the bottom edge | **Without grid mode**: the same desktop with a floating bar and the rail on the left |
 |---|---|
-| ![grid mode](assets/screenshots/hero.jpg) | ![without grid mode](assets/screenshots/no-grid.jpg) |
+| ![grid mode](assets/screenshots/grid-mode.jpg) | ![without grid mode](assets/screenshots/no-grid.jpg) |
 | **Settings app** (`Super+,`): 17 pages, search, reset per page | **Launcher** (`Super+R`): apps, commands and every single setting |
 | ![settings](assets/screenshots/settings.png) | ![launcher](assets/screenshots/launcher.jpg) |
 | **Bar popups**: battery and sound (calendar, Wi-Fi, Bluetooth, display and timer too) | **Tiling** with kitty, fish and starship |
