@@ -10,7 +10,6 @@
 //   { stage: true }           stage mode for the focused workspace (StageState)
 //   { awake: true }           keep awake on/off (Awake)
 //   { mode: "light"|"dark" }  colour mode (SettingsStore)
-//   { overview: true }        the workspace overview
 //   { webapp: "create" }      the menu's Create web app form
 //   { allApps: true }         the All apps grid
 // `confirm: true`: the first Enter only arms it ("Press Enter again to ..."), within 4 s, as every destructive action
@@ -34,7 +33,6 @@ var COMMANDS = [
 
     // Shell
     { id: "all-apps", title: "All apps", subtitle: "Every installed app at a glance (also Tab)", glyph: "\uf00a", keywords: ["applications", "installed", "programs", "grid"], run: { allApps: true } },
-    { id: "overview", title: "Workspace overview", glyph: "", keywords: ["mission control", "expose"], run: { overview: true } },
     { id: "stage", title: "Stage mode for this workspace", subtitle: "Until the next reboot", glyph: "", keywords: ["stage manager", "monocle"], run: { stage: true } },
     { id: "bar", title: "Hide or show the bar", glyph: "", keywords: ["panel"], run: { exec: ["qs", "ipc", "call", "bar", "toggle"] } },
     { id: "clipboard", title: "Clipboard history", glyph: "", keywords: ["paste"], run: { exec: ["qs", "ipc", "call", "clipboard", "toggle"] } },

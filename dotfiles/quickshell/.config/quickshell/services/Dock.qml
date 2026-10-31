@@ -20,8 +20,8 @@ Singleton {
     // The rail's width and side, as Stage.qml reads them (settings.py defaults when the key is missing).
     readonly property int railWidth: (ThemeStore.settings.stage ?? {}).railWidth ?? 150
     readonly property bool railLeft: ((ThemeStore.settings.stage ?? {}).railPosition ?? "left") === "left"
-    // Grid mode, dock on, rail at the left of a horizontal bar: the bar's first two cells (overview, workspaces) add up to the
-    // rail's width, so the line between the workspaces and the title cell continues down the rail's inner edge.
+    // Grid mode, dock on, rail at the left of a horizontal bar: the bar's first cell (workspaces) is as wide as the
+    // rail, so the line between the workspaces and the title cell continues down the rail's inner edge.
     readonly property bool railHug: (ThemeStore.settings.stage ?? {}).railHug === true
     readonly property bool alignBar: on && Theme.gridMode && !Theme.barVertical && railLeft && !railHug   // a hugging rail has no corner to meet
 

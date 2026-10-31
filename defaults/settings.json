@@ -78,8 +78,8 @@
     "wsSwipeDirectionLock": true,
     "wsSwipeCreateNew": true,
     "wsSwipeForever": false,
-    "swipe3Up": "overview",
-    "swipe3Down": "overview-close",
+    "swipe3Up": "none",
+    "swipe3Down": "none",
     "swipe4Up": "none",
     "swipe4Down": "close",
     "swipe4Left": "none",
@@ -87,7 +87,6 @@
   },
   "bar": {
     "layout": [
-      "start:overview",
       "start:workspaces",
       "center:clock",
       "center:media",

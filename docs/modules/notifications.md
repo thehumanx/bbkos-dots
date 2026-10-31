@@ -39,7 +39,8 @@ screenName)`).
 The panel (`modules/notifications/NotificationHistoryPanel.qml`) is a full-height sheet on the right of the screen,
 whatever edge the bar is on, and opens with the same backdrop/Esc/click-outside behaviour as the other panels. It
 does not overlap the bar: for a top, bottom or right bar it clears the bar's thickness plus 6 px on that edge; for a
-left bar the sheet is on the opposite side and uses `shell.gap`. Width 380 px. The list scrolls with the
+left bar the sheet is on the opposite side. On the sides that face a screen edge it keeps the windows' margin
+(`windows.gapsOut`, `Theme.windowMargin`), so it lines up with the windows (2026-10-31; `shell.gap` until then). Width 380 px. The list scrolls with the
 wheel/trackpad; there is deliberately no scrollbar until it can be drawn without the default Qt scrollbar's
 full-height line in an empty list.
 
@@ -96,7 +97,8 @@ notification had replaced the first (it had not; tracked again when sent fast).
 
 **Notifications page (2026-10-24; place `notifications`, group Desktop since 2026-10-28, index 15 before):** `notifications.*` in `settings.py`, read live by
 `Notifs.cfg`: `position` (auto = the bar's end corner, or top-right, top-left, bottom-right, bottom-left; the stack, its
-shadow room and the slide-in side follow), `timeout` (2 to 30 s, default 6, the time for popups whose sender gave none),
+shadow room and the slide-in side follow; the bar side clears the bar by 8 px, the screen-edge sides keep the windows' margin
+`windows.gapsOut` so the cards line up with the windows, 2026-10-31), `timeout` (2 to 30 s, default 6, the time for popups whose sender gave none),
 `senderTimeout` (on: the sender's own time wins; off: every popup uses `timeout`), `criticalSticky` (on: a critical popup stays
 until closed, as before; off: it expires like the rest), `maxPopups` (1 to 10, default 5), `historySize` (20 to 500 step 20,
 default 100: the cap of the bell's list), `showPictures` (attached screenshots and logos), `mutedApps` (below). The page also has the Do not disturb

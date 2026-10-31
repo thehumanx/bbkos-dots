@@ -145,7 +145,6 @@ Scope {
         else if (r.stage) StageState.toggle(Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.name : "")
         else if (r.awake) Awake.set(!Awake.on)
         else if (r.mode) SettingsStore.set("colors.mode", r.mode)
-        else if (r.overview) OverviewState.toggle("")
         else if (r.copy !== undefined) Quickshell.execDetached(["wl-copy", "--", r.copy])
         else if (r.web) Quickshell.execDetached(["uwsm", "app", "--", "xdg-open", (engine ?? engines.duckduckgo).url + encodeURIComponent(r.web)])
         else if (r.webappRemove) {

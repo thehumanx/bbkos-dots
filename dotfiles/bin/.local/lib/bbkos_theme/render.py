@@ -157,18 +157,10 @@ def _rgba(h, alpha):
 SWIPES = {"swipe3Up": (3, "up"), "swipe3Down": (3, "down"),
           "swipe4Up": (4, "up"), "swipe4Down": (4, "down"), "swipe4Left": (4, "left"), "swipe4Right": (4, "right")}
 SWIPE_LUA = {"workspace": "workspace", "close": "close", "fullscreen": "fullscreen", "float": "float", "special": "special"}
-# Overview actions are not stock Hyprland gesture actions: they call the workspace overview through its IPC
-# (modules/overview). Emitted as a Lua-function action, which Hyprland 0.56 runs on the completed gesture. The
-# direct form (hl.exec_cmd) is used: inside a function, hl.dsp.exec_cmd only builds a dispatcher object and runs nothing.
-SWIPE_FUNCS = {
-    "overview": 'function() hl.exec_cmd("qs ipc call overview open") end',
-    "overview-close": 'function() hl.exec_cmd("qs ipc call overview close") end',
-}
 
 
 def _swipe_action(action):
-    func = SWIPE_FUNCS.get(action)
-    return func if func is not None else f'"{SWIPE_LUA[action]}"'
+    return f'"{SWIPE_LUA[action]}"'
 
 
 S_FOLLOW = {"click": 0, "hover": 1, "detached": 2}      # settings.FOLLOW_MOUSE

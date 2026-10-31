@@ -2,7 +2,6 @@
 import Quickshell
 import "modules/bar"
 import "modules/notifications"
-import "modules/overview"
 import "modules/stage"
 import "modules/frame"
 import "modules/osd"
@@ -30,7 +29,6 @@ ShellRoot {
     Polkit {}
     Clipboard {}
     Panels {}
-    Overview {}
     Stage {}
     ScreenFrame {}
     CaptivePortal {}

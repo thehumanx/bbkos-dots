@@ -4,7 +4,7 @@ import Quickshell.Wayland
 // A still screenshot of one window that can be refreshed without a blink. A refresh builds the capture in the second
 // slot underneath the shown one, and swaps only once the new frame has arrived, so a card never goes blank while it
 // updates. The capture is drawn through a layer: ScreencopyView does not blend, so a translucent window's alpha would
-// otherwise land in the surface itself (see docs/modules/overview.md, translucent windows).
+// otherwise land in the surface itself (docs/modules/stage.md).
 Item {
     id: root
 

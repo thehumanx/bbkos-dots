@@ -186,6 +186,7 @@ def start_compositor_for_test_only() -> subprocess.Popen:
     """A bare nested Hyprland with the test config (test_start uses it to stand for a leftover of a crashed run), moved
     out of sight and with the focus given back, as the harness does."""
     focused = _active_window()
+    _rule_hidden()
     p = subprocess.Popen(["Hyprland", "-c", str(CONFIG)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          stdin=subprocess.DEVNULL, start_new_session=True)
     end = time.monotonic() + READY_S
@@ -201,6 +202,19 @@ def _dispatch(lua: str) -> None:
     r = subprocess.run(["hyprctl", "dispatch", lua], capture_output=True, text=True, timeout=5)
     if r.stdout.strip() != "ok":
         raise RuntimeError(f"hyprctl dispatch {lua}: {(r.stdout or r.stderr).strip()}")
+
+
+def _rule_hidden() -> None:
+    """A runtime window rule on the live Hyprland: a nested Hyprland's window (class aquamarine) opens on the hidden
+    workspace without the focus. Without it the window mapped on the owner's workspace and took the focus for ~65 ms
+    before _hide moved it, so the owner's tiled windows split and snapped back on every test start (seen as a flicker,
+    2026-10-31). Added again each time: a config reload drops runtime rules; the old handle is disabled first."""
+    lua = ('if BBKOS_SHELLTEST then BBKOS_SHELLTEST:set_enabled(false) end; '
+           'BBKOS_SHELLTEST = hl.window_rule({ name = "bbkos-shelltest", match = { class = "^aquamarine$" }, '
+           f'workspace = "{SPECIAL} silent", no_initial_focus = true }})')
+    r = subprocess.run(["hyprctl", "eval", lua], capture_output=True, text=True, timeout=5)
+    if r.stdout.strip() != "ok":
+        raise RuntimeError(f"hyprctl eval (shell-test window rule): {(r.stdout or r.stderr).strip()}")
 
 
 def _hide(pid: int, focused: str) -> None:
@@ -342,6 +356,7 @@ class TestShell:
         (checked 2026-10-29, also with a headless output inside it and with render_unfocused on the window)."""
         focused = _active_window()                              # before the leftover sweep, which can move the focus
         sweep_leftovers()
+        _rule_hidden()
         self._hypr = subprocess.Popen(["Hyprland", "-c", str(CONFIG)], stdout=subprocess.DEVNULL,
                                       stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, start_new_session=True)
         self.hypr_pid = self._hypr.pid

@@ -33,7 +33,6 @@ Find the doc for your topic here, then read it in full before changing anything 
 - `docs/modules/network.md`: Network page. Added 2026-10-24
 - `docs/modules/nightlight.md`: Night light (hyprsunset). Added 2026-10-24
 - `docs/modules/notifications.md`: Module: notifications. The notification daemon (Quickshell's `NotificationServer`, which owns `org.freedesktop.Notifications`) and the
-- `docs/modules/overview.md`: Module: workspace overview. A Mission Control-style workspace manager for Hyprland, opened from the grid icon at the start of the bar, a
 - `docs/modules/pacman.md`: Module: pacman baseline and maintenance. `/etc/pacman.conf.bak-bbkos`, `/etc/pacman.d/mirrorlist.bak-bbkos`, `/etc/makepkg.conf.bak-bbkos`
 - `docs/modules/panels.md`: Wi-Fi, Bluetooth, audio and power panels. (The display panel, brightness and monitor layout, is documented in `displays.md`; it uses the same `PanelState` and `Panels.qml` host
 - `docs/modules/power-tuning.md`: Power profile tuning: measurements and findings. What each power knob costs and gains on this laptop, on kernel 6.18 LTS (2026-10-19) and 7.2 (2026-10-21), what was applied (runtime PM, NMI watchdog off), and…

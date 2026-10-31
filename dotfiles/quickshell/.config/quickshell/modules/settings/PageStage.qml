@@ -10,11 +10,11 @@ import qs.services
 // layout never jumps (like the Windows page).
 SettingsPage {
     id: page
-    note: "A stage workspace opens windows one at a time, full size, instead of tiling them. The other windows of the workspace wait in a rail of small cards: click one to bring it to the front. Switch one workspace from the overview (until the next reboot); the switch here is the default for every workspace."
+    note: "A stage workspace opens windows one at a time, full size, instead of tiling them. The other windows of the workspace wait in a rail of small cards: click one to bring it to the front. Switch one workspace with the switch at the end of the rail, Super+Alt+S or the menu (until the next reboot); the switch here is the default for every workspace."
 
 
     SettingsSection {
-        SettingToggle { label: "Stage mode by default"; hint: "Every workspace starts in stage mode. Changing it clears the per-workspace switches from the overview."; key: "stage.enabled" }
+        SettingToggle { label: "Stage mode by default"; hint: "Every workspace starts in stage mode. Changing it clears the per-workspace switches."; key: "stage.enabled" }
         SettingToggle { label: "Show with a single window"; key: "stage.showWithOneWindow" }
     }
 

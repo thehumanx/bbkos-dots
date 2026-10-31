@@ -5,7 +5,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 // Stage mode per workspace (docs/modules/stage.md). stage.enabled in settings.json is the default every workspace
-// starts with (render.py writes it as Hyprland's general.layout); a workspace switched from the overview, a key or IPC
+// starts with (render.py writes it as Hyprland's general.layout); a workspace switched from the rail, a key, the menu or IPC
 // keeps its own choice until the next boot. The choices live in $XDG_RUNTIME_DIR/bbkos-stage.json (a tmpfs, emptied at
 // shutdown), so they survive a shell or Hyprland restart within the session and are gone after a reboot.
 // Hyprland side: one runtime workspace rule per switched workspace (`layout = "monocle"` or `"dwindle"`), kept as a

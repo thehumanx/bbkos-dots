@@ -6,7 +6,7 @@ import Quickshell.Wayland
 import qs
 import qs.services
 import "../bar"
-import "../overview/OverviewModel.js" as Model
+import "Windows.js" as Model
 import "RailGeometry.js" as Geo
 
 // Stage mode (docs/modules/stage.md), per workspace: a stage workspace uses Hyprland's monocle layout (the default from
@@ -15,7 +15,8 @@ import "RailGeometry.js" as Geo
 // small still cards along one edge; a click brings one to the front. The rail only exists while the workspace has at
 // least two windows (or one, with stage.showWithOneWindow), and it reserves its own space like the bar, so the front
 // window is resized when the rail appears or goes away. Everything it shows is read from settings.json (stage.*), so
-// every size and look is tunable from the settings app.
+// every size and look is tunable from the settings app. At the far end of the rail a two-icon switch (tiled / stage) sets stage
+// mode for the workspace on screen (StageState).
 Scope {
     id: root
 
@@ -35,6 +36,8 @@ Scope {
         // Test hooks for the pinned apps: what a click on that app's tile does, and the unpin ×.
         function dockclick(id: string): void { if (rails.instances.length > 0) rails.instances[0].panel.dockActivate(id) }
         function undock(id: string): void { Dock.unpin(id) }
+        // Test hook: what a click on a half of the stage switch at the end of the first screen's rail does (true: the stage half).
+        function stageswitch(stage: bool): void { if (rails.instances.length > 0) rails.instances[0].panel.setStage(stage) }
         function dock(): string {
             return JSON.stringify({ on: Dock.on, apps: Dock.apps, running: Dock.running, alignBar: Dock.alignBar,
                                     resolved: rails.instances.length > 0 ? rails.instances[0].panel.dockResolved() : [] })     // the pins whose tile found its desktop entry
@@ -48,7 +51,8 @@ Scope {
                            cards: r.cardModel.count, visible: r.railVisible, edge: r.position, hug: r.hug,
                            body: { x: r.railStrip.x, y: r.railStrip.y, width: r.railStrip.width, height: r.railStrip.height },
                            style: { radius: r.bodyRadius, blur: r.blurActive, pills: Theme.barPills },
-                           tile: r.tile, padding: r.padding, dockSize: { width: r.dockWidth, height: r.dockHeight } })
+                           tile: r.tile, padding: r.padding, dockSize: { width: r.dockWidth, height: r.dockHeight },
+                           switchRect: { x: r.switchItem.x, y: r.switchItem.y, width: r.switchItem.width, height: r.switchItem.height } })
             }
             return JSON.stringify({ enabled: root.enabled, overrides: StageState.overrides, screens: out })
         }
@@ -207,6 +211,13 @@ Scope {
                     return null
                 }
                 function dockResolved(): var { return dockGrid.resolved() }
+                // The switch at the end of the rail: stage mode on or off for the workspace on this screen.
+                function setStage(on: bool): void { if (workspace) StageState.set(workspace.name, on) }
+                property alias switchItem: stageSwitch
+                // Its length along the rail: one tile on a side rail (the two icons sit across it), two tiles and a gap on a top or
+                // bottom one, where the rail is only one tile across.
+                readonly property real switchLen: sideRail ? tile : 2 * tile + gap
+                readonly property real switchRoom: switchLen + gap  // the switch and the gap before it, at the end of the rail
                 readonly property real dockWidth: dockGrid.width
                 readonly property real dockHeight: dockGrid.height
                 // A pinned app's tile: focus its window when it has one, start it otherwise.
@@ -234,7 +245,7 @@ Scope {
                 }
                 // A reserving rail is placed inside the usable area, which the compositor already keeps clear of the bar
                 // (an extra margin put it 36 px too low). Without reserving it spans the whole monitor edge, so it
-                // takes the bar's inset like the overview does.
+                // takes the bar's inset itself.
                 readonly property bool reserve: root.opt("reserveSpace", true) === true
                 // Grid mode, reserving, and only where the bar's thickness is not a whole number of physical pixels on this screen
                 // (Theme.barHeight is rounded to one, so normally never): one logical pixel clear of the bar. A fractional bar edge
@@ -264,7 +275,7 @@ Scope {
                 readonly property rect bodyRect: {
                     const b = Geo.body({ edge: position, hug: hug, align: align, float: float, thickness: railThick,
                                          windowLength: sideRail ? win.height : win.width,
-                                         contentLength: (sideRail ? content.height : content.width) + 2 * padding, px: px })
+                                         contentLength: (sideRail ? content.height : content.width) + 2 * padding + switchRoom, px: px })
                     return Qt.rect(b.x, b.y, b.width, b.height)
                 }
                 // Where the body sits on its screen, in logical pixels: what the blur looks at (the bar's own arithmetic, Bar.qml bodyStrip).
@@ -332,6 +343,8 @@ Scope {
                     Flickable {
                         id: flick
                         anchors.fill: parent
+                        anchors.bottomMargin: win.sideRail ? win.switchRoom : 0      // the stage switch has the far end
+                        anchors.rightMargin: win.sideRail ? 0 : win.switchRoom
                         contentWidth: win.sideRail ? width : Math.max(width, content.width + 2 * win.padding)
                         contentHeight: win.sideRail ? Math.max(height, content.height + 2 * win.padding) : height
                         flickableDirection: win.sideRail ? Flickable.VerticalFlick : Flickable.HorizontalFlick
@@ -380,6 +393,19 @@ Scope {
                                 StageCard { rail: win }
                             }
                         }
+                    }
+
+                    // Stage mode for this workspace, at the far end of the rail (the bottom of a side rail, the right end of a top or
+                    // bottom one; the end of the contents when hugging). The rail's inner width across a side rail.
+                    StageSwitch {
+                        id: stageSwitch
+                        rail: win
+                        on: win.stageHere
+                        x: win.sideRail ? win.padding : body.width - win.padding - win.switchLen
+                        y: win.sideRail ? body.height - win.padding - win.switchLen : win.padding
+                        width: win.sideRail ? win.crossSize : win.switchLen
+                        height: win.sideRail ? win.switchLen : win.crossSize
+                        onPicked: stage => win.setStage(stage)
                     }
                 }
             }

@@ -4,6 +4,18 @@
 
 Click the Wi-Fi or Bluetooth icon in the bar (audio: the volume widget): a popup opens at it (centred on the widget, `bar.md`; the calendar and timer popups are in `calendar.md`) (separate popup per icon). Click outside or press Esc to close. Source: `dotfiles/quickshell/.config/quickshell/modules/{panels,network}`, services `Net`, `Bt`, `PanelState`.
 
+## Placement against the windows (2026-10-31)
+
+Owner: "the popup should have the padding such that it aligns with the window padding". Every popup in `Panels.qml`, the
+notification sheet and the notification cards keep `Theme.windowMargin` (the windows' `windows.gapsOut`, Hyprland's
+`gaps_out`) from the screen edges, so their outer edge lines up with the windows' border; before, they kept `shell.gap`,
+which grid mode sets to 0, so they touched the screen edge. The side that faces the bar is unchanged (the bar's inset plus
+6 px for popups, 8 px for notifications). A popup centred on its widget is clamped to that margin at both ends. Measured
+with `grim` at scale 16/15, gaps 8: with a top or bottom bar the battery popup's background ends at physical column 1909
+and its edge line is at 1910, the same column as the tiled window's border; the notification card, top bar, the same.
+Seen in screenshots: a notification at the bottom right (bottom bar) and at the top left (left bar). Not handled: a stage
+rail on the popup's side (the windows then start after the rail; the popups do not), light mode.
+
 ## Design
 
 - **Look (2026-10-29, spec `docs/specs/2026-10-29-popup-redesign-design.md`).** The popups share the settings window's language: a `PopupHeader` (section-title style, a toggle or status at the right), `PopupSection` parts separated by the settings hairline (10 % `fg`), `SettingRow` without `key` for a label with a toggle, button or value, chip rows labelled above them in the row-label style, `StepBar` for volume, microphone and brightness ("22 %", − and + step by 5), list rows 36 high with 12 px padding, card content margin 20. The Display popup writes its mode with units (`components/DisplayText.js`: `1920 × 1200 · 60 Hz · 1.07×`). The audio section's speaker / mic glyph at the right of its title is the mute button.

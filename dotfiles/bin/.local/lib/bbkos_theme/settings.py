@@ -21,11 +21,13 @@ SCHEMES = ("content", "expressive", "fidelity", "fruit-salad", "monochrome",
 # Bar widgets and their default section. The bar layout is a list of "section:widget" entries; a widget appears once,
 # and its place in the list sets its order within its section (see _coerce_layout).
 BAR_SECTIONS = ("start", "center", "end")
-BAR_WIDGETS = {"overview": "start", "workspaces": "start", "title": "start", "clock": "center", "media": "center", "timer": "center", "updates": "center", "record": "end", "privacy": "end", "tray": "end", "display": "end",
+BAR_WIDGETS = {"workspaces": "start", "title": "start", "clock": "center", "media": "center", "timer": "center", "updates": "center", "record": "end", "privacy": "end", "tray": "end", "display": "end",
                "audio": "end", "bluetooth": "end", "network": "end", "battery": "end", "notifications": "end",
                "settings": "end"}
 BAR_LAYOUT_DEFAULT = [f"{sec}:{w}" for w, sec in BAR_WIDGETS.items()]
 BAR_LAYOUT_ALLOWED = tuple(f"{sec}:{w}" for sec in BAR_SECTIONS for w in BAR_WIDGETS)
+# The workspace overview was removed on 2026-10-31: a saved layout or hidden list that names its widget drops it quietly.
+RETIRED_WIDGETS = ("overview",)
 
 # Icon sets each bar widget offers (bar.icon<Widget>). The glyphs are in components/BarIcons.js, keyed by these names.
 # The first entry of each widget is its default; "fa" is the original icon set; "none" draws no icon (the settings gear must stay visible, so it has no "none").
@@ -249,9 +251,10 @@ DEFAULTS = {
               "chargeMode": "default"},
 }
 
-# Actions a multi-finger swipe can run (render.py maps each to a Hyprland gesture action; the overview ones run the
-# workspace overview's IPC, since no stock Hyprland action maps to it).
-SWIPE_ACTIONS = ("none", "workspace", "close", "fullscreen", "float", "special", "overview", "overview-close")
+# Actions a multi-finger swipe can run (render.py maps each to a Hyprland gesture action).
+SWIPE_ACTIONS = ("none", "workspace", "close", "fullscreen", "float", "special")
+# The overview's two actions, removed with it on 2026-10-31: a saved swipe that names one becomes "none" without a warning.
+RETIRED_SWIPES = ("overview", "overview-close")
 
 # kinds: ("int", lo, hi, step) ("float", lo, hi) ("bool",) ("enum", values) ("str",)
 RANGES = {
@@ -486,6 +489,8 @@ def _coerce_layout(value):
     out, seen, dropped = [], set(), False
     for e in value:
         widget = e.split(":", 1)[-1]
+        if widget in RETIRED_WIDGETS:
+            continue
         if e not in BAR_LAYOUT_ALLOWED or widget in seen:
             dropped = True
             continue
@@ -521,6 +526,7 @@ def _coerce(dotted, value):
     if kind == "widgetlist":
         if not isinstance(value, list):
             return bad
+        value = [v for v in value if v not in RETIRED_WIDGETS]
         out = []
         for v in value:
             if isinstance(v, str) and v in spec[1] and v not in out:
@@ -552,6 +558,8 @@ def _coerce(dotted, value):
             return "", f"{dotted}: {value!r} is not absolute, ignored"
         return value, None
     if kind == "enum":
+        if spec[1] is SWIPE_ACTIONS and value in RETIRED_SWIPES:
+            return "none", None
         return (value, None) if isinstance(value, str) and value in spec[1] else bad
     # numeric: bool is not a number here
     if isinstance(value, bool) or not isinstance(value, (int, float)):

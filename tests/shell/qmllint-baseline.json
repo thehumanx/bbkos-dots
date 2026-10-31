@@ -99,12 +99,12 @@
     "unqualified": 17
   },
   "modules/bar/Bar.qml": {
-    "import": 30,
+    "import": 28,
     "missing-property": 4,
     "required": 3,
     "uncreatable-type": 1,
-    "unqualified": 107,
-    "unresolved-type": 9,
+    "unqualified": 95,
+    "unresolved-type": 8,
     "unused-imports": 1
   },
   "modules/bar/BarBlur.qml": {
@@ -154,10 +154,6 @@
     "unqualified": 13,
     "unused-imports": 1
   },
-  "modules/bar/OverviewWidget.qml": {
-    "import": 2,
-    "unqualified": 6
-  },
   "modules/bar/PrivacyWidget.qml": {
     "import": 1,
     "unqualified": 8,
@@ -189,7 +185,7 @@
   },
   "modules/bar/WindowTitle.qml": {
     "import": 1,
-    "unqualified": 4,
+    "unqualified": 6,
     "unresolved-type": 1
   },
   "modules/bar/Workspaces.qml": {
@@ -217,7 +213,7 @@
   "modules/launcher/Launcher.qml": {
     "import": 4,
     "missing-property": 14,
-    "unqualified": 24
+    "unqualified": 23
   },
   "modules/launcher/MenuWindow.qml": {
     "import": 20,
@@ -255,33 +251,6 @@
     "uncreatable-type": 1,
     "unqualified": 33,
     "unresolved-type": 1
-  },
-  "modules/overview/AddWorkspaceCard.qml": {
-    "import": 6,
-    "unqualified": 28,
-    "unresolved-type": 4
-  },
-  "modules/overview/Backdrop.qml": {
-    "import": 2,
-    "unqualified": 5
-  },
-  "modules/overview/Overview.qml": {
-    "import": 4,
-    "missing-property": 4,
-    "uncreatable-type": 2,
-    "unqualified": 146,
-    "unresolved-type": 7
-  },
-  "modules/overview/WindowCard.qml": {
-    "import": 1,
-    "missing-property": 1,
-    "unqualified": 29,
-    "unresolved-type": 2
-  },
-  "modules/overview/WorkspaceCard.qml": {
-    "import": 4,
-    "unqualified": 54,
-    "unresolved-type": 8
   },
   "modules/panels/AudioPanel.qml": {
     "import": 11,
@@ -563,14 +532,19 @@
     "unresolved-type": 4
   },
   "modules/stage/Stage.qml": {
-    "import": 14,
+    "import": 13,
     "missing-property": 4,
     "uncreatable-type": 1,
-    "unqualified": 90
+    "unqualified": 91
   },
   "modules/stage/StageCard.qml": {
     "import": 1,
-    "unqualified": 21,
+    "unqualified": 25,
+    "unresolved-type": 2
+  },
+  "modules/stage/StageSwitch.qml": {
+    "import": 1,
+    "unqualified": 26,
     "unresolved-type": 2
   },
   "modules/stage/StillImage.qml": {
@@ -597,6 +571,9 @@
     "missing-property": 2,
     "uncreatable-type": 1,
     "unqualified": 5
+  },
+  "services/ActiveWindow.qml": {
+    "import": 1
   },
   "services/Audio.qml": {
     "import": 1,
@@ -645,9 +622,6 @@
     "import": 1,
     "missing-property": 5
   },
-  "services/OverviewState.qml": {
-    "import": 1
-  },
   "services/PanelState.qml": {
     "import": 1
   },
@@ -686,6 +660,6 @@
     "import": 1
   },
   "shell.qml": {
-    "import": 16
+    "import": 15
   }
 }

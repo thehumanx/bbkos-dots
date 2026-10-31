@@ -33,5 +33,4 @@ animation speed by eye (only the generated numbers were tested), the page on scr
 
 ## Not done
 
-Window rules (always float an app, a default workspace for an app), hot corners (Hyprland has none built in; the overview has its
-own gestures), per-monitor workspace behaviour.
+Window rules (always float an app, a default workspace for an app), hot corners (Hyprland has none built in), per-monitor workspace behaviour.

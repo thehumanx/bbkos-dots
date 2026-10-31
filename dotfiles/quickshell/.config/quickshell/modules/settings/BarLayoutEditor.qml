@@ -21,7 +21,7 @@ ColumnLayout {
     readonly property var sectionNames: [{ id: "start", label: "Left" }, { id: "center", label: "Centre" },
                                          { id: "end", label: "Right" }]
     readonly property var widgetNames: ({
-        overview: "Overview", workspaces: "Workspaces", title: "Window title", clock: "Clock", media: "Music", timer: "Timer", updates: "Updates", tray: "Tray", display: "Display brightness", audio: "Audio",
+        workspaces: "Workspaces", title: "Window title", clock: "Clock", media: "Music", timer: "Timer", updates: "Updates", tray: "Tray", display: "Display brightness", audio: "Audio",
         bluetooth: "Bluetooth", network: "Network", battery: "Battery", notifications: "Notifications", record: "Recording indicator", privacy: "Privacy indicator", settings: "Settings button"
     })
     // Where each widget's own settings are ("page/tab#row" for SettingsStore.openPage and reveal); a widget missing here has none.

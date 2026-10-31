@@ -28,18 +28,17 @@ and his articles "Great animations" and "7 practical animation tips" (emilkowal.
 |---|---|---|
 | `easeOut` | `[0.23, 1, 0.32, 1]` | enter, press, hover, colour (default) |
 | `easeInOut` | `[0.77, 0, 0.175, 1]` | something moving across the screen (not used yet) |
-| `easeDrawer` | `[0.32, 0.72, 0, 1]` | large surfaces: the overview zoom |
+| `easeDrawer` | `[0.32, 0.72, 0, 1]` | large surfaces (no shell surface uses it since the overview was removed, 2026-10-31; Hyprland's workspace slide has the same curve) |
 | `durFast` | 120 ms | hover, press, switch, colour |
 | `durEnter` | 200 ms | a popup or card arriving |
 | `durExit` | 140 ms | a popup leaving |
-| `durLarge` | 300 ms | the overview opening (closing is 260) |
+| `durLarge` | 300 ms | large fades: a settings row appearing (the overview's open used it until it was removed, 2026-10-31) |
 | `reduceMotion` | `shell.reduceMotion` | fades only |
 | `shadow`, `shadowStrength`, `shadowPad` (32) | `shell.popupShadow` | the card shadow, see below |
 | `cardEdge` | `fg` at 8 % (grid mode: the opaque `gridEdge`) | hairline edge of every floating card |
 
 In QML a curve is `easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.easeOut`. No module writes its own
-duration or curve; the exceptions are the wallpaper cross-fade (400 ms, rare and decorative), the timer's done flash, and
-two short values in the overview (card glide 140 ms, stage slide 240 ms).
+duration or curve; the exceptions are the wallpaper cross-fade (400 ms, rare and decorative) and the timer's done flash.
 
 ## What moves, and how
 
@@ -51,7 +50,6 @@ two short values in the overview (card glide 140 ms, stage slide 240 ms).
 | OSD | the compositor's layer fade (160 ms in, 120 ms out) | appears for a key press; the fade is short |
 | Buttons and chips | scale 0.97 while pressed, 120 ms | press feedback |
 | Toggles, sliders, hover colours, bar highlight | 120 ms ease-out | state change |
-| Overview | 300 ms open, 260 ms close, drawer curve | large surface |
 | Windows (Hyprland) | open: pop in from 90 % in 220 ms; close: 140 ms; move/resize 260 ms; fades 180/140 ms | |
 | Workspaces (Hyprland) | slide, 260 ms, drawer curve (vertical for the special workspace) | matches the three-finger horizontal swipe |
 | Layers (Hyprland) | fade 160 ms in, 120 ms out, except `bbkos-panel` and `bbkos-picker` (layer rule `bbkos-instant-layers`) | the popup animates its own card; pickers are instant |
@@ -96,7 +94,5 @@ on screen, and battery cost (expected nil while idle: nothing runs when no card 
 
 ## Known limits
 
-- Reduce motion does not change the overview zoom (it is the overview's whole design); turn `windows.animations` off
-  for a static desktop.
 - A notification card leaves without its own animation; only the last one fades with the window.
 - The shadow cannot be seen over a very dark window: it is a darker shade, by nature.

@@ -24,7 +24,7 @@ SettingsPage {
 
     SettingsSection {
         title: "Shape"
-        SettingSlider { label: "Gap"; hint: "Between the bar, panels and the screen edge"; key: "shell.gap"; from: 0; to: 32; step: 2; suffix: " px" }
+        SettingSlider { label: "Gap"; hint: "Between the bar's widget groups and around a hugging bar (popups keep the window margin from the screen edge)"; key: "shell.gap"; from: 0; to: 32; step: 2; suffix: " px" }
         SettingSlider { label: "Popup radius"; hint: "Corners of popups and cards"; key: "shell.radius"; from: 0; to: 24; step: 2; suffix: " px" }
         SettingSlider { label: "Control radius"; hint: "Corners of buttons and rows"; key: "shell.controlRadius"; from: 0; to: 16; step: 2; suffix: " px" }
     }

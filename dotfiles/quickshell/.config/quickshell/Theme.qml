@@ -50,9 +50,12 @@ Singleton {
     // this flag is for what a token cannot say: the cell borders, the stronger edge, square knobs and tracks.
     readonly property bool gridMode: ThemeStore.shell.gridMode
     // Grid mode squares the corners of popups, buttons and controls too, unless shell.gridRoundControls keeps them round (the bar, windows and stage cards are always square).
-    // Grid mode: the margin around the windows (windows.gapsOut), which the stage rail uses for its padding and the gap between
-    // its tiles (settings.py grid_rail_gap, capped at the rail settings' maximum of 32).
-    readonly property int gridMargin: Math.min(32, Math.max(0, Math.round((ThemeStore.settings.windows ?? ({})).gapsOut ?? 20)))
+    // The margin around the windows (windows.gapsOut, Hyprland's gaps_out; grid mode does not change it). Popups and notifications
+    // keep it from the screen edges so they line up with the windows (owner, 2026-10-31).
+    readonly property int windowMargin: Math.max(0, Math.round((ThemeStore.settings.windows ?? ({})).gapsOut ?? 20))
+    // Grid mode: the same margin as the stage rail's padding and the gap between its tiles (settings.py grid_rail_gap, capped at
+    // the rail settings' maximum of 32).
+    readonly property int gridMargin: Math.min(32, windowMargin)
     // Grid mode: the windows' corner radius (windows.rounding, not overridden by grid mode), which the pinned-app tiles share.
     readonly property int gridWindowRadius: Math.max(0, Math.round((ThemeStore.settings.windows ?? ({})).rounding ?? 10))
     readonly property bool gridSquare: gridMode && !ThemeStore.shell.gridRoundControls
@@ -69,7 +72,7 @@ Singleton {
     readonly property int durFast: 120     // hover, press, switch, colour
     readonly property int durEnter: 200    // a popup or card arriving
     readonly property int durExit: 140     // leaving is quicker than arriving
-    readonly property int durLarge: 300    // the overview zoom
+    readonly property int durLarge: 300    // large fades (settings rows)
 
     readonly property string font: ThemeStore.shell.font               // JetBrainsMono Nerd Font
     readonly property int fontSize: ThemeStore.shell.fontSize          // 13

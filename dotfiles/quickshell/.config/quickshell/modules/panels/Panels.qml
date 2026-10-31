@@ -90,8 +90,8 @@ Scope {
                 id: win
                 readonly property bool target: loader.modelData.name === root.targetName
                 readonly property bool sheet: root.shown === "notifications"    // full-height right-hand panel
-                readonly property int sheetTop: Theme.barEdge === "top" ? Theme.barInset + 6 : Theme.gap
-                readonly property int sheetBottom: Theme.barEdge === "bottom" ? Theme.barInset + 6 : Theme.gap
+                readonly property int sheetTop: Theme.barEdge === "top" ? Theme.barInset + 6 : Theme.windowMargin
+                readonly property int sheetBottom: Theme.barEdge === "bottom" ? Theme.barInset + 6 : Theme.windowMargin
                 screen: loader.modelData
                 anchors { top: true; bottom: true; left: true; right: true }
                 exclusionMode: ExclusionMode.Ignore
@@ -116,21 +116,21 @@ Scope {
                                       : Math.min(body.item ? body.item.implicitHeight + 40 : 100, parent.height - (Theme.barVertical ? 0 : Theme.barInset) - 24)
                     // The notification history is a side sheet on the right, whatever edge the bar is on. Every other
                     // panel opens at the widget that was clicked: centred on it along the bar and just clear of the bar
-                    // (Theme.barEdge / barInset), kept inside the screen by a gap. Opened without a widget (power key,
+                    // (Theme.barEdge / barInset), kept the windows' margin (Theme.windowMargin) from the screen edges, so it lines up with the windows. Opened without a widget (power key,
                     // IPC: PanelState.anchor < 0) it sits in the corner at the bar's end: top bar -> top right,
                     // bottom bar -> bottom right, left bar -> top left, right bar -> top right.
                     readonly property real edge: Theme.barInset + 6
                     readonly property bool anchored: PanelState.anchor >= 0
                     function along(size: real, limit: real): real {      // the card's start along the bar, clamped on screen
-                        return Math.max(Theme.gap, Math.min(PanelState.anchor - size / 2, limit - size - Theme.gap))
+                        return Math.max(Theme.windowMargin, Math.min(PanelState.anchor - size / 2, limit - size - Theme.windowMargin))
                     }
-                    x: win.sheet || Theme.barEdge === "right" ? (win.sheet ? parent.width - width - Theme.gap : parent.width - width - edge)
+                    x: win.sheet || Theme.barEdge === "right" ? (win.sheet ? parent.width - width - Theme.windowMargin : parent.width - width - edge)
                        : Theme.barEdge === "left" ? edge
-                       : anchored ? along(width, parent.width) : parent.width - width - Theme.gap
+                       : anchored ? along(width, parent.width) : parent.width - width - Theme.windowMargin
                     y: win.sheet ? win.sheetTop
                        : Theme.barEdge === "top" ? edge
                        : Theme.barEdge === "bottom" ? parent.height - height - edge
-                       : anchored ? along(height, parent.height) : Theme.gap
+                       : anchored ? along(height, parent.height) : Theme.windowMargin
                     radius: Theme.radius
                     color: Theme.popupBg
                     border.width: Theme.hair

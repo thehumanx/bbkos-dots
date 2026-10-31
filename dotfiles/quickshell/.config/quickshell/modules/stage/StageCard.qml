@@ -5,7 +5,8 @@ import Quickshell.Widgets
 import qs
 import qs.components
 
-// One window in the stage rail: a still of the window with its title and icon. Click it to bring it to the front.
+// One window in the stage rail: a still of the window, its app icon in the middle (also on a top or bottom rail, where the card
+// has no caption) and its title below. Click it to bring it to the front.
 // Sizes and looks come from the stage settings (the rail passes them in), so every one is tunable in the settings app.
 Item {
     id: card
@@ -22,8 +23,8 @@ Item {
         const name = desktopEntry && desktopEntry.icon ? desktopEntry.icon : appId
         return name !== "" ? Quickshell.iconPath(name, "application-x-executable") : ""
     }
-    // No caption on a card under 60 px tall (a top or bottom rail is one tile thick): the picture alone.
-    readonly property real captionHeight: (rail.showTitle || rail.showIcon) && height >= 60 ? 22 : 0
+    // No caption on a card under 60 px tall (a top or bottom rail is one tile thick): the picture and the icon alone.
+    readonly property real captionHeight: rail.showTitle && height >= 60 ? 22 : 0
 
     // Across the rail its thickness less the padding, along it stage.cardHeight, on every edge.
     width: rail.sideRail ? rail.crossSize : rail.cardHeight
@@ -59,11 +60,20 @@ Item {
             refreshToken: card.rail.captureVersion
         }
 
-        IconImage {
-            anchors.centerIn: still
-            visible: !still.hasContent
-            implicitSize: 32
-            source: card.iconSource
+        // The app icon in the middle of the card, on a plate so it reads over any screenshot. Shown alone while there is no still.
+        Rectangle {
+            readonly property real size: Math.round(Math.min(32, Math.min(card.width, card.height) * 0.5))
+            anchors.centerIn: parent
+            visible: card.iconSource !== "" && (card.rail.showIcon || !still.hasContent)
+            width: size + 8
+            height: size + 8
+            radius: Math.min(card.rail.cardRadius, width / 2)
+            color: still.hasContent ? Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 0.80) : "transparent"
+            IconImage {
+                anchors.centerIn: parent
+                implicitSize: parent.size
+                source: card.iconSource
+            }
         }
 
         Rectangle {
@@ -73,23 +83,11 @@ Item {
             visible: height > 0
             color: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 0.92)
 
-            Row {
+            Txt {
                 anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: 6; rightMargin: 6 }
-                spacing: 6
-                IconImage {
-                    visible: card.rail.showIcon && card.iconSource !== ""
-                    implicitSize: 14
-                    source: card.iconSource
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Txt {
-                    visible: card.rail.showTitle
-                    width: parent.width - (card.rail.showIcon && card.iconSource !== "" ? 20 : 0)
-                    text: card.title !== "" ? card.title : card.appId
-                    elide: Text.ElideRight
-                    font.pixelSize: Theme.fontSize - 3
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                text: card.title !== "" ? card.title : card.appId
+                elide: Text.ElideRight
+                font.pixelSize: Theme.fontSize - 3
             }
         }
     }

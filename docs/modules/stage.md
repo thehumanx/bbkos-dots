@@ -3,7 +3,7 @@
 A macOS Stage Manager-style mode (added 2026-10-21), **per workspace since 2026-10-23**. A stage workspace opens windows
 one at a time, full size, instead of tiling them, and the other windows of the workspace wait in a rail of small
 thumbnail cards along one edge. A click on a card brings that window to the front. `stage.enabled` (Settings, "Stage
-mode by default") is the mode every workspace starts in; the overview switch ("Stage mode for workspace N"),
+mode by default") is the mode every workspace starts in; the switch at the far end of the rail (since 2026-10-31, "Rail switch" below),
 `Super+Alt+S` or `qs ipc call stagews set NAME true|false` switch one workspace until the next boot. Every size and look
 of the rail is on bbkOS › Stage mode and bbkOS › Rail and pinned apps (Windows › Stage mode until 2026-10-31). Source:
 `dotfiles/quickshell/.config/quickshell/modules/stage/{Stage,StageCard,StillImage}.qml`, `services/StageState.qml`,
@@ -30,10 +30,32 @@ Since 2026-10-30 the rail can also hold a grid of pinned apps above the cards an
   `qs ipc call stage status` shows `workspace` and `stage` per screen.
 - **Verified:** on a spare workspace 9 with two probe windows: off gave `dwindle` while workspace 1 stayed `monocle`;
   the file held `{"9":false}`; after `systemctl --user restart quickshell` and after `hyprctl reload` workspace 9 was still
-  `dwindle`; back to the default removed the rule and emptied the file; the overview header reads "Stage mode for
-  workspace 1" (screenshot); `tiled_layout` read from Lua; keybinding tests. **Not verified:** a real reboot (the file is
-  on a tmpfs, so it cannot survive one), a real `Super+Alt+S` press and the arrows on a mixed setup, the overview switch
-  clicked on a workspace other than the focused one, a second monitor.
+  `dwindle`; back to the default removed the rule and emptied the file; `tiled_layout` read from Lua; keybinding tests. **Not verified:** a real reboot (the file is
+  on a tmpfs, so it cannot survive one), a real `Super+Alt+S` press and the arrows on a mixed setup, a second monitor.
+
+## Rail switch (2026-10-31)
+
+A two-icon switch at the far end of the rail sets stage mode for the workspace on that screen (`StageSwitch.qml`): tiled
+(Font Awesome `th-large`) on the left half, stage (`clone`, windows stacked) on the right. The current mode's half is lit
+(the accent at 30 %, and the glyph in the accent); hovering the other half shows a softer plate, and a click on it calls
+`StageState.set` (`Super+Alt+S` and the menu's "Stage mode for this workspace" toggle the same state). It replaced the
+switch in the workspace overview's header when the overview was removed; a first version the same day was one icon that
+changed with the state, and the owner asked for both icons. Far end: the bottom of a left or right rail, the right end of
+a top or bottom one, and the end of the contents on a hugging rail. On a side rail it is one tile long and the rail's
+inside wide, the two icons across; a top or bottom rail is only one tile across, so there it is two tiles and a gap long
+(`switchLen`). That room and a gap (`switchRoom`) are kept free at the end, so cards never run under it. Grid mode: a cell
+with the hairline edge and the windows' corner radius, like the pinned tiles; otherwise its own pill. It shows only where
+the rail does: with pinned apps off the rail is hidden on a workspace that is not in stage mode, so there `Super+Alt+S` or
+the menu turns it on (owner's choice, 2026-10-31). Test hook: `qs ipc call stage stageswitch true|false` (a click on that
+half of the first screen's switch); `stage status` gives its `switchRect`.
+
+Verified 2026-10-31 on `eDP-1` (scale 16/15), grid mode, pinned apps on: the hook set workspace 2 to tiled
+(`overrides` `{}`, the tiled half lit in a `grim` capture) and back to stage (`{"2": true}`, the stage half lit); on
+workspace 1 (not stage) the tiled half was lit. Placement from `stage status` and screenshots: left rail at the bottom
+(84 x 38 at `y` 1049 in a 1095 px body), bottom rail at the right end (84 x 38 at `x` 1708 in 1800), hugging bottom rail
+right after the tiles; the one-icon version was also checked on the right and top edges and with `railAlign` end. Outside
+grid mode: its own pill. Not verified: a real mouse click or hover, a second monitor, light mode, the pinned apps off (rail
+hidden on a non-stage workspace, by design).
 
 ## How it works
 
@@ -51,10 +73,14 @@ Since 2026-10-30 the rail can also hold a grid of pinned apps above the cards an
   card shape (`MultiEffect` mask), and the border is drawn on top; `clip: true` only clips to a rectangle, so the
   screenshot and the caption bar used to poke out of the rounded corners (fixed 2026-10-21, checked at radius 24 and 10
   with `grim`). A still screenshot of the window (`hyprland-toplevel-export-v1`, which captures windows
-  that are covered by the front one), its title and app icon. The cards come from a `ListModel` diffed against the window
-  list, so a Hyprland refresh never recreates a screenshot (same lesson as the overview). `StillImage.qml` refreshes a
+  that are covered by the front one), its app icon in the middle of the card on a dark plate (since 2026-10-31, owner: "show
+  the app icons in the center of the card", so the icon shows on a top or bottom rail too, where a card under 60 px tall has
+  no caption) and its title in the caption below. The cards come from a `ListModel` diffed against the window
+  list, so a Hyprland refresh never recreates a screenshot (a recreated delegate retakes its screenshot). `StillImage.qml` refreshes a
   still without a blink: the new capture is built under the shown one and swapped in when its frame has arrived, and it
-  is drawn through a layer because `ScreencopyView` does not blend (see the overview doc, translucent windows).
+  is drawn through a layer because `ScreencopyView` does not blend: without it a translucent window's alpha is written
+  into the rail's surface and the real window shows through the card (found 2026-10-21 in the removed overview with a 50 %
+  translucent kitty; `failure-modes.md`).
 - **Refresh**: a still is taken when a card is created, when the front window changes, and every
   `stage.refreshSeconds` while a rail is visible (0 = only on a switch). Hyprland events (open, close, move, focus,
   workspace, fullscreen, float) refresh Quickshell's window models on a 140 ms debounce, only while the mode is on.
@@ -105,10 +131,10 @@ settings page use the same keys.
   `hyprctl layers` and `hyprctl clients` (for example bar top, rail left: rail `0 36 150 1164`, window `157 43 1756 1150`).
 - Focus: `hl.dsp.focus({ window = ... })` brought a covered window to the front and the rail followed;
   `hl.dsp.layout("cyclenext")` and `("cycleprev")` cycle; `focus left` alone does nothing in monocle.
-- Switching through `SettingsStore` (as the overview switch does): off gives `dwindle`, on gives `monocle`.
+- Switching through `SettingsStore`: off gives `dwindle`, on gives `monocle`.
 - CPU of Quickshell over 15 s with a rail of 2 cards: 90 ms with 3 s refresh, 0 with refresh off, 10 ms with stage off.
 
-**Not verified:** a real mouse click on a card or on the overview switch (no pointer injection here; the dispatch and
+**Not verified:** a real mouse click on a card or on the rail switch (no pointer injection here; the dispatch and
 the settings path were exercised instead), the physical `Super`+arrow keys (the generated Lua loads without errors and
 its calls were run through `hyprctl eval`), a second monitor, windows that are fullscreen, and battery impact over time.
 
@@ -117,7 +143,6 @@ its calls were run through `hyprctl eval`), a second monitor, windows that are f
 - Monitor x/y in Quickshell can go stale after a hotplug or layout change, which drops every window of that monitor (empty rail). `refreshNow` calls `Hyprland.refreshMonitors()`, and `hyprland.lua` runs `qs ipc call display monitorsChanged` on the Lua events `monitor.layout_changed`, `monitor.added` and `monitor.removed` (a monitor move sends no socket event) (2026-10-25); `qs ipc call stage status` shows each screen's `frame` and toplevel count to check.
 - The stills are not live; a window that changes while it is in the rail is as old as the last refresh.
 - The front window is resized when the rail appears (one window to two) or goes away, as on macOS.
-- The overview's workspace card of a stage workspace shows stacked windows, so its miniature looks like one window.
 - A card removed from the rail disappears at once (no exit animation).
 
 ## Cursor on rail clicks (2026-10-21)

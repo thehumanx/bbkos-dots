@@ -339,17 +339,12 @@ class HyprLuaTest(unittest.TestCase):
         self.assertIn("gaps_out = 20,", off)
         self.assertNotIn("40)\"", off.split("inactive_border")[1].split("\n")[0])
 
-    def test_overview_swipes_render_as_lua_functions(self):
+    def test_no_gesture_calls_the_removed_overview(self):
         s = make_settings("dark")
-        s["touchpad"].update(swipe3Up="overview", swipe3Down="overview-close")
+        s["touchpad"].update(swipe3Up="workspace")
         t = render.tokens(make_palette("dark"), s)
         text = render.render_hypr_lua(t, s)
-        self.assertIn(
-            'hl.gesture({ fingers = 3, direction = "up", '
-            'action = function() hl.exec_cmd("qs ipc call overview open") end })', text)
-        self.assertIn(
-            'hl.gesture({ fingers = 3, direction = "down", '
-            'action = function() hl.exec_cmd("qs ipc call overview close") end })', text)
+        self.assertNotIn("overview", text)
         self.assertEqual(self.run_lua_text(text), 0)
 
     def test_touchpad_defaults_leave_hyprland_defaults_in_place(self):

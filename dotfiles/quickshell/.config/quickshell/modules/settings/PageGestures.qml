@@ -6,19 +6,16 @@ import qs.services
 
 // Gestures tab (Mouse and touchpad): the workspace swipe and what each multi-finger swipe does. Keys mirror settings.py
 // (touchpad.wsSwipe*, touchpad.swipe*). The three-finger left and right swipes are the built-in workspace swipe and cannot
-// be remapped, so the list offers up and down for three fingers and all four for four. Swipe up/down can open or close the
-// workspace overview (modules/overview); left/right remains Hyprland's own workspace swipe whether the overview is open or
-// not (the overview follows the change instead, with a slide). Each swipe is a compact choice: the current action, and the
-// eight actions only while it is open.
+// be remapped, so the list offers up and down for three fingers and all four for four. Each swipe is a compact choice: the
+// current action, and the six actions only while it is open.
 SettingsPage {
     id: page
-    note: "Three fingers left and right always switch workspaces (the overview follows the change)."
+    note: "Three fingers left and right always switch workspaces."
 
     readonly property var swipeActions: [
         { value: "none", label: "None" }, { value: "workspace", label: "Switch workspace" },
         { value: "close", label: "Close window" }, { value: "fullscreen", label: "Fullscreen" },
-        { value: "float", label: "Float toggle" }, { value: "special", label: "Scratchpad" },
-        { value: "overview", label: "Overview" }, { value: "overview-close", label: "Close overview" }]
+        { value: "float", label: "Float toggle" }, { value: "special", label: "Scratchpad" }]
 
     SettingsSection {
         title: "Swipes"

@@ -31,7 +31,8 @@ Scope {
 
         PanelWindow {
             id: win
-            // Same corner rule as the panels: the bar's end side, clear of the bar.
+            // Same corner rule as the panels: the bar's end side, clear of the bar, and the windows' margin (Theme.windowMargin) from
+            // the screen edges, so the cards line up with the windows.
             // notifications.position: "auto" is the corner on the bar's end side, else one of the four corners.
             readonly property string corner: Notifs.cfg.position ?? "auto"
             readonly property bool atBottom: corner === "auto" ? Theme.barEdge === "bottom" : corner.startsWith("bottom")
@@ -44,10 +45,10 @@ Scope {
             }
             // Where the cards sit (as before), and the room kept around them for their shadows: up to Theme.shadowPad,
             // taken out of the margin on an anchored side (never below 0) and added freely on the open sides.
-            readonly property int mTop: Theme.barEdge === "top" ? Theme.barInset + 8 : Theme.gap
-            readonly property int mBottom: Theme.barEdge === "bottom" ? Theme.barInset + 8 : Theme.gap
-            readonly property int mRight: Theme.barEdge === "right" ? Theme.barInset + 8 : Theme.gap
-            readonly property int mLeft: Theme.barEdge === "left" ? Theme.barInset + 8 : Theme.gap
+            readonly property int mTop: Theme.barEdge === "top" ? Theme.barInset + 8 : Theme.windowMargin
+            readonly property int mBottom: Theme.barEdge === "bottom" ? Theme.barInset + 8 : Theme.windowMargin
+            readonly property int mRight: Theme.barEdge === "right" ? Theme.barInset + 8 : Theme.windowMargin
+            readonly property int mLeft: Theme.barEdge === "left" ? Theme.barInset + 8 : Theme.windowMargin
             readonly property int padTop: !win.atBottom ? Math.min(Theme.shadowPad, mTop) : Theme.shadowPad
             readonly property int padBottom: win.atBottom ? Math.min(Theme.shadowPad, mBottom) : Theme.shadowPad
             readonly property int padLeft: win.atLeft ? Math.min(Theme.shadowPad, mLeft) : Theme.shadowPad

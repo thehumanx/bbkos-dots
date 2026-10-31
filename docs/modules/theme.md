@@ -117,21 +117,17 @@ The tool clamps; the UI uses the same ranges. Keys are flat (`windows.shadowEnab
 | `touchpad.wsSwipeCancelRatio` | 0.5 | 0.0-1.0 |
 | `touchpad.wsSwipeInvert` / `wsSwipeDirectionLock` / `wsSwipeCreateNew` | true / true / true | bool |
 | `touchpad.wsSwipeForever` | false | bool |
-| `touchpad.swipe3Up` / `swipe3Down` | none | none, workspace, close, fullscreen, float, special, overview, overview-close |
+| `touchpad.swipe3Up` / `swipe3Down` | none | none, workspace, close, fullscreen, float, special |
 | `touchpad.swipe4Up` / `swipe4Down` / `swipe4Left` / `swipe4Right` | none | none, workspace, close, fullscreen, float, special |
 
 Touchpad values are written into `hypr-theme.lua` (one `hl.config` call) and applied with a full `hyprctl reload`.
 Three-finger left and right are Hyprland's built-in workspace swipe and cannot be set per direction: Hyprland ignores
 a per-direction gesture for the same finger count when the horizontal one exists.
 
-The `overview` / `overview-close` swipe actions (2026-10-20, for the workspace overview, docs/modules/overview.md)
-are not stock Hyprland gesture actions: `render.py` emits them as Lua-function actions calling the overview's IPC
-through the compositor, e.g.
-`hl.gesture({ fingers = 3, direction = "up", action = function() hl.dsp.exec_cmd("qs ipc call overview toggle") end })`.
-The dispatcher form (`hl.dsp.exec_cmd`) is used because it was verified live with `hyprctl dispatch …`; the wiki's
-`hl.exec_cmd` direct-call form was never proven on this compositor (0.56.2). Because these functions only run at
-gesture time, the compositor accepting the gesture line (`hyprctl configerrors` empty) does not prove the call works
-at swipe time — the owner's swipe is the end-to-end check.
+The `overview` / `overview-close` swipe actions were removed with the workspace overview on 2026-10-31; a saved swipe that
+still names one is read as `none` without a warning (`settings.py` `RETIRED_SWIPES`), and a saved `bar.layout` or
+`bar.hidden` entry for its widget is dropped the same way (`RETIRED_WIDGETS`). Lesson kept from them: inside a Lua
+gesture function `hl.dsp.exec_cmd(...)` only builds a dispatcher object and runs nothing; `hl.exec_cmd(...)` runs.
 
 Wrong types, NaN, huge numbers, unknown keys and control characters never raise: the value falls back to its default with a warning. Blur, shadow and animations are plain settings (the battery profile that switched them off on battery was removed; decision 0003).
 
@@ -187,7 +183,7 @@ New tokens in `colors.json`: `gridEdge` (2026-10-30: grid mode's opaque cell bor
 - `render.tints`: `secondary` / `tertiary` are `tone_primary` with its OKLCH hue turned -40 / +40 degrees (same lightness and chroma, chroma only cut to fit the gamut), floored at 3:1 like the accent; the `*Soft` ones are the same rotation of `soft_primary`. matugen's own secondary and tertiary tones were tried first and rejected: nearly grey (`#b0cccc`, `#b4c7e9`) for this wallpaper, so the widgets would not have changed visibly. A grey wallpaper keeps every tint grey (test).
 - For the owner's wallpaper: accent `#b4fdff`, secondary `#79d9a5` (green-teal), tertiary `#7dccff` (sky blue), accentSoft `#004f51`.
 
-Quickshell: `Theme.accent2/accent3`, `accent2Soft/accent3Soft`, `accentSoft`, `surfaceHigh`, `Theme.tint` and `Theme.tinted(tone, base)` (base leaned toward the tone by `shell.tint`). Bar widgets call `Txt.tone(Theme.accentN)` (clock and workspaces and audio: accent3; display, battery, updates, notifications: accent2; overview, network: accent; gear and Bluetooth: accent3). When a translucent bar flips its text colour for a bright wallpaper (`BarContrast`) the tints stay off, because they are made for the dark palette background. The pill colour leans toward `accentSoft` by up to 45% of the tint. Popups, notification cards, the volume OSD, the polkit dialog and the pickers use `Theme.popupBg`: `surface` leaned toward `accentSoft` by up to 50% of the tint (opaque; was the plain `surface`, 2026-10-21). Inside a popup or card two more tokens derive from `popupBg`: `Theme.inset` (toward `bg` by 55%: progress tracks, selected rows, notification cards, inputs, dividers, the toggle's off track) and `Theme.control` (toward `fg` by 12%: buttons, chips, hover rows), so every layer follows the tint. The settings window's sidebar and cards use `popupBg` too; its own background stays `bg`. Controls use `accentSoft` (buttons, chips, hover rows).
+Quickshell: `Theme.accent2/accent3`, `accent2Soft/accent3Soft`, `accentSoft`, `surfaceHigh`, `Theme.tint` and `Theme.tinted(tone, base)` (base leaned toward the tone by `shell.tint`). Bar widgets call `Txt.tone(Theme.accentN)` (clock and workspaces and audio: accent3; display, battery, updates, notifications: accent2; network: accent; gear and Bluetooth: accent3). When a translucent bar flips its text colour for a bright wallpaper (`BarContrast`) the tints stay off, because they are made for the dark palette background. The pill colour leans toward `accentSoft` by up to 45% of the tint. Popups, notification cards, the volume OSD, the polkit dialog and the pickers use `Theme.popupBg`: `surface` leaned toward `accentSoft` by up to 50% of the tint (opaque; was the plain `surface`, 2026-10-21). Inside a popup or card two more tokens derive from `popupBg`: `Theme.inset` (toward `bg` by 55%: progress tracks, selected rows, notification cards, inputs, dividers, the toggle's off track) and `Theme.control` (toward `fg` by 12%: buttons, chips, hover rows), so every layer follows the tint. The settings window's sidebar and cards use `popupBg` too; its own background stays `bg`. Controls use `accentSoft` (buttons, chips, hover rows).
 
 ## 5. matugen findings (verified 2026-10-18)
 

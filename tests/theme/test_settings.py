@@ -113,8 +113,20 @@ class SettingsTest(unittest.TestCase):
     def test_the_window_title_widget_sits_after_the_workspaces_by_default(self):
         lay = S.DEFAULTS["bar"]["layout"]
         self.assertEqual(lay[lay.index("start:workspaces") + 1], "start:title")
-        out, _ = S.validate({"version": 1, "bar": {"layout": ["start:overview", "start:workspaces"]}})
+        out, _ = S.validate({"version": 1, "bar": {"layout": ["start:workspaces"]}})
         self.assertIn("start:title", out["bar"]["layout"])     # an older saved layout gains it
+
+    def test_the_removed_overview_is_dropped_quietly(self):
+        # The workspace overview was removed on 2026-10-31; a saved layout, hidden list or swipe naming it loses it without a warning.
+        out, warns = S.validate({"version": 1, "bar": {"layout": ["start:overview", "start:workspaces"], "hidden": ["overview"]},
+                                 "touchpad": {"swipe3Up": "overview", "swipe3Down": "overview-close"}})
+        self.assertNotIn("start:overview", out["bar"]["layout"])
+        self.assertEqual(out["bar"]["layout"][0], "start:workspaces")
+        self.assertEqual(out["bar"]["hidden"], [])
+        self.assertEqual((out["touchpad"]["swipe3Up"], out["touchpad"]["swipe3Down"]), ("none", "none"))
+        self.assertEqual(warns, [])
+        self.assertNotIn("overview", S.SWIPE_ACTIONS)
+        self.assertNotIn("overview", S.BAR_WIDGETS)
 
     def test_stage_set_value_toggles_the_mode(self):
         out = S.set_value(S.DEFAULTS, "stage.enabled", "on")

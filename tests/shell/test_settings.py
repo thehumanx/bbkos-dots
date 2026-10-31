@@ -61,7 +61,7 @@ class SettingsTest(unittest.TestCase):
 
     def test_search_lands_on_the_row(self):
         self.shell.ipc("settings", "page", "about/about")
-        self.shell.ipc("settings", "search", "Thickness")
+        self.shell.ipc("settings", "search", "Hug the widgets")     # "Thickness" is also on bbkOS › Rail (2026-10-31)
         time.sleep(0.5)
         self.shell.ipc("settings", "pick")
         self.assertTrue(wait_for(lambda: self.where() == "bar/layout"), self.where())

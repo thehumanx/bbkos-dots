@@ -8,7 +8,7 @@ import "../../components/FileUrl.js" as FileUrl
 // by a Hyprland layer rule because the rule has no strength of its own (it reuses the windows' decoration.blur size and
 // passes), so the bar could not be tuned apart from the windows. A bar reserves its edge, so what sits behind it is the
 // wallpaper (the same cover-fit picture modules/wallpaper draws); a floating window dragged under it is not blurred.
-// The blur runs on a quarter-size copy and is scaled back up, as in modules/overview/Backdrop: a blur has no fine
+// The blur runs on a quarter-size copy and is scaled back up: a blur has no fine
 // detail, so it looks the same and touches 1/16 of the pixels. Static: nothing redraws until the wallpaper, the amount or
 // the bar's place changes. Needs the bar window's screen size and the strip's place in it (logical pixels).
 Item {
