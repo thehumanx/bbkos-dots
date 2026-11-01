@@ -21,7 +21,7 @@ usage: bbkos-display COMMAND
   set-scale NAME SCALE                          e.g. set-scale eDP-1 1.25
   set-mode NAME WxH@R                           e.g. set-mode eDP-1 1920x1200@60
   layout extend|mirror|only [--primary NAME] [--position left|right|above|below]
-  brightness NAME [PERCENT | --step DELTA | --key up|down]   read, set or step one monitor's brightness (JSON);\n                                                NAME @cursor = the monitor under the pointer
+  brightness NAME [PERCENT | --step DELTA | --key up|down | --kind]   read, set or step one monitor's brightness (JSON;\n                                                --kind: name and backlight|ddc|null, no read);\n                                                NAME @cursor = the monitor under the pointer
   keep                                          accept the last change
   revert                                        undo the last unconfirmed change
   apply [--lid open|closed]                     re-apply the saved state (hotplug, lid, session start)
@@ -302,11 +302,18 @@ def monitor_at_cursor(env, mons):
 
 
 def _brightness(args, env, dp, sd):
-    usage = "brightness needs NAME [PERCENT | --step DELTA | --key up|down]"
+    usage = "brightness needs NAME [PERCENT | --step DELTA | --key up|down | --kind]"
     if not args or len(args) > 3:
         raise UsageError(usage)
     name, rest = args[0], args[1:]
     percent = delta = key = None
+    if rest == ["--kind"]:
+        # Which monitor NAME (or @cursor) is and how its brightness is changed, without touching it (no DDC read):
+        # bbkos-brightness uses it to hand a key on an external monitor to the shell's queue.
+        mons = read_monitors(env)
+        m = monitor_at_cursor(env, mons) if name == "@cursor" else _find(mons, name)
+        print(json.dumps({"name": m["name"], "kind": BR.kind(m["name"], D.is_internal(m), env)}))
+        return []
     if rest[:1] == ["--key"]:
         if len(rest) != 2 or rest[1] not in ("up", "down"):
             raise UsageError(usage)

@@ -3,6 +3,7 @@
 # Changes the brightness of the monitor under the mouse pointer by 5 %, or 1 % at the dark end (up below 5 %, down at 5 % or below; up1 and down1: always 1 %, the precise keys) (the laptop panel on its 1-100 % perceptual scale, see brightness.py,
 # an external monitor over DDC/CI through ddcutil; see `bbkos-display brightness --help`). Then shows the Quickshell
 # OSD (the backlight emits no change events, so the shell is told explicitly) and refreshes that monitor's widget.
+# An external monitor's key goes to the shell's queue instead (below), which shows the OSD itself.
 # A monitor that cannot be controlled (no ddcutil, DDC/CI off) gets a notification, never the laptop's brightness.
 set -euo pipefail
 
@@ -13,6 +14,16 @@ case "${1:-}" in
     down1) arg=(--step -1) ;;
     *)    echo "usage: bbkos-brightness {up|down|up1|down1}" >&2; exit 2 ;;
 esac
+
+# An external monitor goes through the shell's brightness queue (the Display popup slider's path): the shell knows
+# the value, so there is no DDC read, and a held key is coalesced instead of queueing one read-read-write per repeat.
+# The shell answers "" when it cannot (value unknown, last DDC job failed, shell not running): then the path below.
+if info=$(bbkos-display brightness @cursor --kind 2>/dev/null) \
+   && read -r name kind < <(python3 -I -c 'import json, sys; d = json.load(sys.stdin); print(d["name"], d["kind"])' <<<"$info") \
+   && [ "$kind" = ddc ] \
+   && [ "$(qs ipc call display keyBrightness "$name" "$1" 2>/dev/null)" = ok ]; then
+    exit 0
+fi
 
 if ! out=$(bbkos-display brightness @cursor "${arg[@]}" 2>&1); then
     notify-send -a bbkos -u low "Brightness" "${out:-could not change the brightness}" >/dev/null 2>&1 || true

@@ -21,9 +21,11 @@ Scope {
             readonly property bool fullscreen: (per.workspace?.hasFullscreen ?? false)
                 && per.workspace.toplevels.values.some(t => t.wayland?.fullscreen === true)
             // Each strip is a whole number of physical pixels thick (15 logical at 16/15): a surface of a fractional physical size
-            // is scaled by the compositor, and a one-pixel line at its edge was then not drawn at all (2026-10-30).
+            // is scaled by the compositor, and a one-pixel line at its edge was then not drawn at all (2026-10-30). At least 2:
+            // a layer window 1 px thick is not drawn at all (probed 2026-11-01 on HDMI at scale 1, where the first whole length
+            // was 1 and three of the four edges were missing; 2 and 3 px strips drew).
             readonly property int thickness: {
-                for (let l = 1; l <= 15; l++) if (Theme.exactOn(per.modelData, l)) return l
+                for (let l = 2; l <= 16; l++) if (Theme.exactOn(per.modelData, l)) return l
                 return 2
             }
 

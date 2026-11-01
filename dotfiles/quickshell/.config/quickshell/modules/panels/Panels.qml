@@ -47,6 +47,7 @@ Scope {
         }
         function refreshBrightness(name: string): void { Displays.refreshBrightness(name) }
         function setBrightness(name: string, percent: int): void { Displays.setBrightness(name, percent) }
+        function keyBrightness(name: string, key: string): string { return Displays.keyBrightness(name, key) }
         function setScale(name: string, scale: string): void { Displays.setScale(name, parseFloat(scale)) }
         function setMode(name: string, mode: string): void { Displays.setMode(name, mode) }
         function setLayout(mode: string, primary: string, position: string): void { Displays.setLayout(mode, primary, position) }

@@ -72,7 +72,7 @@ Every popup module uses `LazyLoader`: its window exists only while visible.
 | `launcher toggle` / `close` | `Super+R` (`hyprland.lua`, `menu`) |
 | `clipboard toggle` | `Super+Shift+V` |
 | `osd brightnessOn <percent> <screen>` / `osd brightness <percent>` | `~/.local/bin/bbkos-brightness` (brightness keys; the backlight emits no change events; the bar appears on the named screen, the focused one for the old form) |
-| `display status` / `refresh` / `refreshBrightness NAME` / `setBrightness NAME N` / `setScale` / `setMode` / `setLayout` / `keep` / `revert`; `panel toggleOn PANEL SCREEN` | Display widget (`docs/modules/displays.md`); `bbkos-brightness` calls `refreshBrightness` |
+| `display status` / `refresh` / `refreshBrightness NAME` / `setBrightness NAME N` / `keyBrightness NAME up|down|up1|down1` / `setScale` / `setMode` / `setLayout` / `keep` / `revert`; `panel toggleOn PANEL SCREEN` | Display widget (`docs/modules/displays.md`); `bbkos-brightness` calls `keyBrightness` for an external monitor (answers `ok` or ""), else `refreshBrightness` |
 | `notifications status` / `markAllRead` / `clear` / `dismiss KEY` | Test hooks and the notification panel (`docs/modules/notifications.md`) |
 | `wallpaper status` | Test hook: per screen, decode size, scale, `image`/`plain`, `Image.status` |
 | `theme status` / `reload` | Tests and manual use: tokens as the shell resolves them; re-read the theme files (normally not needed, the files are watched) |

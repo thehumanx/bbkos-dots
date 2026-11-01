@@ -298,7 +298,7 @@
     "import": 1,
     "missing-property": 1,
     "uncreatable-type": 1,
-    "unqualified": 89
+    "unqualified": 90
   },
   "modules/panels/PowerPanel.qml": {
     "import": 3,

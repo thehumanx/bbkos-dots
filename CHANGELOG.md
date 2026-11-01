@@ -2,6 +2,13 @@
 
 What changed for people using bbkOS dots, newest first. Update with `git pull && ./install.sh --no-packages` (see "Update" in the README).
 
+## 2026-11-01
+
+### Fixed
+
+- **Brightness keys on an external monitor no longer lag.** Holding the brightness key with the pointer on a DDC/CI monitor used to queue every key repeat, and the monitor kept changing for seconds after you let go. The keys now work like the slider in the Display popup: one press takes about 0.2 s, and the monitor stops within about 0.3 s of letting go. The laptop screen is unchanged.
+- **Grid mode's screen border shows on all four edges of a monitor at scale 1.** On a screen with no scaling only the top edge (the bar's line) had a border; the left, right and bottom were missing.
+
 ## 2026-10-31
 
 ### New

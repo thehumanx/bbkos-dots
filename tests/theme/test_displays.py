@@ -522,6 +522,17 @@ class CliTest(unittest.TestCase):
         self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--bus\t3\tgetvcp\t10\t--brief",
                                                       "ddcutil\t--bus\t3\tsetvcp\t10\t50\t--noverify"])
 
+    def test_brightness_kind_names_the_monitor_without_touching_it(self):
+        self.two()
+        self.add_backlight()
+        self.add_drm()
+        rc, out, _ = self.run_cli("brightness", "DP-1", "--kind")
+        self.assertEqual((rc, json.loads(out)), (0, {"name": "DP-1", "kind": "ddc"}))
+        self.assertEqual(self.tool_calls("ddcutil"), [])              # no DDC read: the key hands the step to the shell
+        rc, out, _ = self.run_cli("brightness", "eDP-1", "--kind")
+        self.assertEqual(json.loads(out)["kind"], "backlight")
+        self.assertEqual(self.tool_calls("brightnessctl"), [])
+
     def test_brightness_external_without_ddc_bus_errors(self):
         self.two()
         rc, _, err = self.run_cli("brightness", "DP-1")

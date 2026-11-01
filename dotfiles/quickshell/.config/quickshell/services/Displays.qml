@@ -107,6 +107,21 @@ Singleton {
         }
     }
 
+    // A brightness key on an external monitor (bbkos-brightness, key = up|down|up1|down1): steps the value the shell
+    // already knows through the slider's queue, so a held key (25 repeats a second) is coalesced into one write at a
+    // time with no read. Until 2026-11-01 each press ran its own read, read, write: a 0.4 s hold kept changing the
+    // monitor for 3.4 s after release. Same step sizes as key_delta in brightness.py. Returns "" when the value is not
+    // known yet or the last DDC job failed: the script then runs the command line, which reads and reports errors.
+    function keyBrightness(name: string, key: string): string {
+        const cur = brightnessOf(name)
+        if (kindOf(name) !== "ddc" || cur < 0 || brightnessError[name] !== undefined) return ""
+        const d = key === "up1" ? 1 : key === "down1" ? -1
+                : key === "up" ? (cur < 5 ? 1 : 5) : key === "down" ? (cur <= 5 ? -1 : -5) : 0
+        if (d === 0) return ""
+        setBrightness(name, cur + d)
+        return "ok"
+    }
+
     function bEnqueue(job) {
         _bQueue = _bQueue.filter(j => !(j.name === job.name && j.kind === job.kind))   // the newest of a kind wins
         _bQueue.push(job)
