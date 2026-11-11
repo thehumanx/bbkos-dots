@@ -135,3 +135,49 @@ class AwakeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScreensaverStepTest(AwakeTest):
+    def setUp(self):
+        super().setUp()
+        for name, body in (("bbkos-screensaver", f'echo "screensaver $*" >> {self.screen}'), ("tte", "exit 0")):
+            fake = self.dir / "bin" / name
+            fake.write_text(f"#!/bin/sh\n{body}\n")
+            fake.chmod(0o755)
+
+    def log(self):
+        return self.screen.read_text() if self.screen.exists() else ""
+
+    def test_idle_screensaver_starts_it(self):
+        self.run_script("idle-screensaver")
+        self.assertIn("screensaver \n", self.log())
+
+    def test_idle_screensaver_skipped_in_awake_mode(self):
+        self.run_script("on")
+        self.screen.unlink(missing_ok=True)
+        self.run_script("idle-screensaver")
+        self.assertNotIn("screensaver", self.log())
+
+    def test_resume_stops_it(self):
+        self.run_script("idle-screensaver-resume")
+        self.assertIn("screensaver stop", self.log())
+
+    def test_without_tte_the_step_dims_instead(self):
+        bare = self.dir / "bare"   # no tte on this PATH, even if one is installed on this machine
+        bare.mkdir()
+        for tool in ("bash", "env", "mkdir", "rm"):
+            (bare / tool).symlink_to(subprocess.run(["which", tool], capture_output=True, text=True).stdout.strip())
+        for name in ("brightnessctl", "hyprctl", "bbkos-screensaver"):
+            (bare / name).symlink_to(self.dir / "bin" / name)
+        self.run_script("idle-screensaver", PATH=str(bare))
+        self.assertIn("brightnessctl -s set 10", self.log())
+        self.assertNotIn("screensaver", self.log())
+        self.screen.unlink()
+        self.run_script("idle-screensaver-resume", PATH=str(bare))   # the resume restores the brightness it dimmed
+        self.assertIn("brightnessctl -r", self.log())
+
+    def test_declined_screensaver_dims_instead(self):
+        fake = self.dir / "bin" / "bbkos-screensaver"
+        fake.write_text(f'#!/bin/sh\necho "screensaver $*" >> {self.screen}\nexit 3\n')
+        self.run_script("idle-screensaver")
+        self.assertIn("brightnessctl -s set 10", self.log())

@@ -13,6 +13,7 @@ One GNU Stow package per directory, each mirroring `$HOME`. `install.sh` links t
 | `gtk` | `~/.config/gtk-3.0/gtk.css` (a comment; GTK 3 takes colours from the generated theme) |
 | `thunar` | the "Set as wallpaper" action |
 | `xdg-apps` | launcher entries hidden |
+| `fastfetch` | `~/.config/fastfetch/config.jsonc` (the bbkOS layout; its logo is `~/.config/bbkos/branding/about.txt`, see `docs/modules/branding.md`) |
 | `bbkos-settings` | `~/.config/bbkos/matugen.toml` |
 
 **Not linked, rendered or copied by `install.sh`:**

@@ -55,6 +55,15 @@ check_theme() {
 
     if [ -r "$settings" ] && [ -f "$settings" ]; then ok "settings file readable ($settings)"; else fail "settings file missing or unreadable: $settings (Stow link broken? run: stow -R --no-folding -d ~/.local/share/bbkos/repo/dotfiles -t ~ bbkos-settings)"; fi
 
+    # The animated screensaver needs tte (python-terminaltexteffects, AUR). Without it the idle step dims instead
+    # (bbkos-awake idle-screensaver), so this is a note, not a failure. docs/modules/branding.md.
+    if ! command -v tte >/dev/null 2>&1 &&
+       python3 -I -c 'import json, sys
+try: sys.exit(0 if json.load(open(sys.argv[1])).get("branding", {}).get("screensaver", True) is not False else 1)
+except Exception: sys.exit(0)' "$settings"; then
+        note "tte is not installed: the idle screensaver dims the screen instead (yay -S python-terminaltexteffects, then bbkos-check again)"
+    fi
+
     local displays=${BBKOS_DISPLAYS:-$HOME/.config/bbkos/displays.json}
     if [ ! -e "$displays" ]; then ok "no saved display settings (displays.json absent)"
     elif python3 -I -c 'import json, sys; json.load(open(sys.argv[1]))' "$displays" 2>/dev/null; then ok "display settings readable ($displays)"

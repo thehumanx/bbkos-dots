@@ -1,0 +1,35 @@
+// bbkOS fastfetch (docs/modules/branding.md). The logo is the branding file ~/.config/bbkos/branding/about.txt (change it with
+// bbkos-branding); bbkos-about-window passes the same text with --logo. If the file is missing, fastfetch falls back to its own
+// logo (`bbkos-branding reset about` writes the default). Colours come from the terminal's palette (the kitty theme).
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "file-raw",
+    "source": "~/.config/bbkos/branding/about.txt",
+    "padding": { "top": 1, "left": 2, "right": 4 }
+  },
+  "display": {
+    "separator": "  ",
+    "key": { "type": "string" }
+  },
+  "modules": [
+    "break",
+    { "type": "title", "color": { "user": "cyan", "at": "white", "host": "cyan" } },
+    "separator",
+    { "type": "os", "key": "OS      " },
+    { "type": "host", "key": "Host    " },
+    { "type": "kernel", "key": "Kernel  " },
+    { "type": "uptime", "key": "Uptime  " },
+    { "type": "packages", "key": "Pkgs    " },
+    { "type": "wm", "key": "WM      " },
+    { "type": "terminal", "key": "Terminal" },
+    "break",
+    { "type": "cpu", "key": "CPU     " },
+    { "type": "gpu", "key": "GPU     " },
+    { "type": "memory", "key": "Memory  " },
+    { "type": "disk", "key": "Disk    " },
+    { "type": "battery", "key": "Battery " },
+    "break",
+    "colors"
+  ]
+}

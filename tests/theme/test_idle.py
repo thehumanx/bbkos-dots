@@ -20,7 +20,8 @@ def timeouts(text):
 
 class RenderTest(unittest.TestCase):
     def conf(self, **over):
-        s, _ = S.validate({"version": 1, "idle": over})
+        # The dim step: the screensaver (docs/modules/branding.md) takes its place when on, so these tests turn it off.
+        s, _ = S.validate({"version": 1, "idle": over, "branding": {"screensaver": False}})
         return render.render_hypridle(s)
 
     def test_defaults_keep_the_old_timers(self):

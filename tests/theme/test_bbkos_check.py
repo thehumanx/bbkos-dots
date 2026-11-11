@@ -48,7 +48,11 @@ class CheckTest(unittest.TestCase):
                 (self.minimal / tool).symlink_to(src)
         env = {k: v for k, v in os.environ.items()
                if k != "HYPRLAND_INSTANCE_SIGNATURE" and not k.startswith(("FAKE_", "BBKOS_"))}
-        env.update(PATH=f"{FAKE_BIN}:{os.environ.get('PATH', '/usr/bin:/bin')}:{BIN}",
+        tte = self.base / "default-tte"          # present by default, so the tte note does not depend on this machine
+        tte.mkdir()
+        (tte / "tte").write_text("#!/bin/sh\n")
+        (tte / "tte").chmod(0o755)
+        env.update(PATH=f"{tte}:{FAKE_BIN}:{os.environ.get('PATH', '/usr/bin:/bin')}:{BIN}",
                    HOME=str(self.base / "home"), BBKOS_SETTINGS=str(self.settings),
                    BBKOS_STATE_DIR=str(self.state), BBKOS_SHARE_DIR=str(self.base / "share"),
                    BBKOS_QS_DIR=str(self.qs), BBKOS_KITTY_COMM="no-such-comm",
@@ -76,6 +80,29 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(self.lines(r, "FAIL"), [])
         self.assertEqual(len(self.lines(r, "ok")), 7, r.stdout)
         self.assertIn("all checks passed", r.stdout)
+
+    def lean_path(self, *extra):
+        return ":".join([*extra, str(FAKE_BIN), str(self.minimal), str(BIN)])
+
+    def test_missing_tte_is_a_note_while_the_screensaver_is_on(self):
+        r = self.check(PATH=self.lean_path())
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertTrue(any("tte" in l for l in self.lines(r, "note")), r.stdout)
+
+    def test_tte_present_adds_no_note(self):
+        fake = self.base / "ttebin"
+        fake.mkdir()
+        (fake / "tte").write_text("#!/bin/sh\n")
+        (fake / "tte").chmod(0o755)
+        r = self.check(PATH=self.lean_path(str(fake)))
+        self.assertFalse(any("tte" in l for l in self.lines(r, "note")), r.stdout)
+
+    def test_missing_tte_is_silent_with_the_screensaver_off(self):
+        doc = json.loads(self.settings.read_text())
+        doc["branding"] = {"screensaver": False}
+        self.settings.write_text(json.dumps(doc))
+        r = self.check(PATH=self.lean_path())
+        self.assertFalse(any("tte" in l for l in self.lines(r, "note")), r.stdout)
 
     def test_low_contrast_colours_fail_the_check(self):
         import json

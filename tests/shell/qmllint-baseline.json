@@ -213,7 +213,7 @@
   "modules/launcher/Launcher.qml": {
     "import": 4,
     "missing-property": 14,
-    "unqualified": 23
+    "unqualified": 24
   },
   "modules/launcher/MenuWindow.qml": {
     "import": 20,
@@ -345,7 +345,7 @@
   },
   "modules/settings/IdleTimeline.qml": {
     "import": 4,
-    "unqualified": 29,
+    "unqualified": 31,
     "unresolved-type": 4
   },
   "modules/settings/LockPreview.qml": {
@@ -412,8 +412,8 @@
     "unused-imports": 1
   },
   "modules/settings/PageIdle.qml": {
-    "import": 8,
-    "unqualified": 7
+    "import": 15,
+    "unqualified": 14
   },
   "modules/settings/PageKeybindings.qml": {
     "import": 29,
@@ -424,7 +424,7 @@
     "import": 7
   },
   "modules/settings/PageLauncher.qml": {
-    "import": 9,
+    "import": 10,
     "unqualified": 2
   },
   "modules/settings/PageLidPower.qml": {

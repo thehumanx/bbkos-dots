@@ -12,6 +12,7 @@
 # The layout comes from the Lock screen page: bbkos-theme renders hyprlock.conf into the theme state directory. It is
 # used only when it is there and looks like a config (has a background block); otherwise plain hyprlock runs on the
 # static ~/.config/hypr/hyprlock.conf, so a missing or broken render can never leave the machine without a lock.
+bbkos-screensaver stop >/dev/null 2>&1 || true   # the animated screensaver (docs/modules/branding.md) is closed before hyprlock draws
 conf="${BBKOS_STATE_DIR:-$HOME/.local/state/bbkos/theme}/hyprlock.conf"
 lock="${XDG_RUNTIME_DIR:?}/bbkos-hyprlock.lock"
 if [ -s "$conf" ] && grep -q '^background {' "$conf"; then

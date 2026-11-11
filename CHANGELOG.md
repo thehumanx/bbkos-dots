@@ -2,6 +2,17 @@
 
 What changed for people using bbkOS dots, newest first. Update with `git pull && ./install.sh --no-packages` (see "Update" in the README).
 
+## 2026-11-11
+
+### New
+
+- **Your own logo: an animated screensaver, an About window, and fastfetch.** One ASCII logo (the default is BBKOS in block letters) shows in three places. After 2.5 minutes idle it plays as a full-screen animation on every monitor, before the lock at 5 minutes; any key or touch ends it. `bbkos-about-window` opens a floating window with fastfetch and a glint that sweeps over the logo. Plain `fastfetch` in a terminal shows the same logo with the bbkOS layout. Change the logo with `bbkos-branding` (`words about "your text"`, `set-text about FILE`, `reset about`; the files are `~/.config/bbkos/branding/about.txt` and `screensaver.txt`; run `bbkos-branding reset about` once to create them). Settings > Power and sleep > When idle > Screensaver has the switch, the effect (decrypt, beams, matrix, slide, rain, burn, waves), the start time, and buttons to preview the screensaver and open the About window. The animation needs `tte`, from the AUR package `python-terminaltexteffects` (read its PKGBUILD before installing: `yay -S python-terminaltexteffects`). Without it nothing breaks: that idle step dims the screen as before, and `bbkos-check` says `tte` is missing. Inspired by Omarchy's branding.
+- **Switch to an open app from the menu.** Settings > Launcher > "Switch to an open app": Enter on an app that is already open goes to its window; Shift+Enter always starts a new one.
+
+### Changed
+
+- **The idle step at 2.5 minutes is the screensaver while it is on** (it replaces the dimming; the keyboard light still goes off with it). Settings > Power and sleep > When idle shows "Screensaver" instead of "Dim the screen" while it is on. Turn the screensaver off to get the dimming back.
+
 ## 2026-11-01
 
 ### Fixed

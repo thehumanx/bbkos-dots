@@ -35,9 +35,13 @@ case "${1:-status}" in
     idle-suspend)     awake || exec systemctl suspend-then-hibernate ;;
     idle-dim)         awake || { mkdir -p "$state" && : > "$dimmed" && brightnessctl -s set 10; } ;;
     idle-dim-resume)  if [ -e "$dimmed" ]; then rm -f "$dimmed"; exec brightnessctl -r; fi ;;
+    # The screensaver takes the dim step's place; without tte, or when it declines to start (blank logo, the lock is already
+    # up: bbkos-screensaver exits 3), the step dims, as it did before.
+    idle-screensaver)        awake || { if command -v tte >/dev/null && bbkos-screensaver; then :; else mkdir -p "$state" && : > "$dimmed" && brightnessctl -s set 10; fi; } ;;
+    idle-screensaver-resume) bbkos-screensaver stop; if [ -e "$dimmed" ]; then rm -f "$dimmed"; exec brightnessctl -r; fi ;;
     idle-kbd)         awake || { mkdir -p "$state" && : > "$kbd_off" && brightnessctl -sd "$kbd" set 0; } ;;
     idle-kbd-resume)  if [ -e "$kbd_off" ]; then rm -f "$kbd_off"; exec brightnessctl -rd "$kbd"; fi ;;
     idle-screen-off)  awake || exec hyprctl dispatch 'hl.dsp.dpms({action = "off"})' ;;
     idle-screen-on)   exec hyprctl dispatch 'hl.dsp.dpms({action = "on"})' ;;
-    *)                echo "usage: bbkos-awake on|off|status|idle-lock|idle-suspend|idle-dim[-resume]|idle-kbd[-resume]|idle-screen-off|idle-screen-on" >&2; exit 2 ;;
+    *)                echo "usage: bbkos-awake on|off|status|idle-lock|idle-suspend|idle-dim[-resume]|idle-screensaver[-resume]|idle-kbd[-resume]|idle-screen-off|idle-screen-on" >&2; exit 2 ;;
 esac

@@ -81,6 +81,44 @@ Scope {
             Quickshell.execDetached(["uwsm", "app", "--", entry.id + ".desktop"])
     }
 
+    // ---- Switch to an open app (launcher.focusOpen, after oma-cast): Enter on an app that has a window goes to its most
+    // recently used window, on whatever workspace; Shift+Enter always starts another. Windows belong to an app the way the
+    // dock matches them (Dock.idFor: Quickshell's heuristic lookup, which reads StartupWMClass, so web apps match too).
+    // The address is "" when the app has no window.
+    function windowFor(entryId: string): string {
+        let best = null
+        for (const t of Hyprland.toplevels.values) {
+            const ipc = t.lastIpcObject                              // its address has the 0x that t.address lacks
+            if (!ipc || ipc.mapped === false) continue
+            if (Dock.idFor(t.wayland ? String(t.wayland.appId ?? "") : String(ipc["class"] ?? "")) !== entryId) continue
+            const h = ipc.focusHistoryID !== undefined ? ipc.focusHistoryID : 1e9
+            if (best === null || h < best.h) best = { h: h, address: String(ipc.address ?? "") }
+        }
+        return best && /^0x[0-9a-f]{1,16}$/.test(best.address) ? best.address : ""
+    }
+    // Hyprland will not focus a window while the menu's layer holds the keyboard, so the focus waits for the menu to close.
+    // The pointer stays where it is (no_warps for this one focus, as the stage rail and the media widget do).
+    property string pendingFocus: ""
+    Timer {
+        id: focusTimer
+        interval: 60
+        onTriggered: {
+            if (root.pendingFocus === "") return
+            Quickshell.execDetached(["hyprctl", "eval",
+                "local nw = hl.get_config('cursor.no_warps'); hl.config({cursor={no_warps=true}}); "
+                + "hl.dispatch(hl.dsp.focus({window='address:" + root.pendingFocus + "'})); hl.config({cursor={no_warps=nw}})"])
+            root.pendingFocus = ""
+        }
+    }
+    // Enter on an app: its open window, else a new instance. Returns what it did, for the test hook.
+    function openApp(entry, newWindow: bool): string {
+        const a = !newWindow && cfg.focusOpen !== false && !entry.runInTerminal ? windowFor(entry.id) : ""
+        if (a === "") { launchEntry(entry); return "launched" }
+        pendingFocus = a
+        focusTimer.restart()
+        return "focused " + a
+    }
+
     function allItems(): var {
         const out = []
         for (const e of DesktopEntries.applications.values) {
@@ -125,18 +163,18 @@ Scope {
     property string armed: ""
     Timer { id: disarm; interval: 4000; onTriggered: root.armed = "" }
 
-    function activate(item, query: string) {
-        if (item.confirm && root.armed !== item.id) { root.armed = item.id; disarm.restart(); return }
+    function activate(item, query: string, newWindow: bool): string {
+        if (item.confirm && root.armed !== item.id) { root.armed = item.id; disarm.restart(); return "" }
         root.armed = ""
         if (root.pinMode) {                                  // pin mode picks an app and nothing else
             if (item.entry) { Dock.pin(item.entry.id); root.open = false }
-            return
+            return ""
         }
         if (item.id !== "calc" && item.id !== "search") remember(item.id, query)
-        if (item.entry) { launchEntry(item.entry); root.open = false; return }
+        if (item.entry) { const did = openApp(item.entry, newWindow === true); root.open = false; return did }
         const r = item.run || {}
-        if (r.webapp === "create") { menu.item.openForm(); return }
-        if (r.allApps) { menu.item.setQuery(""); menu.item.showGrid(true); return }
+        if (r.webapp === "create") { menu.item.openForm(); return "" }
+        if (r.allApps) { menu.item.setQuery(""); menu.item.showGrid(true); return "" }
         root.open = false
         if (r.exec) Quickshell.execDetached(r.exec)
         else if (r.panel) PanelState.toggle(r.panel, "")
@@ -151,6 +189,7 @@ Scope {
             Quickshell.execDetached(["bbkos-webapp", "remove", r.webappRemove])
             webapps = webapps.filter(w => w.slug !== r.webappRemove)
         }
+        return ""
     }
 
     // ---- Uninstall (the Delete key on an app or web app): a second Delete within 4 s, then bbkos-uninstall, which
@@ -215,11 +254,14 @@ Scope {
         function grid(on: bool): void { if (menu.item) menu.item.showGrid(on) }
         function create(name: string, url: string): void { if (menu.item) { menu.item.openForm(); root.createWebApp(name, url) } }
         // Carry out the result with this id for this query, as Enter would (twice for a command that asks to confirm).
-        function run(id: string, query: string): string {
+        function run(id: string, query: string): string { return runAs(id, query, false) }
+        // The same with Shift held (a new window of an app); the answer says "focused 0x..." or "launched" for an app.
+        function runNew(id: string, query: string): string { return runAs(id, query, true) }
+        function runAs(id: string, query: string, newWindow: bool): string {
             const r = (root.pinMode ? root.appsFor(query) : root.search(query)).find(x => x.id === id)
             if (!r) return "not found"
-            root.activate(r, query)
-            return root.armed === id ? "armed" : "done"
+            const did = root.activate(r, query, newWindow)
+            return root.armed === id ? "armed" : (did || "done")
         }
         function del(id: string, query: string): string {     // test hook: the Delete key on that result
             const r = root.search(query).find(x => x.id === id)
@@ -238,7 +280,7 @@ Scope {
             results: root.pinMode ? root.appsFor(query) : root.search(query)
             apps: grid ? root.appsFor(query) : []
             armedId: root.armed
-            onActivated: item => root.activate(item, query)
+            onActivated: (item, newWindow) => root.activate(item, query, newWindow)
             onUninstall: item => root.uninstall(item)
             onEdited: root.armed = ""
             onDismissed: root.open = false

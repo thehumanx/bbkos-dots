@@ -118,7 +118,12 @@ CALENDAR_DEFAULTS = {"weekStart": "mon", "weekNumbers": False, "moon": True}
 
 # Idle timers (hypridle, the Idle and lock page): seconds of inactivity before each step, 0 = never. dim also switches the
 # keyboard light off. Awake mode skips every step except the ones the owner does by hand (bbkos-awake).
-IDLE_DEFAULTS = {"dim": 150, "lock": 300, "screenOff": 330, "suspend": 900}
+IDLE_DEFAULTS = {"dim": 150, "screensaver": 150, "lock": 300, "screenOff": 330, "suspend": 900}
+
+# Branding (docs/modules/branding.md): the animated screensaver (replaces the dim step while on; idle.screensaver is its timer)
+# and the terminaltexteffects effect it plays.
+BRANDING_EFFECTS = ("decrypt", "beams", "matrix", "slide", "rain", "burn", "waves")
+BRANDING_DEFAULTS = {"screensaver": True, "effect": "decrypt"}
 
 # Notification popups (Quickshell's own daemon, docs/modules/notifications.md). timeout: seconds a popup stays when the sender
 # gave none (or always, with senderTimeout off); criticalSticky keeps a critical one until it is closed; position "auto" is the
@@ -188,7 +193,7 @@ SESSION_DEFAULTS = {"lidBattery": "suspend-then-hibernate", "lidPower": "suspend
 # maxResults caps the list; commands includes the bbkOS commands and settings pages; learn lets the menu remember what you open
 # and which words found it (frecency), which orders the results.
 WEB_SEARCH = ("duckduckgo", "google", "brave", "startpage", "ecosia", "off")
-LAUNCHER_DEFAULTS = {"webSearch": "duckduckgo", "calculator": True, "maxResults": 40, "commands": True, "learn": True}
+LAUNCHER_DEFAULTS = {"webSearch": "duckduckgo", "calculator": True, "maxResults": 40, "commands": True, "learn": True, "focusOpen": True}
 
 # The privacy indicator in the bar (the Privacy page, bar widget "privacy"): which of the three show it. It lights while an app has
 # an open microphone input, a camera stream (through PipeWire) or a screen-sharing stream (services/Privacy.qml).
@@ -233,6 +238,7 @@ DEFAULTS = {
     "calendar": dict(CALENDAR_DEFAULTS),
     "idle": dict(IDLE_DEFAULTS),
     "notifications": {**NOTIF_DEFAULTS, "mutedApps": []},     # a fresh list: dict() would share the default one
+    "branding": dict(BRANDING_DEFAULTS),
     "keyboard": dict(KEYBOARD_DEFAULTS),
     "mouse": dict(MOUSE_DEFAULTS),
     "cursor": dict(CURSOR_DEFAULTS),
@@ -409,6 +415,8 @@ RANGES = {
     **{f"idle.{k}": ("int", 0, 3600, 30) for k in IDLE_DEFAULTS},
     "notifications.timeout": ("int", 2, 30, 1),
     "notifications.senderTimeout": ("bool",),
+    "branding.screensaver": ("bool",),
+    "branding.effect": ("enum", BRANDING_EFFECTS),
     "notifications.criticalSticky": ("bool",),
     "notifications.maxPopups": ("int", 1, 10, 1),
     "notifications.position": ("enum", NOTIF_POSITIONS),
@@ -442,6 +450,7 @@ RANGES = {
     "launcher.maxResults": ("int", 10, 40, 5),
     "launcher.commands": ("bool",),
     "launcher.learn": ("bool",),
+    "launcher.focusOpen": ("bool",),
     "session.lidBattery": ("enum", LID_ACTIONS),
     "session.lidPower": ("enum", LID_ACTIONS),
     "session.powerKeyLong": ("enum", POWERKEY_ACTIONS),

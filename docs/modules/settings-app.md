@@ -50,7 +50,7 @@ Nothing was dropped: every key that had a row still has one. Duplicates removed:
 
 **Links.** Accessibility rows show their page under the label ("↗ Appearance › Style") and open it at that row (`SettingRow.link`, `"page/tab#Row label"`). The Bar › Layout widget list has a Settings button on each widget that has settings elsewhere (clock and music: Bar › Widgets; privacy dot: Privacy and wellbeing; brightness: Displays; volume: Sound; network, battery, notifications, updates, recording, workspaces).
 
-**Idle timeline.** Power and sleep › When idle draws the four steps on one time line above their chips (square-root scale; steps at the same time share a dot; a line in the warning colour when the order is unusual, for example the screen switching off before it locks), and says when Keep awake is on that none of them happen now.
+**Idle timeline.** Power and sleep › When idle draws the four steps on one time line above their chips (square-root scale; steps at the same time share a dot; a line in the warning colour when the order is unusual, for example the screen switching off before it locks), and says when Keep awake is on that none of them happen now. While the animated screensaver is on, its dot ("Saver") replaces "Dim", and a Screensaver card (toggle, effect, Preview and About window buttons) sits below the chips (2026-11-11, `branding.md`).
 
 
 **Menu.** The bbkOS menu lists every page and every tab of a page with tabs ("Stage mode", "Settings · Windows"), built from `Pages.js`; the old page names stay findable through the keywords. Learned ranking for the old `settings:N` entries is not carried over.

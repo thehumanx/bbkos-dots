@@ -30,6 +30,7 @@ SettingsPage {
         SettingToggle { label: "Calculator"; hint: "Type a sum and Enter copies the answer"; key: "launcher.calculator" }
         SettingToggle { label: "bbkOS commands and settings pages"; hint: "Lock, power modes, update, the settings pages and the other commands"; key: "launcher.commands" }
         SettingSlider { label: "Results shown"; key: "launcher.maxResults"; from: 10; to: 40; step: 5 }
+        SettingToggle { label: "Switch to an open app"; hint: "Enter on an app that is already open goes to its window; Shift+Enter always starts a new one"; key: "launcher.focusOpen" }
     }
     SettingsSection {
         title: "Learning"

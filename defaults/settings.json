@@ -218,9 +218,14 @@
   },
   "idle": {
     "dim": 150,
+    "screensaver": 150,
     "lock": 300,
     "screenOff": 300,
     "suspend": 900
+  },
+  "branding": {
+    "screensaver": true,
+    "effect": "decrypt"
   },
   "notifications": {
     "timeout": 6,
@@ -291,7 +296,8 @@
     "calculator": true,
     "maxResults": 40,
     "commands": true,
-    "learn": true
+    "learn": true,
+    "focusOpen": true
   },
   "privacy": {
     "mic": true,

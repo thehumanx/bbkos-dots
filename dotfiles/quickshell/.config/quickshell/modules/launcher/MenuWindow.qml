@@ -24,7 +24,7 @@ PanelWindow {
     property string formStatus: ""
     property bool formBusy: false
     readonly property string query: input.text
-    signal activated(var item)
+    signal activated(var item, bool newWindow)
     signal uninstall(var item)
     signal edited()                             // the query changed: the parent disarms (armedId is its binding)
     signal dismissed()
@@ -33,7 +33,7 @@ PanelWindow {
     function setQuery(text: string) { input.text = text; input.forceActiveFocus() }
     function openForm() { form = true; formStatus = ""; nameField.text = ""; urlField.text = ""; nameField.forceActiveFocus() }
     function closeForm() { form = false; input.forceActiveFocus() }
-    function pick(index: int) { if (index >= 0 && index < list.count) win.activated(win.results[index]) }
+    function pick(index: int) { if (index >= 0 && index < list.count) win.activated(win.results[index], false) }
     Component.onCompleted: if (pinMode) showGrid(true)
     function showGrid(on: bool) { grid = on; appGrid.currentIndex = 0; list.currentIndex = 0; input.forceActiveFocus() }
     // The highlighted item and how arrows move, in whichever view is showing.
@@ -102,7 +102,7 @@ PanelWindow {
                     Keys.onLeftPressed: event => { if (win.grid) win.move(-1, 0); else event.accepted = false }
                     Keys.onRightPressed: event => { if (win.grid) win.move(1, 0); else event.accepted = false }
                     Keys.onTabPressed: win.showGrid(!win.grid)
-                    Keys.onReturnPressed: { const it = win.current(); if (it) win.activated(it) }
+                    Keys.onReturnPressed: event => { const it = win.current(); if (it) win.activated(it, (event.modifiers & Qt.ShiftModifier) !== 0) }
                     // Delete with the cursor at the end of the text (where it would delete nothing): uninstall the
                     // highlighted app or web app, after a second Delete. Inside the text it deletes as usual.
                     Keys.onDeletePressed: event => {
@@ -179,7 +179,7 @@ PanelWindow {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onEntered: appGrid.currentIndex = tile.index
-                        onClicked: win.activated(tile.modelData)
+                        onClicked: win.activated(tile.modelData, false)
                     }
                 }
             }
@@ -266,7 +266,7 @@ PanelWindow {
                 visible: !win.form
                 text: win.pinMode ? "Enter pin   Arrows move   Esc close"
                     : win.grid ? "Enter open   Arrows move   Delete uninstall   Tab back to results   Esc close"
-                               : "Enter open   Ctrl+1-9 quick pick   Tab all apps   Delete uninstall   Esc close"
+                               : "Enter open   Shift+Enter new window   Ctrl+1-9 quick pick   Tab all apps   Esc close"
                 color: Theme.dim
                 opacity: 0.7
                 font.pixelSize: Theme.fontSize - 2

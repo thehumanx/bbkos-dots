@@ -9,6 +9,7 @@ Find the doc for your topic here, then read it in full before changing anything 
 - `docs/modules/app-behaviour.md`: App behaviour (window rules for specific apps). Window rules in `dotfiles/hypr/.config/hypr/hyprland.lua`, one per behaviour, each with the evidence behind it
 - `docs/modules/bar.md`: Module: bar. Part of the Quickshell shell (see `quickshell.md`)
 - `docs/modules/behavior.md`: Window behaviour. Added 2026-10-24
+- `docs/modules/branding.md`: Branding: ASCII logo, animated screensaver, About window. Added 2026-11-11
 - `docs/modules/calendar.md`: Calendar popup and timer (clock click). Added 2026-10-21
 - `docs/modules/camera.md`: Camera (webcam picture controls). Added 2026-10-21
 - `docs/modules/capture.md`: Capture: screenshots, OCR and screen recording. Added 2026-10-21
@@ -57,9 +58,11 @@ Find the doc for your topic here, then read it in full before changing anything 
 ## Commands
 
 - `bbkos-about`: facts about this computer for the settings page (docs/modules/about.md)
+- `bbkos-about-window`: the About window, fastfetch with the branding logo and a glint (docs/modules/branding.md)
 - `bbkos-android`: disable, remove and restore apps on an Android phone (docs/modules/android.md)
 - `bbkos-autostart`: the apps started at login (docs/modules/startup.md)
 - `bbkos-awake`: awake mode
+- `bbkos-branding`: the ASCII logo of the About window and the screensaver (docs/modules/branding.md)
 - `bbkos-brightness`: Changes the brightness of the monitor under the mouse pointer by 5 %, or 1 % at the dark end (up below 5 %, down at 5 % or below; up1 and down1: always 1 %, th…
 - `bbkos-camera`: webcam picture controls (docs/modules/camera.md)
 - `bbkos-camera-users`: JSON list of the programs that hold a camera device (/dev/video*) open, one entry per program
@@ -83,6 +86,7 @@ Find the doc for your topic here, then read it in full before changing anything 
 - `bbkos-progress`: Draws a progress bar on one line: [█████░░░░░░░░░░░]  2/9 steps
 - `bbkos-qml-audit`: Audit a Quickshell config for missing `import qs...` lines and for QML that does not parse
 - `bbkos-record`: screen recording with gpu-screen-recorder (docs/modules/capture.md)
+- `bbkos-screensaver`: the animated logo screensaver (docs/modules/branding.md)
 - `bbkos-screenshot`: Saves a PNG to ~/Pictures/Screenshots and copies it to the clipboard
 - `bbkos-speedtest`: internet speed for the Wi-Fi popup (docs/modules/panels.md)
 - `bbkos-theme`: settings -> generated theme files (see docs/modules/theme.md)

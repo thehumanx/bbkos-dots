@@ -12,6 +12,7 @@ before each step, `0` = never (steps of 30 s, 0 to 3600; the page offers presets
 | Key | Default | Step |
 |---|---|---|
 | `idle.dim` | 150 | dim the screen and switch the keyboard light off (two listeners, one setting) |
+| `idle.screensaver` | 150 | the animated logo screensaver (2026-11-11, see below); replaces the dim step while `branding.screensaver` is on |
 | `idle.lock` | 300 | lock (`bbkos-awake idle-lock`, then `loginctl lock-session`) |
 | `idle.screenOff` | 330 | switch the screen off |
 | `idle.suspend` | 900 | `suspend-then-hibernate` |
@@ -31,6 +32,10 @@ bar), the lock before sleep (lid, `before_sleep_cmd`) and the lock after resume 
   `hypridle-active.conf` and the unit is running, so changing an unrelated setting never resets the idle timers. It is skipped
   when HOME is not the real home (see the incident).
 - The static `hypridle.conf` keeps the old defaults (lock and the rest through `bbkos-awake`).
+
+## Update 2026-11-11: the screensaver
+
+`idle.screensaver` (default 150 s, 0 = never) is a fifth step. While `branding.screensaver` is on (the default) and the timer is above 0, its listener runs `bbkos-awake idle-screensaver` **in place of the dim listener**; the keyboard-light listener moves to the screensaver's timer with it. Without `tte` the step dims (runtime fallback in `bbkos-awake`). The Idle page shows "Screensaver" instead of "Dim" while it is on, with a Screensaver card below. Details in `docs/modules/branding.md`.
 
 ## Verified (2026-10-24)
 

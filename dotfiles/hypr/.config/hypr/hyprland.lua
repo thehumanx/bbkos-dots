@@ -376,6 +376,15 @@ hl.window_rule({
 --     name  = "no-anim-overlay",
 --     match = { namespace = "^my-overlay$" },
 --     no_anim = true,
+-- The About window (bbkos-about-window: fastfetch with the branding logo, docs/modules/branding.md): floating, fixed size.
+hl.window_rule({
+    name  = "bbkos-about-window",
+    match = { class = "^org\\.bbkos\\.about$" },
+    float = true,
+    size = { 900, 480 },
+    center = true,
+})
+
 -- })
 -- overlayLayerRule:set_enabled(false)
 

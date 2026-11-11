@@ -5,7 +5,7 @@ REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SHARE="$HOME/.local/share/bbkos"
 BACKUP_ROOT="$SHARE/backup"
 STATE_FILE="$SHARE/installer"           # one "key=value" per line: linked packages, rendered files, new packages
-STOW_PKGS=(bin hypr quickshell uwsm systemd-user kitty fish gtk thunar xdg-apps bbkos-settings)
+STOW_PKGS=(bin hypr quickshell uwsm systemd-user kitty fish gtk thunar xdg-apps bbkos-settings fastfetch)
 
 if [ -t 1 ]; then B=$'\e[1m'; D=$'\e[2m'; G=$'\e[32m'; Y=$'\e[33m'; R=$'\e[31m'; N=$'\e[0m'; else B=; D=; G=; Y=; R=; N=; fi
 step() { printf '\n%s==>%s %s%s%s\n' "$G" "$N" "$B" "$*" "$N"; }

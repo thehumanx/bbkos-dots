@@ -4,7 +4,7 @@ import qs
 import qs.components
 import qs.services
 
-// The idle steps on one time line, so their order and spacing show at a glance: a dot per step at its time (dim, lock,
+// (2026-11-11: the screensaver replaces the Dim dot while it is on.) The idle steps on one time line, so their order and spacing show at a glance: a dot per step at its time (dim, lock,
 // screen off, suspend; "never" is left out), the name above and the time below, steps at the same time share a dot. The scale
 // is the square root of the time, so 1 to 5 minutes do not crowd at the start while an hour still fits. Reads
 // SettingsStore.shown, so it follows the chips below while they apply. A line under it says when the order is unusual.
@@ -18,7 +18,8 @@ ColumnLayout {
     function secs(key) { const v = SettingsStore.shown(key); return typeof v === "number" ? v : 0 }
     function fmt(s) { return s < 3600 ? (s / 60) + " min" : (s / 3600) + " h" }
     readonly property var steps: [
-        { name: "Dim", s: secs("idle.dim") }, { name: "Lock", s: secs("idle.lock") },
+        (SettingsStore.shown("branding.screensaver") === true && secs("idle.screensaver") > 0
+            ? { name: "Saver", s: secs("idle.screensaver") } : { name: "Dim", s: secs("idle.dim") }), { name: "Lock", s: secs("idle.lock") },
         { name: "Screen off", s: secs("idle.screenOff") }, { name: "Suspend", s: secs("idle.suspend") }].filter(x => x.s > 0)
     // Steps at the same time become one dot: [{ names, s }] in time order.
     readonly property var groups: {
@@ -31,7 +32,7 @@ ColumnLayout {
     }
     readonly property real span: Math.max(600, ...steps.map(x => x.s)) * 1.1
     readonly property string warning: {
-        const d = secs("idle.dim"), l = secs("idle.lock"), o = secs("idle.screenOff"), u = secs("idle.suspend")
+        const d = SettingsStore.shown("branding.screensaver") === true && secs("idle.screensaver") > 0 ? secs("idle.screensaver") : secs("idle.dim"), l = secs("idle.lock"), o = secs("idle.screenOff"), u = secs("idle.suspend")
         if (u > 0 && l > 0 && u < l) return "The laptop suspends before the lock step (suspending locks it anyway)."
         if (o > 0 && l > 0 && o < l) return "The screen switches off before it locks: a key press shows the desktop unlocked."
         if (d > 0 && l > 0 && d > l) return "The screen dims after it has locked."

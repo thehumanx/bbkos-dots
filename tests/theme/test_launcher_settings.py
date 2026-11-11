@@ -12,11 +12,11 @@ QML = (ROOT / "dotfiles/quickshell/.config/quickshell/modules/launcher/Launcher.
 
 class LauncherSettingsTest(unittest.TestCase):
     def test_defaults_are_todays_menu(self):
-        self.assertEqual(S.DEFAULTS["launcher"], {"webSearch": "duckduckgo", "calculator": True, "maxResults": 40, "commands": True, "learn": True})
+        self.assertEqual(S.DEFAULTS["launcher"], {"webSearch": "duckduckgo", "calculator": True, "maxResults": 40, "commands": True, "learn": True, "focusOpen": True})
 
     def test_values_are_validated(self):
         s, warns = S.validate({"version": 1, "launcher": {"webSearch": "altavista", "maxResults": 3, "calculator": "yes", "learn": False}})
-        self.assertEqual(s["launcher"], {"webSearch": "duckduckgo", "calculator": True, "maxResults": 10, "commands": True, "learn": False})
+        self.assertEqual(s["launcher"], {"webSearch": "duckduckgo", "calculator": True, "maxResults": 10, "commands": True, "learn": False, "focusOpen": True})
         self.assertEqual(len(warns), 3)
 
     def test_every_engine_has_an_address_in_the_menu(self):

@@ -12,7 +12,10 @@ window with its own entry. Source: `dotfiles/quickshell/.config/quickshell/modul
   Quickshell shell. It cannot be dropped in: it is a plugin for `omarchy-shell`, built on its menu (about 400 Omarchy
   actions) and theme; it describes itself as early; and the repository states no license, so nothing was copied.
   Taken as ideas: one ranked list of apps and system actions, the ranking (below, from the behaviour its SPEC documents
-  for Raycast 2.8), frecency and learned search terms, Ctrl+1-9 quick picks, a calculator and a web-search fallback.
+  for Raycast 2.8), frecency and learned search terms, Ctrl+1-9 quick picks, a calculator and a web-search fallback. Re-read
+  2026-11-02: from its commits of 2026-10-22 to 29 we took "Enter on an app switches to its open window, Shift+Enter starts
+  a new one" (`Switching to an open app` below). Not taken: its Rust search helper (`flea-search`, 43 ms to 8 ms on their
+  machine; ours is not slow enough to need a build step) and its Omarchy menu changes.
 - **Omarchy** (MIT): `omarchy-webapp-install` and `omarchy-launch-webapp` for web apps (icon lookup, `--app=`,
   `StartupWMClass`, refusing non-http(s) addresses).
 - **Emil Kowalski** (`motion.md`): something opened from the keyboard many times a day gets no animation, "Raycast has
@@ -22,8 +25,8 @@ window with its own entry. Source: `dotfiles/quickshell/.config/quickshell/modul
 
 | Kind | Source | Enter does |
 |---|---|---|
-| App | every visible desktop entry (`DesktopEntries`) | `uwsm app -- ID.desktop` (own systemd scope, as before) |
-| Web app | entries `bbkos-webapp-*.desktop` (shown with the tag "Web app") | the same: the entry runs `bbkos-webapp launch URL` |
+| App | every visible desktop entry (`DesktopEntries`) | the app's open window if it has one (below), else `uwsm app -- ID.desktop` (own systemd scope, as before); Shift+Enter always starts a new one |
+| Web app | entries `bbkos-webapp-*.desktop` (shown with the tag "Web app") | the same (the web app's window, else the entry runs `bbkos-webapp launch URL`) |
 | Command | `Commands.js`: lock, suspend, log out, restart, shut down, the three power modes, keep awake, update, health check, stage mode for this workspace, hide the bar, clipboard, emoji, notifications, Wi-Fi, Bluetooth, sound, display, battery, calendar, Claude Code in bbkOS (a kitty in `~/.local/share/bbkos/repo` running `claude`, also `Super+Ctrl+Enter`), screenshot, screen recording, OCR, light mode, dark mode, Create web app; and "Remove web app: NAME" for each web app | the action, inside the shell where it can (`PanelState`, `Power`, `StageState`, `Awake`, `SettingsStore`), else a detached process |
 | Settings | every settings page, and every tab of a page with tabs (`settings/Pages.js`, read by `Commands.settingsEntries()`; nothing to keep in step since 2026-10-28), and since 2026-10-29 every single setting (a row of `settings/SearchIndex.js`, the settings window's own search index, read by `Commands.settingRowEntries()`: title is the row label, subtitle "Settings · Page › Tab · Card"; the hint is not searched, and the subtitle is shown but not matched, `subtitleOnly`) | `SettingsStore.openPage("page/tab")`; a single setting also sets `SettingsStore.reveal`, so the tab opens scrolled to the row and lights it up (as the settings sidebar search does) |
 | Calculator | a query made of numbers, `+ - * / % ^`, parentheses (also `×`, `÷`) | copies the result (`wl-copy`) |
@@ -92,13 +95,37 @@ Our own code after the behaviour oma-cast's SPEC documents for Raycast's root se
 - **Remove:** "Remove web app: NAME" in the menu (asks first), or `bbkos-webapp remove SLUG`. Only files that carry
   `X-bbkOS-WebApp` are touched.
 
+## Switching to an open app (2026-11-02)
+
+**Enter on an app or web app that already has a window goes to its most recently used window**, on whatever workspace, and
+starts the app only when it has none. **Shift+Enter always starts another one** (the footer says so). Idea from oma-cast
+(`References`); the code is ours. `Launcher.windowFor(id)` looks through `Hyprland.toplevels`, keeps the windows whose class
+`Dock.idFor` maps to that desktop id (Quickshell's heuristic lookup, which reads `StartupWMClass`; the dock's running dots use
+the same, so web apps match) and takes the one with the lowest `focusHistoryID` (the most recently used); the address comes
+from `lastIpcObject.address` (`t.address` has no `0x`). Hyprland will not focus a window while the menu's layer holds the
+keyboard, so the focus runs 60 ms after the menu closes, as `hyprctl eval` with `hl.dsp.focus({window='address:...'})` and
+`cursor.no_warps` on for that one call, the way the stage rail and the media widget do it (the pointer stays). Apps that run in a terminal
+(`runInTerminal`) and pin mode are not changed. A window the menu cannot match to its entry (a class with no desktop file) is
+not found, so Enter starts the app as before. Setting: `launcher.focusOpen` (Apps › Launcher, "Switch to an open app", default
+on); off gives the old behaviour, a new window on every Enter. Test hooks: `qs ipc call launcher run ID QUERY` answers
+`focused 0x...` or `launched` for an app, and `runNew` is the same with Shift.
+
+Verified 2026-11-02 on the live session (4 windows: Vivaldi, a web app, kitty, Claude): through IPC Enter on WhatsApp, kitty and
+Vivaldi each focused the window that was open (`hyprctl activewindow` agreed, window count stayed 4); with real keys (`wtype`) on the
+open menu Enter on "whatsapp" and "kitty" focused them with the menu's keyboard grab in place; Shift+Enter on "kitty" opened a
+second kitty (closed again); with `launcher.focusOpen` off Enter on kitty opened a second one (closed again; the setting put back
+on). The first attempt used `t.address` and launched new windows on every Enter; that is how the missing `0x` was found.
+**Not verified:** a window on another workspace or monitor (the dock's click uses the same focus call and was checked across workspaces),
+two windows of one app (the most recent one is chosen from `focusHistoryID`, read from Quickshell's copy of Hyprland's data), a
+minimized or special-workspace window, a click on a row (it takes the same path as Enter).
+
 ## Settings (Launcher page, 2026-10-24)
 
 **Apps › Launcher** (`PageLauncher`, place `apps/launcher`; sidebar index 27 until 2026-10-28) holds `launcher.*`, read live by `Launcher.qml` (`cfg`):
 `webSearch` (`duckduckgo` default, `google`, `brave`, `startpage`, `ecosia`, or `off`: no "Search the web" result; the addresses are
 the `engines` table in `Launcher.qml`), `calculator` (the "= value" result), `maxResults` (10 to 40 step 5, default 40), `commands` (the
 bbkOS commands and settings pages: with it off only apps and web apps are searched) and `learn` (off: nothing is recorded and the ranking
-ignores what was learned; the file is kept). **Forget** (two clicks) clears the learned usage through `qs ipc call launcher forget`. Reference:
+ignores what was learned; the file is kept) and, since 2026-11-02, `focusOpen` (Enter on an open app switches to its window; off starts a new one every time). **Forget** (two clicks) clears the learned usage through `qs ipc call launcher forget`. Reference:
 DankMaterialShell's Launcher tab. Verified live through `qs ipc call launcher query`: the defaults gave the calculator and the web search; web search
 off and calculator off removed both; commands off removed the command results; the engine switched to Google (the result title is the same, its
 subtitle names the engine); every value was set back. Not verified: Enter on a Google result in a browser, the result cap with more than ten hits, the

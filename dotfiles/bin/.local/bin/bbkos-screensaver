@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# bbkos-screensaver: the animated logo screensaver (docs/modules/branding.md).
+#   bbkos-screensaver          open one fullscreen kitty per monitor, each playing a terminaltexteffects effect on the
+#                              screensaver logo (hypridle starts it through `bbkos-awake idle-screensaver`)
+#   bbkos-screensaver stop     close them (hypridle's on-resume, and bbkos-lock before it starts hyprlock)
+# Every failure means "do nothing": the idle chain goes on to the lock without it. The effect list is the one in
+# settings.py (BRANDING_EFFECTS); an unknown name falls back to decrypt.
+class=org.bbkos.screensaver
+settings="${BBKOS_SETTINGS:-$HOME/.config/bbkos/settings.json}"
+
+case "${1:-}" in
+    stop)
+        pkill -f -- "--class $class" 2>/dev/null
+        exit 0 ;;
+    --play)  # runs inside each kitty: the logo, the effect, a pause, again; any key ends it
+        effect="$2"
+        file=$(mktemp) || exit 0
+        # A key closes the windows on every monitor, not only this one; the tte child is stopped by its pid (not `kill 0`,
+        # which would take the caller's whole process group with it).
+        t=
+        trap 'rm -f "$file"; [ -n "$t" ] && kill "$t" 2>/dev/null; "$0" stop' EXIT
+        bbkos-branding show screensaver > "$file"
+        printf '\e[?25l'
+        while :; do
+            clear
+            tte --no-restore-cursor --canvas-width 0 --canvas-height 0 --anchor-canvas c --anchor-text c "$effect" < "$file" &
+            t=$!
+            while kill -0 "$t" 2>/dev/null; do read -rsn1 -t 0.2 && exit 0; done
+            read -rsn1 -t 3 && exit 0
+        done ;;
+esac
+
+command -v tte >/dev/null || exit 0
+[ -n "$(bbkos-branding show screensaver 2>/dev/null | tr -d '[:space:]')" ] || exit 3
+# Exit 3 = not started for a reason bbkos-awake can act on (it dims instead); 0 = started, or already running.
+pgrep -f -- "--class $class" >/dev/null && exit 0
+pgrep -x hyprlock >/dev/null && exit 3
+
+effect=$(jq -r '.branding.effect // "decrypt"' "$settings" 2>/dev/null)
+case "$effect" in
+    decrypt|beams|matrix|slide|rain|burn|waves) ;;
+    *) effect=decrypt ;;
+esac
+
+hyprctl monitors -j 2>/dev/null | jq -r '.[].name' | while read -r mon; do
+    hyprctl dispatch "hl.dsp.exec_cmd(\"kitty --class $class -o confirm_os_window_close=0 -o window_padding_width=0 -o font_size=36 -o mouse_hide_wait=0.01 -o background_opacity=1 bbkos-screensaver --play $effect\", {monitor=\"$mon\", fullscreen=true})" >/dev/null
+done
+exit 0
