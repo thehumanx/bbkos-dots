@@ -114,16 +114,17 @@ CAMERA_DEFAULTS = {"exposure": "auto", "exposureTime": 156, "brightness": 128, "
 
 # Calendar popup (the bar clock's click target, docs/modules/calendar.md): display choices.
 CALENDAR_WEEK_STARTS = ("mon", "sun", "sat")
-CALENDAR_DEFAULTS = {"weekStart": "mon", "weekNumbers": False, "moon": True}
+# zones: the world clocks of the date popup, IANA names such as "Asia/Tokyo" (at most zones.MAX_ZONES, checked against the tz database).
+CALENDAR_DEFAULTS = {"weekStart": "mon", "weekNumbers": False, "moon": True, "zones": []}
 
 # Idle timers (hypridle, the Idle and lock page): seconds of inactivity before each step, 0 = never. dim also switches the
 # keyboard light off. Awake mode skips every step except the ones the owner does by hand (bbkos-awake).
 IDLE_DEFAULTS = {"dim": 150, "screensaver": 150, "lock": 300, "screenOff": 330, "suspend": 900}
 
 # Branding (docs/modules/branding.md): the animated screensaver (replaces the dim step while on; idle.screensaver is its timer)
-# and the terminaltexteffects effect it plays.
+# and the terminaltexteffects effects it plays one after the other (always in the order of BRANDING_EFFECTS; at least one).
 BRANDING_EFFECTS = ("decrypt", "beams", "matrix", "slide", "rain", "burn", "waves")
-BRANDING_DEFAULTS = {"screensaver": True, "effect": "decrypt"}
+BRANDING_DEFAULTS = {"screensaver": True, "effects": ["decrypt"]}
 
 # Notification popups (Quickshell's own daemon, docs/modules/notifications.md). timeout: seconds a popup stays when the sender
 # gave none (or always, with senderTimeout off); criticalSticky keeps a critical one until it is closed; position "auto" is the
@@ -235,10 +236,11 @@ DEFAULTS = {
     "camera": dict(CAMERA_DEFAULTS),
     "terminal": {"fontSize": 11, "padding": 0, "opacity": 1.0},
     "lock": dict(LOCK_DEFAULTS),
-    "calendar": dict(CALENDAR_DEFAULTS),
+    "profile": {"name": ""},                                 # About page: the name shown on the profile card ("" = the account's full name, else the user name)
+    "calendar": {**CALENDAR_DEFAULTS, "zones": []},          # a fresh list: dict() would share the default one
     "idle": dict(IDLE_DEFAULTS),
+    "branding": {**BRANDING_DEFAULTS, "effects": list(BRANDING_DEFAULTS["effects"])},     # a fresh list: dict() would share the default one
     "notifications": {**NOTIF_DEFAULTS, "mutedApps": []},     # a fresh list: dict() would share the default one
-    "branding": dict(BRANDING_DEFAULTS),
     "keyboard": dict(KEYBOARD_DEFAULTS),
     "mouse": dict(MOUSE_DEFAULTS),
     "cursor": dict(CURSOR_DEFAULTS),
@@ -403,6 +405,7 @@ RANGES = {
     "lock.autoDim": ("bool",),
     "lock.font": ("str",),
     "lock.avatar": ("str",),
+    "profile.name": ("str",),
     "lock.textColor": ("str",),
     "lock.welcomeText": ("str",),
     **{f"lock.{e}Align": ("enum", LOCK_ALIGNS) for e in (*LOCK_ELEMENTS, "field")},
@@ -412,11 +415,12 @@ RANGES = {
     "calendar.weekStart": ("enum", CALENDAR_WEEK_STARTS),
     "calendar.weekNumbers": ("bool",),
     "calendar.moon": ("bool",),
+    "calendar.zones": ("zonelist",),
     **{f"idle.{k}": ("int", 0, 3600, 30) for k in IDLE_DEFAULTS},
+    "branding.screensaver": ("bool",),
+    "branding.effects": ("enumlist", BRANDING_EFFECTS),
     "notifications.timeout": ("int", 2, 30, 1),
     "notifications.senderTimeout": ("bool",),
-    "branding.screensaver": ("bool",),
-    "branding.effect": ("enum", BRANDING_EFFECTS),
     "notifications.criticalSticky": ("bool",),
     "notifications.maxPopups": ("int", 1, 10, 1),
     "notifications.position": ("enum", NOTIF_POSITIONS),
@@ -524,6 +528,19 @@ def _app_names(names):
     return out, dropped
 
 
+def _zone_names(names):
+    """Keep the time zone names the tz database knows, first spelling wins, at most zones.MAX_ZONES. Returns the list and whether anything was dropped."""
+    from . import zones
+    valid = zones.valid_names()
+    out, dropped = [], False
+    for n in names:
+        if not isinstance(n, str) or n not in valid or n in out or len(out) >= zones.MAX_ZONES:
+            dropped = True
+            continue
+        out.append(n)
+    return out, dropped
+
+
 def _coerce(dotted, value):
     """Return (value, warning or None). Never raises."""
     spec = RANGES[dotted]
@@ -541,11 +558,23 @@ def _coerce(dotted, value):
             if isinstance(v, str) and v in spec[1] and v not in out:
                 out.append(v)
         return out, (f"{dotted}: unknown or repeated names ignored" if len(out) != len(value) else None)
+    if kind == "enumlist":
+        if not isinstance(value, list):
+            return list(default), bad[1]
+        out = [v for v in spec[1] if v in value]                 # the canonical order, no repeats, no unknown names
+        if not out:
+            return list(default), f"{dotted}: at least one entry, using {default!r}"
+        return out, (f"{dotted}: unknown or repeated names ignored" if len(out) != len(value) else None)
     if kind == "applist":
         if not isinstance(value, list):
             return bad
         out, dropped = _app_names(value)
         return out, (f"{dotted}: unusable names ignored" if dropped else None)
+    if kind == "zonelist":
+        if not isinstance(value, list):
+            return bad
+        out, dropped = _zone_names(value)
+        return out, (f"{dotted}: unknown, repeated or too many time zones ignored" if dropped else None)
     if kind == "bool":
         return (value, None) if isinstance(value, bool) else bad
     if kind == "str":
@@ -604,7 +633,6 @@ GRID_OVERRIDES = {
     "shell": {"gap": 0, "barRadius": 0, "barFloat": 0, "barItemGap": 0,
               "barHug": False, "barPills": "individual", "popupShadow": 0.0},
     "windows": {"shadowEnabled": False, "borderSize": 1},   # gapsIn: grid_gaps_in()
-    "lock": {"fieldRadius": 0},
     "stage": {"dock": True},   # railPadding and cardGap: grid_rail_gap(); cardRadius: the window rounding (effective())
 }
 # The corners of popups, buttons and controls: squared by grid mode unless shell.gridRoundControls is on.
@@ -666,6 +694,10 @@ def validate(raw):
             if section in raw:
                 warns.append(f"{section}: not an object, using defaults")
             continue
+        if section == "branding" and "effect" in got:      # 2026-11-11: branding.effect became branding.effects (a list)
+            got = dict(got)
+            old = got.pop("effect")
+            got.setdefault("effects", [old])
         for k in got:
             if k not in keys:
                 warns.append(f"{section}.{k}: unknown key ignored")
@@ -778,6 +810,18 @@ def set_value(settings, dotted, text):
         for e in value:
             if e not in spec[1]:
                 raise ValueError(f"{dotted}: unknown widget {e!r} (one of {', '.join(spec[1])})")
+    elif kind == "enumlist":
+        names = [e.strip() for e in text.split(",") if e.strip()]
+        for e in names:
+            if e not in spec[1]:
+                raise ValueError(f"{dotted}: unknown name {e!r} (one of {', '.join(spec[1])})")
+        if not names:
+            raise ValueError(f"{dotted}: at least one of {', '.join(spec[1])}")
+        value = [v for v in spec[1] if v in names]
+    elif kind == "zonelist":
+        value = [e.strip() for e in text.split(",") if e.strip()]
+        if _zone_names(value)[1]:
+            raise ValueError(f"{dotted}: unknown or repeated time zone, or more than 8 (names like Asia/Tokyo)")
     elif kind == "applist":
         value = [e for e in text.split(",") if e.strip()]
         if _app_names(value)[1]:

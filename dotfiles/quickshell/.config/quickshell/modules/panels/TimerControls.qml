@@ -16,8 +16,7 @@ ColumnLayout {
     readonly property bool typing: input.activeFocus     // the calendar's key shortcuts stand aside while typing
     readonly property bool done: Countdown.state === "done"
     readonly property var presets: [{ value: 60, label: "1 min" }, { value: 300, label: "5 min" }, { value: 600, label: "10 min" },
-                                    { value: 900, label: "15 min" }, { value: 1500, label: "25 min" }, { value: 1800, label: "30 min" },
-                                    { value: 3600, label: "1 h" }]
+                                    { value: 1800, label: "30 min" }, { value: 3600, label: "1 h" }]
     property bool bad: false                             // the typed text is not a duration
 
     function startTyped() {

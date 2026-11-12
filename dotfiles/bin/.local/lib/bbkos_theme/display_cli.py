@@ -232,9 +232,10 @@ def _set_scale(args, env, dp, sd):
     entry = _entry(m, key, data)
     w, h = D.mode_size(m, entry)
     opts = D.scale_options(w, h)
-    if round(scale, 2) not in opts:
-        raise DisplayError(f"scale {args[1]} not valid for {w}x{h} (one of {', '.join(str(o) for o in opts)})")
-    entry["scale"] = round(scale, 2)
+    match = [o for o in opts if abs(o - scale) < 0.005]       # "1.07" is 16/15
+    if not match:
+        raise DisplayError(f"scale {args[1]} not valid for {w}x{h} (one of {', '.join(str(round(o, 3)) for o in opts)})")
+    entry["scale"] = match[0]
     data["monitors"][key] = entry
     commit(env, dp, sd, data, mons)
     return warns

@@ -35,9 +35,12 @@ ColumnLayout {
     readonly property var cells: Cal.grid(viewY, viewM, weekStart)
     readonly property var selDate: new Date(selY, selM, selD)
     readonly property var progress: Cal.yearProgress(now)
-    readonly property real cellW: (width - (weekNumbers ? weekColW + 2 : 0)) / 7 - 2
+    readonly property real colW: 320                      // each of the two panels (Panels.qml makes the card 2 x 320 + 16 + padding wide)
+    readonly property real cellW: (colW - (weekNumbers ? weekColW + 2 : 0)) / 7 - 2
     readonly property int weekColW: 24
     readonly property int cellH: 38
+
+    readonly property bool typing: timer.typing || zones.typing
 
     function select(y: int, m: int, d: int) {
         selY = y; selM = m; selD = d
@@ -62,17 +65,34 @@ ColumnLayout {
     }
     function pct(f: real): string { return (f * 100).toFixed(1) + "%" }
 
-    Shortcut { enabled: !timer.typing; sequence: "Left"; onActivated: root.moveDays(-1) }
-    Shortcut { enabled: !timer.typing; sequence: "Right"; onActivated: root.moveDays(1) }
-    Shortcut { enabled: !timer.typing; sequence: "Up"; onActivated: root.moveDays(-7) }
-    Shortcut { enabled: !timer.typing; sequence: "Down"; onActivated: root.moveDays(7) }
-    Shortcut { enabled: !timer.typing; sequence: "PgUp"; onActivated: root.moveMonths(-1) }
-    Shortcut { enabled: !timer.typing; sequence: "PgDown"; onActivated: root.moveMonths(1) }
-    Shortcut { enabled: !timer.typing; sequence: "T"; onActivated: root.today() }
+    Shortcut { enabled: !root.typing; sequence: "Left"; onActivated: root.moveDays(-1) }
+    Shortcut { enabled: !root.typing; sequence: "Right"; onActivated: root.moveDays(1) }
+    Shortcut { enabled: !root.typing; sequence: "Up"; onActivated: root.moveDays(-7) }
+    Shortcut { enabled: !root.typing; sequence: "Down"; onActivated: root.moveDays(7) }
+    Shortcut { enabled: !root.typing; sequence: "PgUp"; onActivated: root.moveMonths(-1) }
+    Shortcut { enabled: !root.typing; sequence: "PgDown"; onActivated: root.moveMonths(1) }
+    Shortcut { enabled: !root.typing; sequence: "T"; onActivated: root.today() }
+
+    // How much of the year and the month is gone, as tiles.
+    readonly property var tiles: [
+        { label: String(todayY), p: progress },
+        { label: Qt.formatDate(now, "MMMM"), p: { fraction: Cal.monthProgress(now), left: Cal.daysInMonth(todayY, todayM) - now.getDate() } }
+    ]
+    RowLayout {
+    Layout.fillWidth: true
+    spacing: 16
+
+    // Left panel: the month.
+    ColumnLayout {
+        Layout.preferredWidth: root.colW
+        Layout.maximumWidth: root.colW
+        Layout.alignment: Qt.AlignTop
+        spacing: 8
 
     // Header: month and year, and the controls.
     RowLayout {
         Layout.fillWidth: true
+        Layout.bottomMargin: 8                       // air between the controls and the weekday names (16 px with the column spacing)
         spacing: 6
         Txt { Layout.fillWidth: true; text: Qt.formatDate(new Date(root.viewY, root.viewM, 1), "MMMM yyyy"); font.bold: true; font.pixelSize: Theme.fontSize + 1 }
         Button { text: "‹"; implicitWidth: 30; onClicked: root.moveMonths(-1) }
@@ -157,8 +177,17 @@ ColumnLayout {
         }
     }
 
+    }
+
+    // Right panel: everything but the month.
+    ColumnLayout {
+        Layout.preferredWidth: root.colW
+        Layout.maximumWidth: root.colW
+        Layout.alignment: Qt.AlignTop
+        spacing: 8
+
     // The selected day
-    PopupSection { ColumnLayout {
+    PopupSection { first: true; ColumnLayout {      // first: no hairline above it, so its title lines up with the month title on the left
         Layout.fillWidth: true
         spacing: 2
         RowLayout {
@@ -180,11 +209,6 @@ ColumnLayout {
         }
     } }
 
-    // How much of the year and the month is gone, as tiles.
-    readonly property var tiles: [
-        { label: String(todayY), p: progress },
-        { label: Qt.formatDate(now, "MMMM"), p: { fraction: Cal.monthProgress(now), left: Cal.daysInMonth(todayY, todayM) - now.getDate() } }
-    ]
     PopupSection {
         GridLayout {
             Layout.fillWidth: true
@@ -232,4 +256,9 @@ ColumnLayout {
         title: "Timer"
         TimerControls { id: timer; Layout.fillWidth: true; embedded: true }
     }
+    }
+    }
+
+    // The world clocks: a strip across both panels, so the popup is about one row taller however many zones there are.
+    WorldClocks { id: zones; now: root.now }
 }

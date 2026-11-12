@@ -28,14 +28,33 @@ def mon(name="eDP-1", desc="Samsung 0x4187", w=1920, h=1200, scale=1.5, **kw):
 class ScaleTest(unittest.TestCase):
     def test_scale_options_1920x1200(self):
         opts = D.scale_options(1920, 1200)
-        self.assertEqual(opts, [1.0, 1.1, 1.2, 1.25])
+        self.assertEqual(opts, [1.0, 16 / 15, 1.2, 1.25, 4 / 3, 1.5])
+
+    def test_every_offered_scale_leaves_a_whole_logical_size(self):
+        for w, h in ((1920, 1200), (2880, 1800), (2560, 1440), (3840, 2160), (1920, 1080), (1280, 800)):
+            for s in D.scale_options(w, h):
+                self.assertEqual((w / s) % 1, 0, (w, h, s))
+                self.assertEqual((h / s) % 1, 0, (w, h, s))
+                self.assertTrue(1.0 <= s <= 1.5 or (s <= 2.0 and w > 2600), (w, h, s))
+
+    def test_the_rule_keeps_the_exact_scale(self):
+        # "scale = 1.07" is not a whole logical size on 1920x1200 either: Hyprland would pick 1.0667 again and complain
+        text = D.render_lua([{"output": "eDP-1", "mode": "1920x1200@60", "position": "0x0", "scale": 16 / 15, "disabled": False, "mirror": None}])
+        self.assertIn("scale = 1.0666666666666667", text)
+        text = D.render_lua([{"output": "eDP-1", "mode": "1920x1200@60", "position": "0x0", "scale": 1.25, "disabled": False, "mirror": None}])
+        self.assertIn("scale = 1.25", text)
+
+    def test_1_1_is_not_offered_because_it_leaves_a_fraction(self):
+        # 1920 / 1.1 = 1745.45: Hyprland would pick the nearest valid scale (1.0667) itself, with an error
+        self.assertNotIn(1.1, D.scale_options(1920, 1200))
+        self.assertEqual(D.clamp_scale(1.1, 1920, 1200), 16 / 15)
 
     def test_clamp_scale_picks_nearest_valid(self):
         self.assertEqual(D.clamp_scale(1.17, 1920, 1200), 1.2)
-        self.assertEqual(D.clamp_scale(2.5, 1920, 1200), 1.25)
+        self.assertEqual(D.clamp_scale(2.5, 1920, 1200), 1.5)
 
-    def test_odd_resolution_offers_the_same_scales(self):
-        self.assertEqual(D.scale_options(1367, 769), D.scale_options(1920, 1200))
+    def test_an_odd_resolution_offers_only_100_percent(self):
+        self.assertEqual(D.scale_options(1367, 769), [1.0])
 
 
 class KeyTest(unittest.TestCase):
@@ -491,7 +510,7 @@ class CliTest(unittest.TestCase):
         self.add_drm()
         rc, out, _ = self.run_cli("brightness", "DP-1", FAKE_DDC_CUR="30")
         self.assertEqual((rc, json.loads(out)), (0, {"name": "DP-1", "kind": "ddc", "percent": 30}))
-        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--bus\t3\tgetvcp\t10\t--brief"])
+        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--syslog\tNEVER\t--bus\t3\tgetvcp\t10\t--brief"])
         self.assertEqual(self.tool_calls("brightnessctl"), [])        # never touches the laptop backlight
 
     def test_brightness_external_set_scales_to_the_monitors_maximum(self):
@@ -499,7 +518,7 @@ class CliTest(unittest.TestCase):
         self.add_drm()
         rc, out, _ = self.run_cli("brightness", "DP-1", "50", FAKE_DDC_MAX="255")
         self.assertEqual((rc, json.loads(out)), (0, {"name": "DP-1", "kind": "ddc", "percent": 50}))
-        self.assertIn("ddcutil\t--bus\t3\tsetvcp\t10\t128\t--noverify", self.tool_calls("ddcutil"))
+        self.assertIn("ddcutil\t--syslog\tNEVER\t--bus\t3\tsetvcp\t10\t128\t--noverify", self.tool_calls("ddcutil"))
         self.assertEqual(self.tool_calls("brightnessctl"), [])
 
     def test_brightness_external_set_reuses_the_known_maximum(self):
@@ -510,7 +529,7 @@ class CliTest(unittest.TestCase):
         self.log.unlink()
         rc, out, _ = self.run_cli("brightness", "DP-1", "50", FAKE_DDC_MAX="255")
         self.assertEqual((rc, json.loads(out)), (0, {"name": "DP-1", "kind": "ddc", "percent": 50}))
-        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--bus\t3\tsetvcp\t10\t128\t--noverify"])
+        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--syslog\tNEVER\t--bus\t3\tsetvcp\t10\t128\t--noverify"])
 
     def test_brightness_another_monitor_on_the_same_bus_is_read_again(self):
         self.two()
@@ -519,8 +538,8 @@ class CliTest(unittest.TestCase):
         self.add_drm(edid=b"monitor-b")                    # a different monitor plugged into the same port
         self.log.unlink()
         self.run_cli("brightness", "DP-1", "50", FAKE_DDC_MAX="100")
-        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--bus\t3\tgetvcp\t10\t--brief",
-                                                      "ddcutil\t--bus\t3\tsetvcp\t10\t50\t--noverify"])
+        self.assertEqual(self.tool_calls("ddcutil"), ["ddcutil\t--syslog\tNEVER\t--bus\t3\tgetvcp\t10\t--brief",
+                                                      "ddcutil\t--syslog\tNEVER\t--bus\t3\tsetvcp\t10\t50\t--noverify"])
 
     def test_brightness_kind_names_the_monitor_without_touching_it(self):
         self.two()
@@ -602,7 +621,7 @@ class CliTest(unittest.TestCase):
         self.add_drm()
         rc, out, _ = self.run_cli("brightness", "DP-1", "--step", "5", FAKE_DDC_CUR="30")
         self.assertEqual((rc, json.loads(out)), (0, {"name": "DP-1", "kind": "ddc", "percent": 35}))
-        self.assertIn("ddcutil\t--bus\t3\tsetvcp\t10\t35\t--noverify", self.tool_calls("ddcutil"))
+        self.assertIn("ddcutil\t--syslog\tNEVER\t--bus\t3\tsetvcp\t10\t35\t--noverify", self.tool_calls("ddcutil"))
         self.assertEqual(self.tool_calls("brightnessctl"), [])
 
     def test_step_external_scales_to_the_monitors_maximum(self):

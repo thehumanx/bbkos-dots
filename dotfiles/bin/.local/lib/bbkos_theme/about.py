@@ -2,9 +2,11 @@
 
     bbkos-about            JSON: {"rows": [[label, value], ...], "update": {"last": "...", "kernel": "..."}}
 """
+import grp
 import json
 import os
 import platform
+import pwd
 import shutil
 import subprocess
 import sys
@@ -122,8 +124,50 @@ def rows(env):
     return [[k, v] for k, v in out if v]
 
 
+def identity(env):
+    """The profile card: user name, computer name, the account's full name (GECOS), shell, groups, session. No secrets."""
+    try:
+        pw = pwd.getpwuid(os.getuid())
+    except KeyError:
+        return {}
+    try:
+        groups = sorted(grp.getgrgid(g).gr_name for g in os.getgroups())
+    except (KeyError, OSError):
+        groups = []
+    session = " on ".join(x for x in (env.get("XDG_CURRENT_DESKTOP", ""), env.get("XDG_SESSION_TYPE", "")) if x)
+    return {"user": pw.pw_name, "host": platform.node(), "fullName": pw.pw_gecos.split(",")[0].strip(),
+            "shell": Path(pw.pw_shell).name, "groups": ", ".join(groups), "session": session}
+
+
+def github_user(hosts):
+    """The user of the first host in gh's hosts.yml. Only the `user:` line is read; the token in that file is never kept."""
+    try:
+        with open(hosts, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                s = line.strip()
+                if s.startswith("user:"):
+                    return s.split(":", 1)[1].strip().strip("'\"")
+    except OSError:
+        pass
+    return ""
+
+
+def accounts(env):
+    """Who the command-line tools are signed in as, from local files only: no network, no sign-in, no token read.
+    [[label, value], ...]; a tool that is not set up is left out."""
+    home = Path(env.get("HOME", "~")).expanduser()
+    name, mail = _run(["git", "config", "--global", "user.name"], env), _run(["git", "config", "--global", "user.email"], env)
+    gh = github_user(Path(env.get("GH_CONFIG_DIR") or home / ".config/gh") / "hosts.yml")
+    out = [
+        ("Git", " ".join(x for x in (name, f"<{mail}>" if mail else "") if x)),
+        ("GitHub", gh),
+        ("Claude", "Signed in" if (home / ".claude/.credentials.json").is_file() else ""),
+    ]
+    return [[k, v] for k, v in out if v]
+
+
 def status(env):
-    return {"rows": rows(env), "update": {"last": last_update()}}
+    return {"rows": rows(env), "update": {"last": last_update()}, "identity": identity(env), "accounts": accounts(env)}
 
 
 def main(argv, env=None):

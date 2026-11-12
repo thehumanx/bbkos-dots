@@ -55,6 +55,7 @@ Scope {
                         TextInput {
                             id: input
                             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                            clip: true
                             verticalAlignment: TextInput.AlignVCenter
                             echoMode: flow && flow.responseVisible ? TextInput.Normal : TextInput.Password
                             color: Theme.fg

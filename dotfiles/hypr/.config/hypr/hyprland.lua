@@ -232,9 +232,14 @@ hl.config({
 -- Direct scanout stays off (the default): tried on 2026-10-25 with 1 (any fullscreen window) and fullscreen Stremio on
 -- battery, it saved nothing measurable (7.86 W off against 7.96 W on, Hyprland 4 % of a core either way, so it most likely
 -- never engaged) and it can cause fullscreen flicker on some setups. 2 ("auto") only covers games. docs/modules/power-tuning.md.
+-- cm_auto_hdr off (2026-11-02): with the default (1) a fullscreen Vivaldi window made the panel jump to full backlight
+-- (sysfs `brightness` stayed at the chosen value while `actual_brightness` went from 48 to 400 of 400, and fell back on leaving
+-- fullscreen). Hyprland switches the output to HDR when a fullscreen client sends HDR colour information, and this OLED panel
+-- answers with maximum brightness. Measured by switching the option live: off, no jump. The cost: HDR video is shown as SDR.
 hl.config({
     render = {
         direct_scanout = 0,
+        cm_auto_hdr    = 0,
     },
 })
 
@@ -371,11 +376,6 @@ hl.window_rule({
     no_shadow = true,
 })
 
--- Layer rules also return a handle.
--- local overlayLayerRule = hl.layer_rule({
---     name  = "no-anim-overlay",
---     match = { namespace = "^my-overlay$" },
---     no_anim = true,
 -- The About window (bbkos-about-window: fastfetch with the branding logo, docs/modules/branding.md): floating, fixed size.
 hl.window_rule({
     name  = "bbkos-about-window",
@@ -385,6 +385,11 @@ hl.window_rule({
     center = true,
 })
 
+-- Layer rules also return a handle.
+-- local overlayLayerRule = hl.layer_rule({
+--     name  = "no-anim-overlay",
+--     match = { namespace = "^my-overlay$" },
+--     no_anim = true,
 -- })
 -- overlayLayerRule:set_enabled(false)
 

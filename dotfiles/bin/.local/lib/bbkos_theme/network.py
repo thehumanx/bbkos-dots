@@ -1,7 +1,7 @@
 """Network page (docs/modules/network.md): Wi-Fi on or off, the saved connections, Tailscale and the phone mirror, as JSON.
 The popups in the bar are the quick version; this is where a saved network is forgotten.
 
-    bbkos-network status | wifi on|off | forget NAME | autoconnect NAME yes|no | tailscale on|off
+    bbkos-network status | wifi on|off | forget NAME | autoconnect NAME yes|no | password NAME | tailscale on|off
 
 Tailscale on and off are `tailscale up` and `tailscale down`. tailscaled keeps the choice across reboots, so off stays off at
 the next boot. Both need the CLI's operator rights for this user, given once by the owner with
@@ -121,6 +121,12 @@ def main(argv, env=None):
         if len(argv) == 2 and argv[0] == "forget":
             _run(["nmcli", "connection", "delete", "id", check_name(argv[1])], env, check=True)
             return 0
+        if len(argv) == 2 and argv[0] == "password":      # the saved Wi-Fi key, for the page's eye button
+            key = _run(["nmcli", "-s", "-g", "802-11-wireless-security.psk", "connection", "show", "id", check_name(argv[1])], env, check=True).strip()
+            if not key:
+                raise ValueError("no saved password")
+            print(key)
+            return 0
         if len(argv) == 2 and argv[0] == "tailscale" and argv[1] in ("on", "off"):
             set_tailscale(argv[1] == "on", env)
             return 0
@@ -130,5 +136,5 @@ def main(argv, env=None):
     except ValueError as e:
         print(e, file=sys.stderr)
         return 1
-    print("usage: bbkos-network status | wifi on|off | forget NAME | autoconnect NAME yes|no | tailscale on|off", file=sys.stderr)
+    print("usage: bbkos-network status | wifi on|off | forget NAME | autoconnect NAME yes|no | password NAME | tailscale on|off", file=sys.stderr)
     return 2

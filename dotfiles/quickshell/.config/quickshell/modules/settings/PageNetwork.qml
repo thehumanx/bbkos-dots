@@ -36,6 +36,29 @@ SettingsPage {
         id: mirrorProc
         onExited: page.refresh()
     }
+    // The eye button: shows one saved Wi-Fi password under its name, hidden again after 20 s, on a second click or when another is shown.
+    property string revealed: ""                          // the Wi-Fi whose password is on screen
+    property string revealedKey: ""
+    Process {
+        id: keyProc
+        property string target: ""
+        stderr: StdioCollector { id: keyErr }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() !== "") { page.revealedKey = text.replace(/\n$/, ""); page.revealed = keyProc.target; hideTimer.restart() }
+            }
+        }
+        onExited: code => { if (code !== 0) page.error = keyErr.text.trim() || "Could not read the password" }
+    }
+    function toggleKey(name) {
+        if (revealed === name) { revealed = ""; revealedKey = ""; return }
+        revealed = ""; revealedKey = ""
+        if (keyProc.running) return
+        keyProc.target = name
+        keyProc.command = ["bbkos-network", "password", name]
+        keyProc.running = true
+    }
+    Timer { id: hideTimer; interval: 20000; onTriggered: { page.revealed = ""; page.revealedKey = "" } }
     Timer { id: confirmTimer; interval: 4000; onTriggered: page.confirming = "" }
 
     SettingsSection {
@@ -54,16 +77,32 @@ SettingsPage {
             delegate: SettingRow {
                 required property var modelData
                 label: modelData.name
-                hint: modelData.kind + (modelData.active ? ", connected" : "")
+                hint: modelData.kind + (modelData.active ? ", connected" : "") + (page.revealed === modelData.name ? ", password: " + page.revealedKey : "")
+                id: row
+                // The actions show only while the pointer is over the row (or while a Forget waits for its second click); the
+                // space stays, so the list does not jump. Leaving the row hides a shown password again.
+                readonly property bool active: rowHover.hovered || page.confirming === modelData.name
+                HoverHandler { id: rowHover; onHoveredChanged: if (!hovered && page.revealed === modelData.name) page.toggleKey(modelData.name) }
                 Item { Layout.fillWidth: true }
-                Txt { text: "Connect automatically"; color: Theme.dim; font.pixelSize: Theme.fontSize - 1 }
-                Toggle { checked: modelData.autoconnect; onToggled: on => page.run(["autoconnect", modelData.name, on ? "yes" : "no"]) }
-                Button {
-                    text: page.confirming === modelData.name ? "Really forget?" : "Forget"
-                    tint: page.confirming === modelData.name ? Theme.crit : Theme.fg
-                    onClicked: {
-                        if (page.confirming === modelData.name) { page.confirming = ""; page.run(["forget", modelData.name]) }
-                        else { page.confirming = modelData.name; confirmTimer.restart() }
+                RowLayout {
+                    spacing: 8
+                    opacity: row.active ? 1 : 0
+                    enabled: row.active
+                    Behavior on opacity { NumberAnimation { duration: Theme.durFast } }
+                    Button {
+                        visible: modelData.kind === "wifi"
+                        text: page.revealed === modelData.name ? "\uf070" : "\uf06e"      // eye / eye with a slash
+                        onClicked: page.toggleKey(modelData.name)
+                    }
+                    Txt { text: "Connect automatically"; color: Theme.dim; font.pixelSize: Theme.fontSize - 1 }
+                    Toggle { checked: modelData.autoconnect; onToggled: on => page.run(["autoconnect", modelData.name, on ? "yes" : "no"]) }
+                    Button {
+                        text: page.confirming === modelData.name ? "Really forget?" : "Forget"
+                        tint: page.confirming === modelData.name ? Theme.crit : Theme.fg
+                        onClicked: {
+                            if (page.confirming === modelData.name) { page.confirming = ""; page.run(["forget", modelData.name]) }
+                            else { page.confirming = modelData.name; confirmTimer.restart() }
+                        }
                     }
                 }
             }

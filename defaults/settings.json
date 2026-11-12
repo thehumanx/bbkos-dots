@@ -211,10 +211,14 @@
     "fieldAlign": "center",
     "edgeMargin": 0
   },
+  "profile": {
+    "name": ""
+  },
   "calendar": {
     "weekStart": "mon",
     "weekNumbers": false,
-    "moon": true
+    "moon": true,
+    "zones": []
   },
   "idle": {
     "dim": 150,
@@ -225,7 +229,7 @@
   },
   "branding": {
     "screensaver": true,
-    "effect": "decrypt"
+    "effects": ["decrypt"]
   },
   "notifications": {
     "timeout": 6,

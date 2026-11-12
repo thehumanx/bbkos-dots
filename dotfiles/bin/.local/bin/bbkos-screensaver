@@ -4,7 +4,7 @@
 #                              screensaver logo (hypridle starts it through `bbkos-awake idle-screensaver`)
 #   bbkos-screensaver stop     close them (hypridle's on-resume, and bbkos-lock before it starts hyprlock)
 # Every failure means "do nothing": the idle chain goes on to the lock without it. The effect list is the one in
-# settings.py (BRANDING_EFFECTS); an unknown name falls back to decrypt.
+# settings.py (BRANDING_EFFECTS), played in that order; unknown names are dropped, none left means decrypt.
 class=org.bbkos.screensaver
 settings="${BBKOS_SETTINGS:-$HOME/.config/bbkos/settings.json}"
 
@@ -12,8 +12,10 @@ case "${1:-}" in
     stop)
         pkill -f -- "--class $class" 2>/dev/null
         exit 0 ;;
-    --play)  # runs inside each kitty: the logo, the effect, a pause, again; any key ends it
-        effect="$2"
+    --play)  # runs inside each kitty: the logo, an effect, a pause, the next effect (wrapping round), forever; any key ends it
+        IFS=, read -ra list <<< "$2"
+        n=0
+        # BBKOS_SAVER_PAUSE (seconds between effects) and BBKOS_SAVER_MAX (stop after that many) are test hooks.
         file=$(mktemp) || exit 0
         # A key closes the windows on every monitor, not only this one; the tte child is stopped by its pid (not `kill 0`,
         # which would take the caller's whole process group with it).
@@ -22,11 +24,14 @@ case "${1:-}" in
         bbkos-branding show screensaver > "$file"
         printf '\e[?25l'
         while :; do
+            effect=${list[n % ${#list[@]}]}
+            n=$((n + 1))
             clear
-            tte --no-restore-cursor --canvas-width 0 --canvas-height 0 --anchor-canvas c --anchor-text c "$effect" < "$file" &
+            tte --no-restore-cursor --no-eol --canvas-width 0 --canvas-height 0 --anchor-canvas c --anchor-text c "$effect" < "$file" &
             t=$!
             while kill -0 "$t" 2>/dev/null; do read -rsn1 -t 0.2 && exit 0; done
-            read -rsn1 -t 3 && exit 0
+            [ -n "${BBKOS_SAVER_MAX:-}" ] && [ "$n" -ge "$BBKOS_SAVER_MAX" ] && exit 0
+            read -rsn1 -t "${BBKOS_SAVER_PAUSE:-3}" && exit 0
         done ;;
 esac
 
@@ -36,13 +41,16 @@ command -v tte >/dev/null || exit 0
 pgrep -f -- "--class $class" >/dev/null && exit 0
 pgrep -x hyprlock >/dev/null && exit 3
 
-effect=$(jq -r '.branding.effect // "decrypt"' "$settings" 2>/dev/null)
-case "$effect" in
-    decrypt|beams|matrix|slide|rain|burn|waves) ;;
-    *) effect=decrypt ;;
-esac
+# branding.effects: the chosen effects, played in this fixed order; unknown names are dropped, none left means decrypt.
+# (the old single key branding.effect, until the settings tool rewrites the file, counts as a list of one)
+want=$(jq -r '(.branding.effects // (if .branding.effect then [.branding.effect] else [] end)) | if type == "array" then map(tostring) | join(" ") else "" end' "$settings" 2>/dev/null)
+effects=
+for e in decrypt beams matrix slide rain burn waves; do
+    case " $want " in *" $e "*) effects="${effects:+$effects,}$e" ;; esac
+done
+[ -n "$effects" ] || effects=decrypt
 
 hyprctl monitors -j 2>/dev/null | jq -r '.[].name' | while read -r mon; do
-    hyprctl dispatch "hl.dsp.exec_cmd(\"kitty --class $class -o confirm_os_window_close=0 -o window_padding_width=0 -o font_size=36 -o mouse_hide_wait=0.01 -o background_opacity=1 bbkos-screensaver --play $effect\", {monitor=\"$mon\", fullscreen=true})" >/dev/null
+    hyprctl dispatch "hl.dsp.exec_cmd(\"kitty --class $class -o confirm_os_window_close=0 -o window_padding_width=0 -o font_size=36 -o mouse_hide_wait=0.01 -o background_opacity=1 bbkos-screensaver --play $effects\", {monitor=\"$mon\", fullscreen=true})" >/dev/null
 done
 exit 0

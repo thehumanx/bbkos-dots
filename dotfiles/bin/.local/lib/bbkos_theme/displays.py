@@ -12,7 +12,6 @@ from pathlib import Path
 from .settings import _atomic_write
 
 VERSION = 1
-SCALES = (1.0, 1.1, 1.2, 1.25)
 LAYOUT_MODES = ("extend", "mirror", "only")
 POSITIONS = ("left", "right", "above", "below")
 
@@ -20,9 +19,18 @@ DEFAULTS = {"version": VERSION, "monitors": {}, "layouts": {}}
 
 
 def scale_options(width, height):
-    """Every offered scale. A scale that leaves a fractional logical size (1920 / 1.15) would be allowed, but SCALES
-    offers only these four. width and height are kept for the callers and a future filter."""
-    return list(SCALES)
+    """The scales this mode really supports: Wayland sends a scale in 120ths, and Hyprland needs both logical sizes
+    (width / scale, height / scale) to be whole numbers; with anything else it picks the nearest valid scale by itself and
+    reports an error (1.1 on 1920x1200 became 1.0667, 16/15). So the options are every k/120 whose logical size is whole,
+    from 100 % to 150 % (to 200 % on a screen over 2600 px wide, where that is a normal setting), and only while the
+    logical width stays at 1024 or more. 1920x1200 gives 100, 107, 120, 125, 133 and 150 %."""
+    top = 2.0 if width > 2600 else 1.5
+    out = []
+    for k in range(120, int(top * 120) + 1):
+        s = k / 120
+        if (120 * width) % k == 0 and (120 * height) % k == 0 and width / s >= 1024:
+            out.append(s)
+    return out or [1.0]
 
 
 def clamp_scale(scale, width, height):
@@ -160,14 +168,18 @@ def _layout(layout, keys, mons, pairs):
 HEADER = "-- bbkos-display: generated monitor rules from ~/.config/bbkos/displays.json. Do not edit.\n"
 
 
+def _scale_text(scale):
+    """The scale as Hyprland needs it: every digit of a float such as 16/15 (rounding it to 1.07 would not be a whole logical size)."""
+    return repr(float(scale))
+
+
 def render_lua(rules):
     from .reload import lua_quote
-    from .render import num
     out = [HEADER]
     for r in rules:
         fields = [f"output = {lua_quote(r['output'])}", f"mode = {lua_quote(r['mode'])}",
                   f"position = {lua_quote(r['position'])}",
-                  "scale = " + (lua_quote(r["scale"]) if r["scale"] == "auto" else num(r["scale"]))]
+                  "scale = " + (lua_quote(r["scale"]) if r["scale"] == "auto" else _scale_text(r["scale"]))]
         if r["disabled"]:
             fields.append("disabled = true")
         if r["mirror"]:

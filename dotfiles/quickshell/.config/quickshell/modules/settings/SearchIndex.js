@@ -71,6 +71,7 @@ var ROWS = [
     {"label": "Week starts on", "hint": "", "section": "Calendar", "place": "bar/widgets", "where": "Bar › Widgets"},
     {"label": "Week numbers", "hint": "", "section": "Calendar", "place": "bar/widgets", "where": "Bar › Widgets"},
     {"label": "Moon phase", "hint": "Shown with the selected day", "section": "Calendar", "place": "bar/widgets", "where": "Bar › Widgets"},
+    {"label": "World clocks", "hint": "Places whose time shows under the calendar (up to 8). Click one to remove it", "section": "Calendar", "place": "bar/widgets", "where": "Bar › Widgets"},
     {"label": "Longest width", "hint": "The title is cut to fit, and to make room for the buttons while the pointer is on it", "section": "Music", "place": "bar/widgets", "where": "Bar › Widgets"},
     {"label": "Gaps inside", "hint": "Between windows", "section": "Layout", "place": "windows/look", "where": "Windows › Look"},
     {"label": "Gaps outside", "hint": "Between windows and the screen edge", "section": "Layout", "place": "windows/look", "where": "Windows › Look"},
@@ -106,7 +107,7 @@ var ROWS = [
     {"label": "Blur size", "hint": "", "section": "", "place": "lock/editor", "where": "Lock screen"},
     {"label": "Keep text readable", "hint": "Dims a bright wallpaper until the text reads at 4.5:1 (WCAG)", "section": "", "place": "lock/editor", "where": "Lock screen"},
     {"label": "Brightness", "hint": "The most the lock screen may show; lower when the wallpaper needs it", "section": "", "place": "lock/editor", "where": "Lock screen"},
-    {"label": "Font", "hint": "", "section": "", "place": "lock/editor", "where": "Lock screen"},
+    {"label": "Font", "hint": "Each name is shown in its own font", "section": "", "place": "lock/editor", "where": "Lock screen"},
     {"label": "Text colour", "hint": "", "section": "", "place": "lock/editor", "where": "Lock screen"},
     {"label": "Welcome text", "hint": "", "section": "", "place": "lock/editor", "where": "Lock screen"},
     {"label": "Time format", "hint": "", "section": "", "place": "lock/editor", "where": "Lock screen"},
@@ -183,7 +184,7 @@ var ROWS = [
     {"label": "Switch the screen off", "hint": "", "section": "When idle", "place": "power/idle", "where": "Power and sleep › When idle"},
     {"label": "Suspend", "hint": "Suspend, then hibernate later", "section": "When idle", "place": "power/idle", "where": "Power and sleep › When idle"},
     {"label": "Animated screensaver", "hint": "Off: the screen dims instead", "section": "Screensaver", "place": "power/idle", "where": "Power and sleep › When idle"},
-    {"label": "Effect", "hint": "", "section": "Screensaver", "place": "power/idle", "where": "Power and sleep › When idle"},
+    {"label": "Effects", "hint": "Pick one or more. Several play one after another, then start over", "section": "Screensaver", "place": "power/idle", "where": "Power and sleep › When idle"},
     {"label": "Logo", "hint": "The text is in ~/.config/bbkos/branding (bbkos-branding on the command line)", "section": "Screensaver", "place": "power/idle", "where": "Power and sleep › When idle"},
     {"label": "On battery", "hint": "Doing nothing leaves the laptop running in a bag: it gets hot and drains the battery", "section": "Closing the lid", "place": "power/lid", "where": "Power and sleep › Lid and power button"},
     {"label": "On the charger", "hint": "Do nothing keeps the laptop reachable from your phone with the lid shut", "section": "Closing the lid", "place": "power/lid", "where": "Power and sleep › Lid and power button"},
@@ -242,6 +243,7 @@ var ROWS = [
     {"label": "Lock swipe direction", "hint": "", "section": "Workspace swipe", "place": "mouse/gestures", "where": "Mouse and touchpad › Gestures"},
     {"label": "New workspace at the end", "hint": "", "section": "Workspace swipe", "place": "mouse/gestures", "where": "Mouse and touchpad › Gestures"},
     {"label": "Swipe past the first and last", "hint": "", "section": "Workspace swipe", "place": "mouse/gestures", "where": "Mouse and touchpad › Gestures"},
+    {"label": "Name", "hint": "Shown here. Empty uses the account's full name, or the user name", "section": "", "place": "about/about", "where": "About and system › About and updates"},
     {"label": "Revert to when this window opened", "hint": "Including the wallpaper", "section": "Revert and restore", "place": "about/reset", "where": "About and system › Reset"},
     {"label": "Reset everything", "hint": "Every setting and the wallpaper back to the defaults", "section": "Revert and restore", "place": "about/reset", "where": "About and system › Reset"}
 ]

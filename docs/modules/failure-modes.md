@@ -36,7 +36,7 @@ Status: **done** = applied and tested; **partly** = applied, part untested; **pe
 | Real Wi-Fi MAC broadcast and trackable across cafes | Stable random MAC per network; the network you are on when the script runs keeps the real MAC (routers with reservations or filters) | **done**: the home profile reads `permanent` and the interface still has the hardware MAC; other networks use `stable` |
 | Inbound traffic on public Wi-Fi | `ufw` active, default input DROP | **done** (observed) |
 | Captive portals and joining a new network from the GUI | Wi-Fi and Bluetooth popups, portal page opens once in a private Zen window (`docs/modules/panels.md`) | **partly**: portal hand-off and panel states tested; a real join, wrong password and a real portal are untested |
-| The Wi-Fi popup and bar lie while Wi-Fi is off or joining ("Connected, but no internet access" with Wi-Fi off; the bar said `off` while a network was joining) | NetworkManager's connectivity is trusted only after a link has been up 6 s; the bar says `connecting…`, `offline` (on, not joined) or `off` (radio off) | **done** 2026-10-25 (`panels.md`, `bar.md`); the three bar labels not yet seen on screen |
+| The Wi-Fi popup and bar lie while Wi-Fi is off or joining ("Connected, but no internet access" with Wi-Fi off; the bar said `off` while a network was joining) | NetworkManager's connectivity is trusted only after a link has been up 6 s; the bar says `connecting…`, `not connected` (on, not joined) or `off` (radio off) | **done** 2026-10-25 (`panels.md`, `bar.md`); the three bar labels not yet seen on screen |
 
 ## Disk, data and recovery
 

@@ -25,7 +25,7 @@
     "unqualified": 2
   },
   "components/Chips.qml": {
-    "unqualified": 24
+    "unqualified": 40
   },
   "components/KeyCapture.qml": {
     "unqualified": 8
@@ -43,6 +43,9 @@
   },
   "components/SettingChoice.qml": {
     "import": 2,
+    "unqualified": 2
+  },
+  "components/SettingChoices.qml": {
     "unqualified": 2
   },
   "components/SettingRow.qml": {
@@ -68,6 +71,9 @@
   },
   "components/Txt.qml": {
     "unqualified": 6
+  },
+  "components/ZoneAdder.qml": {
+    "unqualified": 22
   },
   "modules/android/AndroidWindow.qml": {
     "import": 24,
@@ -278,10 +284,7 @@
     "unresolved-type": 2
   },
   "modules/panels/CalendarPanel.qml": {
-    "import": 17,
-    "required": 3,
-    "unqualified": 60,
-    "unresolved-type": 9
+    "syntax": 1
   },
   "modules/panels/DisplayPanel.qml": {
     "import": 25,
@@ -298,7 +301,7 @@
     "import": 1,
     "missing-property": 1,
     "uncreatable-type": 1,
-    "unqualified": 90
+    "unqualified": 91
   },
   "modules/panels/PowerPanel.qml": {
     "import": 3,
@@ -322,6 +325,12 @@
     "import": 9,
     "unqualified": 39,
     "unresolved-type": 5
+  },
+  "modules/panels/WorldClocks.qml": {
+    "import": 8,
+    "unqualified": 33,
+    "unresolved-type": 5,
+    "unused-imports": 1
   },
   "modules/polkit/Polkit.qml": {
     "import": 10,
@@ -359,9 +368,10 @@
     "unqualified": 2
   },
   "modules/settings/PageAbout.qml": {
-    "import": 8,
-    "required": 3,
-    "unqualified": 7
+    "import": 21,
+    "required": 9,
+    "unqualified": 19,
+    "unresolved-type": 1
   },
   "modules/settings/PageAccessibility.qml": {
     "import": 11
@@ -379,7 +389,7 @@
     "unqualified": 4
   },
   "modules/settings/PageBarWidgets.qml": {
-    "import": 11
+    "syntax": 1
   },
   "modules/settings/PageBehavior.qml": {
     "import": 8,
@@ -433,16 +443,16 @@
   },
   "modules/settings/PageLock.qml": {
     "import": 32,
-    "unqualified": 23,
+    "unqualified": 24,
     "unresolved-type": 3
   },
   "modules/settings/PageMouse.qml": {
     "import": 11
   },
   "modules/settings/PageNetwork.qml": {
-    "import": 17,
+    "import": 18,
     "required": 3,
-    "unqualified": 14,
+    "unqualified": 20,
     "unresolved-type": 1
   },
   "modules/settings/PageNotifications.qml": {
@@ -660,6 +670,6 @@
     "import": 1
   },
   "shell.qml": {
-    "import": 15
+    "import": 17
   }
 }

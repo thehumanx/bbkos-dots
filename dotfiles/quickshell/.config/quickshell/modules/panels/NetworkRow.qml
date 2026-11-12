@@ -119,6 +119,7 @@ Rectangle {
                 TextInput {
                     id: pw
                     anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                    clip: true                       // a long password scrolls inside the box, not over its edge
                     verticalAlignment: TextInput.AlignVCenter
                     echoMode: reveal.checked ? TextInput.Normal : TextInput.Password
                     color: Theme.fg

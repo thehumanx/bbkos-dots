@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import qs
 import qs.components
 import qs.services
@@ -27,6 +28,32 @@ SettingsPage {
         }
         SettingToggle { label: "Week numbers"; key: "calendar.weekNumbers" }
         SettingToggle { label: "Moon phase"; hint: "Shown with the selected day"; key: "calendar.moon" }
+        SettingRow {
+            id: zonesRow
+            label: "World clocks"; hint: "Places whose time shows under the calendar (up to 8). Click one to remove it"; key: "calendar.zones"
+            readonly property var zones: { const z = SettingsStore.shown("calendar.zones"); return Array.isArray(z) ? z : [] }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Repeater {
+                        model: zonesRow.zones
+                        delegate: Button {
+                            required property string modelData
+                            text: modelData.split("/").pop().replace(/_/g, " ") + "  ×"
+                            onClicked: SettingsStore.set("calendar.zones", zonesRow.zones.filter(n => n !== modelData))
+                        }
+                    }
+                }
+                ZoneAdder {
+                    exclude: zonesRow.zones
+                    full: zonesRow.zones.length >= 8
+                    onPicked: z => SettingsStore.set("calendar.zones", zonesRow.zones.concat([z]))
+                }
+            }
+        }
     }
 
     SettingsSection {

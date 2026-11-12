@@ -47,7 +47,7 @@ SettingsPage {
         title: "Screensaver"
         description: "An animated logo that plays full screen before the lock. A key or touch ends it. It needs terminaltexteffects (tte)."
         SettingToggle { label: "Animated screensaver"; hint: "Off: the screen dims instead"; key: "branding.screensaver" }
-        SettingChoice { label: "Effect"; key: "branding.effect"; model: effects; visible: SettingsStore.shown("branding.screensaver") === true }
+        SettingChoices { label: "Effects"; hint: "Pick one or more. Several play one after another, then start over"; key: "branding.effects"; model: effects; visible: SettingsStore.shown("branding.screensaver") === true }
         SettingRow {
             label: "Logo"; hint: "The text is in ~/.config/bbkos/branding (bbkos-branding on the command line)"
             Item { Layout.fillWidth: true }

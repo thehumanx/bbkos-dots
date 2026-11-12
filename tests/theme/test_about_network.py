@@ -49,11 +49,38 @@ class AboutTest(unittest.TestCase):
         self.assertEqual(A.last_update(log), "2026-10-24 07:48")
         self.assertEqual(A.last_update(self.dir / "none"), "")
 
+    def test_github_user_reads_only_the_user_line(self):
+        hosts = self.dir / "hosts.yml"
+        hosts.write_text("github.com:\n    oauth_token: SECRET\n    user: octo\n    git_protocol: https\n")
+        self.assertEqual(A.github_user(hosts), "octo")
+        self.assertEqual(A.github_user(self.dir / "none"), "")
+
+    def test_accounts_lists_only_what_is_set_up_and_never_a_token(self):
+        home = self.dir / "home"
+        (home / ".config/gh").mkdir(parents=True)
+        (home / ".config/gh/hosts.yml").write_text("github.com:\n    oauth_token: SECRET\n    user: octo\n")
+        env = {"HOME": str(home), "PATH": "/nonexistent"}
+        self.assertEqual(A.accounts(env), [["GitHub", "octo"]])
+        (home / ".claude").mkdir()
+        (home / ".claude/.credentials.json").write_text("{}")
+        out = A.accounts(env)
+        self.assertEqual(out, [["GitHub", "octo"], ["Claude", "Signed in"]])
+        self.assertNotIn("SECRET", json.dumps(out))
+        self.assertEqual(A.accounts({"HOME": str(self.dir / "empty"), "PATH": "/nonexistent"}), [])
+
+    def test_identity_has_the_card_fields(self):
+        ident = A.identity({"XDG_CURRENT_DESKTOP": "Hyprland", "XDG_SESSION_TYPE": "wayland"})
+        self.assertTrue(ident["user"] and ident["host"])
+        self.assertEqual(ident["session"], "Hyprland on wayland")
+        self.assertEqual(A.identity({})["session"], "")
+
     def test_status_shape_and_usage(self):
         env = {"HOME": str(self.dir), "PATH": "/usr/bin:/bin"}
         st = A.status(env)
         self.assertTrue(all(len(r) == 2 and r[1] for r in st["rows"]))
         self.assertIn("Kernel", [r[0] for r in st["rows"]])
+        self.assertIn("user", st["identity"])
+        self.assertIsInstance(st["accounts"], list)
         self.assertEqual(A.main(["x"], env), 2)
 
 
@@ -70,6 +97,7 @@ class NetworkTest(unittest.TestCase):
 echo "nmcli $*" >> {self.log}
 case "$*" in
   "radio wifi") echo enabled;;
+  "-s -g 802-11-wireless-security.psk connection show id Home Wi-Fi") echo hunter2;;
   "-t -f NAME connection show --active") printf 'Home Wi-Fi\\nlo\\n';;
   "-t -f NAME,TYPE,AUTOCONNECT connection show")
     printf 'Home Wi-Fi:802-11-wireless:yes\\nCafe\\\\: free:802-11-wireless:no\\nlo:loopback:yes\\ntailscale0:tun:yes\\nWork:vpn:no\\n';;
@@ -117,6 +145,18 @@ exit 0
         self.assertEqual(N.main(["autoconnect", "Work", "yes"], self.env), 0)
         self.assertEqual(self.calls(), ["nmcli radio wifi off", "nmcli connection delete id Cafe: free",
                                         "nmcli connection modify id Work connection.autoconnect yes"])
+
+    def test_password_prints_the_saved_wifi_key(self):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.assertEqual(N.main(["password", "Home Wi-Fi"], self.env), 0)
+        self.assertEqual(buf.getvalue(), "hunter2\n")
+        err = io.StringIO()
+        from contextlib import redirect_stderr
+        with redirect_stderr(err):
+            self.assertEqual(N.main(["password", "Cafe: free"], self.env), 1)      # an open network: nothing saved
+            self.assertEqual(N.main(["password", "--help"], self.env), 1)
+        self.assertIn("no saved password", err.getvalue())
 
     def test_tailscale_on_and_off(self):
         self.assertEqual(N.main(["tailscale", "off"], self.env), 0)

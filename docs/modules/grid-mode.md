@@ -22,7 +22,6 @@ Two layers, so nothing has to be kept in step by hand:
    | `windows.gapsIn` | half the margin, `(gapsOut + 1) // 2` (`settings.grid_gaps_in`): the gap between two tiled windows equals the margin around them |
    | `windows.shadowEnabled` | false |
    | `windows.borderSize` | 1 |
-   | `lock.fieldRadius` | 0 |
 
    Hyprland's inactive window border becomes the opaque `gridEdge` colour (below), the active border keeps the palette's accent gradient (a focus ring must stay visible).
 

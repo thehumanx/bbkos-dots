@@ -8,7 +8,7 @@ do not have. Reference: the Network pages of GNOME, COSMIC and DankMaterialShell
 - **Saved connections:** every saved Wi-Fi, ethernet, VPN, WireGuard and Bluetooth connection (loopback and the Tailscale interface are
   not listed), the connected ones first. A Connect automatically switch (`connection.autoconnect`) and Forget (`nmcli connection
   delete id NAME`, a second click within 4 s confirms). Names are passed as one argument, a name that starts with `-` or has control
-  characters is refused, and nmcli's first error line is shown on the page.
+  characters is refused, and nmcli's first error line is shown on the page. The three actions of a row (the eye, Connect automatically, Forget) show only while the pointer is over the row, or while a Forget waits for its second click (2026-11-02; the space stays, so the list does not jump). Each Wi-Fi row has an eye button (icon only): it shows that network's saved password under its name (`bbkos-network password NAME`, `nmcli -s -g 802-11-wireless-security.psk`), and a second click, another row's eye, leaving the row or 20 s hides it again; an open network says there is no saved password.
 - **Tailscale:** state, this device's address and the number of other devices (`tailscale status --json`), and an on and off switch
   (added 2026-10-25; `bbkos-network tailscale on|off` runs `tailscale up` / `tailscale down`). tailscaled keeps the choice across
   reboots: off stays off at the next boot, on reconnects. The switch needs the tailscale CLI's operator rights for this user, set once

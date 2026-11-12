@@ -217,7 +217,7 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual((S.effective(s8)["windows"]["gapsOut"], S.effective(s8)["windows"]["rounding"], S.effective(s8)["windows"]["gapsIn"]), (8, 6, 4))
         self.assertEqual(s8["windows"]["gapsIn"], 5)       # the saved inner gap is untouched
         self.assertFalse(g["windows"]["shadowEnabled"])
-        self.assertEqual(g["lock"]["fieldRadius"], 0)
+        self.assertEqual(g["lock"]["fieldRadius"], s["lock"]["fieldRadius"])   # the lock screen is not a grid cell: its field keeps the owner's radius
         self.assertEqual(s["shell"]["radius"], 20)                  # the owner's value is untouched
         self.assertEqual(s["windows"]["gapsOut"], 20)
 
@@ -585,11 +585,11 @@ if __name__ == "__main__":
 
 class CalendarSettingsTest(unittest.TestCase):
     def test_defaults(self):
-        self.assertEqual(S.DEFAULTS["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True})
+        self.assertEqual(S.DEFAULTS["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True, "zones": []})
 
     def test_junk_falls_back_per_key(self):
         out, warns = S.validate({"version": 1, "calendar": {"weekStart": "tue", "weekNumbers": "yes"}})
-        self.assertEqual(out["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True})
+        self.assertEqual(out["calendar"], {"weekStart": "mon", "weekNumbers": False, "moon": True, "zones": []})
         self.assertEqual(len(warns), 2)
 
     def test_set_value(self):

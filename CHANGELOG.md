@@ -2,6 +2,31 @@
 
 What changed for people using bbkOS dots, newest first. Update with `git pull && ./install.sh --no-packages` (see "Update" in the README).
 
+## 2026-11-12
+
+### New
+
+- **Date popup: two panels, and world clocks.** The popup is wider instead of very long: the month and your world clocks on the left, the selected day, the year and month tiles and the timer on the right. Add up to 8 places in Settings > Bar and widgets > Calendar, "World clocks" (type a place, pick it; click a place to remove it). Each card shows the place, the time and how far it is from you.
+- **About: a profile card and a "Signed in" card.** Settings > About and system > About shows your picture (the same one as on the lock screen) and name (Settings > About, or leave it empty to use the account's full name), plus who Git, GitHub and Claude are signed in as. It reads local files only and never signs you in or out.
+- **Screensaver: pick several effects.** Settings > Appearance > Logo, "Screensaver effect": select more than one and they play in turn, looping in list order. Multi-choice pills now carry a checkbox. An old single choice carries over.
+- **Network: a saved Wi-Fi's password can be shown.** An eye button on each saved connection shows its password; click again (or wait 20 s) to hide it. The row's actions now appear only while the pointer is over it.
+
+### Changed
+
+- **Timer presets are 1, 5, 10, 30 min and 1 h.** Typed durations still work.
+- **Lock screen font is chosen from chips**, each name drawn in its own font, like the Appearance font.
+- **Display scale chips show only scales the screen supports**, so picking 1.1 no longer errors and lands on 1.07.
+- **Closing a terminal no longer asks for confirmation.**
+- **The bar's network widget says "not connected"** when Wi-Fi is on but nothing is joined (it said "offline").
+
+### Fixed
+
+- **The screen no longer jumps to full backlight when a window goes fullscreen** on an HDR-capable panel. Hyprland's automatic HDR switch is off (`cm_auto_hdr = 0`); HDR video plays as SDR.
+- **A long Wi-Fi password no longer overflows its field.**
+- **The settings icon opens the first page** in the list, not always Appearance.
+- **The grid mode no longer squares the lock screen's password field.**
+- **Brightness: ddcutil's own retry notes no longer count as shell errors in `bbkos-check`** (`--syslog NEVER`).
+
 ## 2026-11-11
 
 ### New

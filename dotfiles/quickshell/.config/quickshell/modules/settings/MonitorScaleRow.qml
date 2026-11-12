@@ -4,7 +4,7 @@ import qs
 import qs.components
 import qs.services
 
-// Scale of one monitor: one chip per valid scale (mon.scaleOptions, four on this laptop: 1, 1.1, 1.2, 1.25; uneven steps, so
+// Scale of one monitor: one chip per valid scale (mon.scaleOptions, the scales whose logical size is whole: six on this laptop, 100 to 150 %; uneven steps, so
 // chips and not a slider). bbkos-display owns the scale (displays.json), so a choice goes through Displays and its
 // Keep / Revert prompt.
 SettingRow {

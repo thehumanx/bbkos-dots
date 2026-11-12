@@ -2,6 +2,7 @@
 Fake hyprctl, pgrep, pkill and bbkos-branding in PATH record what would happen; nothing is opened or killed for real."""
 import json
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -51,16 +52,39 @@ class ScreensaverTest(unittest.TestCase):
         self.assertIn("org.bbkos.screensaver", starts[0])
         self.assertIn("--play decrypt", starts[0])
 
-    def test_effect_comes_from_settings(self):
-        self.settings.write_text('{"branding": {"effect": "matrix"}}')
-        self.run_it()
-        self.assertIn("--play matrix", self.calls()[0])
+    def played(self):
+        return re.search(r"--play ([^\\\"\s]+)", self.calls()[0]).group(1)
 
-    def test_unknown_effect_falls_back(self):
-        self.settings.write_text('{"branding": {"effect": "x; reboot"}}')
+    def test_effects_come_from_settings_in_list_order(self):
+        self.settings.write_text('{"branding": {"effects": ["waves", "matrix", "decrypt"]}}')
         self.run_it()
-        self.assertIn("--play decrypt", self.calls()[0])
+        self.assertEqual(self.played(), "decrypt,matrix,waves")
+
+    def test_the_old_single_effect_key_still_works(self):
+        self.settings.write_text('{"branding": {"effect": "rain"}}')
+        self.run_it()
+        self.assertEqual(self.played(), "rain")
+
+    def test_unknown_effects_are_dropped(self):
+        self.settings.write_text('{"branding": {"effects": ["x; reboot", "beams"]}}')
+        self.run_it()
+        self.assertEqual(self.played(), "beams")
         self.assertNotIn("reboot", self.calls()[0])
+
+    def test_no_usable_effect_falls_back_to_decrypt(self):
+        for body in ('{"branding": {"effects": []}}', '{"branding": {"effects": ["nope"]}}', '{"branding": {}}', "not json"):
+            self.settings.write_text(body)
+            self.log.unlink(missing_ok=True)
+            self.run_it()
+            self.assertEqual(self.played(), "decrypt", body)
+
+    def test_play_cycles_through_the_effects_and_wraps(self):
+        self.fake("clear", "exit 0")
+        self.fake("tte", f'for last; do :; done; echo "tte $last" >> {self.log}')
+        r = self.run_it("--play", "decrypt,matrix,beams", stdin="", BBKOS_SAVER_PAUSE="0.01", BBKOS_SAVER_MAX="5")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual([c for c in self.calls() if c.startswith("tte")],
+                         ["tte decrypt", "tte matrix", "tte beams", "tte decrypt", "tte matrix"])
 
     def test_no_tte_does_nothing(self):
         bare = self.dir / "bare"   # only the tools the script needs, so a tte installed on this machine is not found

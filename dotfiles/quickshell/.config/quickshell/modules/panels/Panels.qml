@@ -112,7 +112,7 @@ Scope {
                 Rectangle {
                     id: card
                     visible: win.target
-                    width: win.sheet ? 380 : 360
+                    width: win.sheet ? 380 : root.shown === "calendar" ? 696 : 360    // the calendar has two 320 px panels (CalendarPanel.colW)
                     height: win.sheet ? parent.height - win.sheetTop - win.sheetBottom
                                       : Math.min(body.item ? body.item.implicitHeight + 40 : 100, parent.height - (Theme.barVertical ? 0 : Theme.barInset) - 24)
                     // The notification history is a side sheet on the right, whatever edge the bar is on. Every other

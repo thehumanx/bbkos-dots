@@ -52,10 +52,43 @@ class IdleScreensaverTest(unittest.TestCase):
         text = self.conf(idle={"dim": 90}, branding={"screensaver": False})
         self.assertIn((90, "bbkos-awake idle-kbd"), list(zip(timeouts(text), commands(text))))
 
-    def test_effect_must_be_known(self):
-        s, warns = S.validate({"version": 1, "branding": {"effect": "nope"}})
-        self.assertEqual(s["branding"]["effect"], "decrypt")
+    def test_effects_default_to_decrypt(self):
+        s, warns = S.validate({"version": 1})
+        self.assertEqual(s["branding"]["effects"], ["decrypt"])
+        self.assertEqual(warns, [])
+
+    def test_effects_keep_the_list_order_and_drop_unknown_and_repeated(self):
+        s, warns = S.validate({"version": 1, "branding": {"effects": ["waves", "nope", "beams", "waves"]}})
+        self.assertEqual(s["branding"]["effects"], ["beams", "waves"])
         self.assertTrue(warns)
+
+    def test_the_old_single_effect_key_becomes_the_list(self):
+        s, warns = S.validate({"version": 1, "branding": {"screensaver": True, "effect": "rain"}})
+        self.assertEqual(s["branding"]["effects"], ["rain"])
+        self.assertEqual(warns, [])                      # no "unknown key" warning for the old name
+
+    def test_the_new_key_wins_over_the_old_one(self):
+        s, _ = S.validate({"version": 1, "branding": {"effect": "rain", "effects": ["matrix"]}})
+        self.assertEqual(s["branding"]["effects"], ["matrix"])
+
+    def test_an_unknown_old_effect_falls_back(self):
+        s, warns = S.validate({"version": 1, "branding": {"effect": "nope"}})
+        self.assertEqual(s["branding"]["effects"], ["decrypt"])
+        self.assertTrue(warns)
+
+    def test_an_empty_list_falls_back_to_decrypt(self):
+        s, warns = S.validate({"version": 1, "branding": {"effects": []}})
+        self.assertEqual(s["branding"]["effects"], ["decrypt"])
+        self.assertTrue(warns)
+
+    def test_set_from_the_command_line(self):
+        s = S.set_value(S.DEFAULTS, "branding.effects", "matrix, decrypt")
+        self.assertEqual(s["branding"]["effects"], ["decrypt", "matrix"])
+        self.assertEqual(S.DEFAULTS["branding"]["effects"], ["decrypt"])      # the defaults are not shared or changed
+        with self.assertRaises(ValueError):
+            S.set_value(S.DEFAULTS, "branding.effects", "decrypt,nope")
+        with self.assertRaises(ValueError):
+            S.set_value(S.DEFAULTS, "branding.effects", "")
 
 
 class FilesTest(unittest.TestCase):

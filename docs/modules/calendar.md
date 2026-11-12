@@ -15,9 +15,23 @@ Added 2026-10-21. Left click on the bar clock opens a calendar popup in the same
 - Keyboard: arrows move the day (up and down by a week), PageUp and PageDown the month, `T` today,
   Esc closes (the panel host).
 
+## World clocks
+
+Added 2026-11-02. The popup has two panels side by side (each 320 px, the card 696 px; `Panels.qml` widens the card for "calendar", `CalendarPanel.colW`):
+left the month, right the selected day, the year and month tiles and the timer. The **world clocks** are a strip of cards across both panels
+under them, four to a row, so the popup is about one row taller however many zones there are (the first cut put them under the month and
+the left panel grew 50 px per zone; the design audit of the same day moved them). Each card: the place, the time there (12 or 24 hour as
+`clock.hour24`, AM/PM dim), and `Today / Tomorrow / Yesterday · 5:15 h ahead / behind` against this computer's own time. Hover a card for
+its x; `+ Add time zone` opens a search over the tz database (type `tok`; matches the place, region or full name) and Enter or a click adds it.
+The same list is edited on Bar › Widgets › Calendar › World clocks (chips to remove, the same search to add). Up to 8 zones. Setting `calendar.zones` (list of IANA names such as `Asia/Tokyo`,
+default none; `bbkos-theme set calendar.zones Asia/Tokyo,Europe/London`; unknown or repeated names are dropped with a warning).
+The offsets come from `bbkos-zones now ZONE...` (`bbkos_theme/zones.py`, python `zoneinfo`, so daylight saving is right; read when the
+popup opens and when the list changes, not on a timer); `bbkos-zones list` feeds the search (the places in the tz database's `zone.tab` plus UTC; legacy aliases like `Australia/ACT` are not offered but a saved one still works). The search box needs the keyboard, so
+the calendar's key shortcuts (arrows, T, N) stand aside while it or the timer's box has focus.
+
 ## Timer
 
-Added 2026-10-21. The bottom of the calendar popup is a timer: presets (1, 5, 10, 15, 25, 30 min, 1 h) start at once, or type a
+Added 2026-10-21. The bottom of the calendar popup is a timer: presets (1, 5, 10, 30 min, 1 h; 15 and 25 min were dropped 2026-11-02) start at once, or type a
 time and press Enter or Start: `5` is minutes, `5:30` minutes:seconds, `1:05:00` hours:minutes:seconds, `90s`, `5m`, `1h30m`
 (zero, nonsense and over 99 hours are refused with a hint). While a timer exists the **timer widget** appears in the bar next to
 the clock (`modules/bar/TimerWidget.qml`; layout key `timer`, section centre, hidden by its BarItem when idle). Click it for the

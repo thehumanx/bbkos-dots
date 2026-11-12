@@ -66,7 +66,7 @@ Scope {
 
         FloatingWindow {
             id: win
-            property string page: "appearance"
+            property string page: Pages.PAGES[0].id      // the first page of the sidebar, whatever it is
             property var tabOf: ({})                 // page id -> tab index last shown (this window only)
             readonly property var entry: Pages.find(page) ?? Pages.PAGES[0]
             readonly property int tab: Math.min(tabOf[page] ?? 0, entry.tabs.length - 1)

@@ -15,6 +15,18 @@ SettingsPage {
     card: true
     note: "The preview is an approximation of hyprlock. Positions are pixels from the screen centre (up is positive)."
 
+    // The font list: a short candidate list filtered to the families Qt reports as installed, plus the current value so a font
+    // set by hand never vanishes (the same way as the Style page). hyprlock takes any fontconfig family.
+    readonly property var fontCandidates: ["JetBrainsMono Nerd Font", "Adwaita Sans", "Adwaita Mono", "DejaVu Sans", "DejaVu Sans Mono", "DejaVu Serif",
+        "Noto Sans", "Liberation Sans", "Liberation Serif", "Liberation Mono", "FiraCode Nerd Font", "Hack Nerd Font", "CaskaydiaCove Nerd Font", "Iosevka Nerd Font"]
+    readonly property var fonts: {
+        const installed = Qt.fontFamilies()
+        const list = fontCandidates.filter(f => installed.indexOf(f) >= 0)
+        const cur = SettingsStore.shown("lock.font")
+        if (typeof cur === "string" && cur !== "" && list.indexOf(cur) < 0) list.push(cur)
+        return list
+    }
+
     readonly property var aligns: [{ value: "left", label: "Left" }, { value: "center", label: "Center" }, { value: "right", label: "Right" }]
     readonly property var elements: [
         { id: "avatar", label: "Avatar", sizeLabel: "Diameter", from: 32, to: 300 },
@@ -142,7 +154,7 @@ SettingsPage {
     SettingSlider { label: "Brightness"; hint: "The most the lock screen may show; lower when the wallpaper needs it"; key: "lock.brightness"; from: 0.2; to: 1.0; step: 0.05 }
 
     Txt { text: "Text"; color: Theme.dim; font.bold: true }
-    SettingText { label: "Font"; key: "lock.font"; placeholder: "JetBrainsMono Nerd Font" }
+    SettingChoice { label: "Font"; hint: "Each name is shown in its own font"; key: "lock.font"; model: page.fonts.map(f => ({ value: f, label: f, font: f })) }
     SettingText { label: "Text colour"; key: "lock.textColor"; placeholder: "#f0f0f0" }
     SettingText { label: "Welcome text"; key: "lock.welcomeText"; placeholder: "Welcome $USER" }
     SettingChoice { label: "Time format"; key: "lock.timeFormat"; model: [{ value: "24h", label: "24-hour" }, { value: "12h", label: "12-hour" }] }

@@ -19,6 +19,9 @@ TIMEOUT = 15            # one DDC transaction can take several seconds
 FLOOR = 2               # lowest raw backlight value we write (0 is off, and the screen should never go black)
 EXPONENT = 4            # perceived brightness ~ (raw / max) ** (1 / EXPONENT): the percent scale of the laptop panel
 DDC_HINT = "ddcutil is not installed (run scripts/task16-ddcutil.sh)"
+# ddcutil logs its own retry notes to the system log at error level; they are not failures (we judge by exit code and
+# output), and they made `bbkos-check` flag the shell. Never log.
+DDC_QUIET = ["--syslog", "NEVER"]
 
 
 class BrightnessError(Exception):
@@ -192,7 +195,7 @@ def _remember_max(key, mx, env):
 
 
 def _ddc_read(exe, bus, env, key=None):
-    out = _run(exe, ["--bus", bus, "getvcp", "10", "--brief"], env).split()
+    out = _run(exe, [*DDC_QUIET, "--bus", bus, "getvcp", "10", "--brief"], env).split()
     try:
         cur, mx = int(out[3]), int(out[4])
         if mx <= 0:
@@ -225,7 +228,7 @@ def set(name, internal, percent, env):
         mx = _known_max(key, env)              # the maximum does not change: skip the ~90 ms read once it is known
         if mx is None:
             _, mx = _ddc_read(exe, bus, env, key)
-        _run(exe, ["--bus", bus, "setvcp", "10", str(round(percent * mx / 100)), "--noverify"], env)
+        _run(exe, [*DDC_QUIET, "--bus", bus, "setvcp", "10", str(round(percent * mx / 100)), "--noverify"], env)
     return {"kind": "ddc", "percent": percent}
 
 
@@ -244,5 +247,5 @@ def step(name, internal, delta, env):
     with _ddc_lock(env):
         cur, mx = _ddc_read(exe, bus, env, f"{bus}:{_edid_hash(name, env)}")
         new = max(0, min(mx, cur + round(delta * mx / 100)))
-        _run(exe, ["--bus", bus, "setvcp", "10", str(new), "--noverify"], env)
+        _run(exe, [*DDC_QUIET, "--bus", bus, "setvcp", "10", str(new), "--noverify"], env)
     return {"kind": "ddc", "percent": round(new * 100 / mx)}
