@@ -210,6 +210,8 @@ fi
 for pair in "power/bbkos-power-apply:/usr/local/sbin/bbkos-power-apply:install-power-helper.sh" \
             "power/bbkos-logind-apply:/usr/local/sbin/bbkos-logind-apply:install-logind-helper.sh" \
             "touchpad/bbkos-touchpad-reload:/usr/local/sbin/bbkos-touchpad-reload:install-touchpad-helper.sh" \
+            "touchpad/bbkos-touchpad-watch:/usr/local/sbin/bbkos-touchpad-watch:install-touchpad-watch.sh" \
+            "touchpad/bbkos-touchpad-watch.service:/etc/systemd/system/bbkos-touchpad-watch.service:install-touchpad-watch.sh" \
             "scripts/bbkos-grub-reinstall:/usr/local/bin/bbkos-grub-reinstall:task14-oomd-grub.sh"; do
     IFS=: read -r src dst installer <<<"$pair"
     if [ ! -e "$dst" ]; then note "root helper $dst is not installed (sudo scripts/$installer)"

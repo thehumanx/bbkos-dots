@@ -18,10 +18,15 @@ Item {
 
     readonly property bool hovered: area.containsMouse
     readonly property var toplevel: rail.toplevelFor(address)
-    readonly property var desktopEntry: appId !== "" ? DesktopEntries.heuristicLookup(appId) : null
+    // Reading `.values` re-runs the lookup whenever Quickshell (re)loads the desktop entries: at start they load lazily,
+    // and a later rescan (any change in an applications folder) can replace the entry object this card held, which left
+    // the card on the generic gear icon for good (as Dock.qml and WindowTitle.qml already do).
+    readonly property var desktopEntry: { void DesktopEntries.applications.values; return appId !== "" ? DesktopEntries.heuristicLookup(appId) : null }
     readonly property string iconSource: {
         const name = desktopEntry && desktopEntry.icon ? desktopEntry.icon : appId
-        return name !== "" ? Quickshell.iconPath(name, "application-x-executable") : ""
+        if (name === "") return ""
+        // A web app's entry names its icon by absolute path (bbkos-webapp), which is not an icon-theme name.
+        return name.startsWith("/") ? "file://" + name : Quickshell.iconPath(name, "application-x-executable")
     }
     // No caption on a card under 60 px tall (a top or bottom rail is one tile thick): the picture and the icon alone.
     readonly property real captionHeight: rail.showTitle && height >= 60 ? 22 : 0

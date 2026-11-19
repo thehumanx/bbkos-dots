@@ -97,6 +97,8 @@ Our own code after the behaviour oma-cast's SPEC documents for Raycast's root se
 
 ## Switching to an open app (2026-11-02)
 
+**Hover selects only on a real pointer move.** A row that slides under a resting pointer while you type gets a synthetic hover enter from Qt; `MenuWindow.qml` selects on `onPositionChanged` and only when the pointer's window position differs from the last one seen (`lastPtrX/Y`), so typing is never hijacked by the pointer.
+
 **Enter on an app or web app that already has a window goes to its most recently used window**, on whatever workspace, and
 starts the app only when it has none. **Shift+Enter always starts another one** (the footer says so). Idea from oma-cast
 (`References`); the code is ours. `Launcher.windowFor(id)` looks through `Hyprland.toplevels`, keeps the windows whose class

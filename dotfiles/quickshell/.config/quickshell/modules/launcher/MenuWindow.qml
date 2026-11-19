@@ -14,6 +14,8 @@ import qs.components
 PanelWindow {
     id: win
 
+    property real lastPtrX: -1                  // last pointer position seen over a row; hover selects only when it changes
+    property real lastPtrY: -1
     property var results: []
     property string armedId: ""                 // a destructive command waiting for its second Enter
     property bool form: false                   // the Create web app form instead of the list
@@ -178,7 +180,14 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: appGrid.currentIndex = tile.index
+                        onPositionChanged: mouse => {
+                            // Only a real pointer move selects: rows that slide under a
+                            // resting pointer while typing send a synthetic enter, not a move.
+                            const p = mapToItem(null, mouse.x, mouse.y)
+                            if (p.x === win.lastPtrX && p.y === win.lastPtrY) return
+                            win.lastPtrX = p.x; win.lastPtrY = p.y
+                            appGrid.currentIndex = tile.index
+                        }
                         onClicked: win.activated(tile.modelData, false)
                     }
                 }
@@ -256,7 +265,14 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: list.currentIndex = row.index
+                        onPositionChanged: mouse => {
+                            // Only a real pointer move selects: rows that slide under a
+                            // resting pointer while typing send a synthetic enter, not a move.
+                            const p = mapToItem(null, mouse.x, mouse.y)
+                            if (p.x === win.lastPtrX && p.y === win.lastPtrY) return
+                            win.lastPtrX = p.x; win.lastPtrY = p.y
+                            list.currentIndex = row.index
+                        }
                         onClicked: win.pick(row.index)
                     }
                 }

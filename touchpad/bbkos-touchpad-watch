@@ -1,0 +1,333 @@
+#!/usr/bin/python3 -I
+"""bbkos-touchpad-watch: a diagnostic logger for the touchpad's mouse-mode fault (docs/modules/touchpad.md).
+
+The Synaptics touchpad sometimes leaves Precision Touchpad mode and reports as a plain mouse: its "Touchpad" evdev node
+goes silent and the cursor moves through its "Mouse" node (REL_X/REL_Y), so 2-finger scrolling and gestures stop.
+In touchpad mode the Mouse node sends no motion at all (measured 2026-11-13), so motion there is the fault.
+
+This logs, to /var/log/bbkos-touchpad-watch.log, every charger plug/unplug, monitor connect/disconnect, wake from sleep
+and input device add/remove, and then judges each one by the FIRST touch after it: still touchpad mode (OK) or mouse
+mode (FAULT). A fault with no such event before it is logged too, with the kernel lines of that window. It only reads
+(/proc, /sys, the two touchpad nodes, udev events, the kernel log); it never resets the touchpad and logs no positions.
+
+Runs as root (reading /dev/input needs it) from bbkos-touchpad-watch.service; installed by
+scripts/install-touchpad-watch.sh. `bbkos-touchpad-watch --report [LOG]` summarises the log (no root needed).
+"""
+import errno
+import os
+import re
+import select
+import struct
+import subprocess
+import sys
+import time
+from datetime import datetime
+
+os.environ["PATH"] = "/usr/bin:/bin"
+LOG = "/var/log/bbkos-touchpad-watch.log"
+LOG_MAX = 1_000_000                       # bytes; then the log moves to .1
+DEVICE = "SYNA2BA6:00 06CB:CEF5"          # the touchpad; its nodes are "<DEVICE> Touchpad" and "<DEVICE> Mouse"
+EV_KEY, EV_REL, EV_ABS = 1, 2, 3
+REL_X, REL_Y = 0, 1
+ABS_MT_SLOT = 0x2F
+MULTI_TOOLS = {0x14D, 0x14E, 0x148, 0x14F}  # BTN_TOOL_DOUBLETAP, TRIPLETAP, QUADTAP, QUINTTAP
+EVENT = struct.Struct("llHHi")              # struct input_event on 64-bit: timeval, type, code, value (24 bytes)
+KERNEL_LINES = 30
+
+
+def boottime():
+    """Seconds since boot, including time asleep (so intervals across a suspend are real)."""
+    return time.clock_gettime(time.CLOCK_BOOTTIME)
+
+
+def find_nodes(devices_text, device=DEVICE):
+    """{'touchpad': 'eventN', 'mouse': 'eventM'} from /proc/bus/input/devices (either may be missing)."""
+    nodes = {}
+    for block in devices_text.split("\n\n"):
+        name = re.search(r'^N: Name="(.*)"$', block, re.M)
+        ev = re.search(r"^H: Handlers=.*?\b(event\d+)\b", block, re.M)
+        if not name or not ev or not name.group(1).startswith(device):
+            continue
+        rest = name.group(1)[len(device):].strip()
+        if rest == "Touchpad":
+            nodes["touchpad"] = ev.group(1)
+        elif rest == "Mouse":
+            nodes["mouse"] = ev.group(1)
+    return nodes
+
+
+def decode(data):
+    """(type, code, value) for each whole input_event in data."""
+    for off in range(0, len(data) - EVENT.size + 1, EVENT.size):
+        _, _, t, c, v = EVENT.unpack_from(data, off)
+        yield t, c, v
+
+
+def classify(node, events):
+    """What a batch of events from one node says: 'motion' (Mouse node moved: mouse mode), 'multi' (touchpad mode
+    with a second finger), 'touch' (touchpad mode), or None (nothing that tells the mode, e.g. a click)."""
+    seen = None
+    for t, c, v in events:
+        if node == "mouse":
+            if t == EV_REL and c in (REL_X, REL_Y):
+                return "motion"
+        elif t == EV_ABS:
+            if c == ABS_MT_SLOT and v >= 1:
+                seen = "multi"
+            elif seen is None:
+                seen = "touch"
+        elif t == EV_KEY and c in MULTI_TOOLS and v == 1:
+            seen = "multi"
+    return seen
+
+
+def parse_udev(buf):
+    """Split `udevadm monitor --property` output into complete blocks: ([dict, ...], unparsed rest)."""
+    blocks = []
+    while "\n\n" in buf:
+        chunk, buf = buf.split("\n\n", 1)
+        props = {}
+        for line in chunk.splitlines():
+            if "=" in line and not line.startswith(("UDEV", "KERNEL")):
+                k, v = line.split("=", 1)
+                props[k] = v
+        if "ACTION" in props:
+            blocks.append(props)
+    return blocks, buf
+
+
+def secs(d):
+    return f"{d:.0f} s" if d < 120 else f"{d / 60:.1f} min"
+
+
+class Watch:
+    """The judging logic, free of devices so it can be tested. `log(text)` writes one line."""
+
+    def __init__(self, log):
+        self.log = log
+        self.pending = []          # [(time, description, detail)] events not judged yet
+        self.faulted = False
+        self.fault_at = None
+        self.last_touch = None     # time of the last touchpad-mode touch
+
+    def event(self, now, desc, detail=""):
+        self.log(f"EVENT {desc}" + (f" | {detail}" if detail else ""))
+        self.pending.append((now, desc, detail))
+
+    def touch(self, now):
+        """A touchpad-mode event from the Touchpad node."""
+        if self.faulted:
+            self.log(f"RECOVERED | touchpad mode again after {secs(now - self.fault_at)} in mouse mode")
+            if self.pending:
+                self.log("NOT JUDGED (happened in mouse mode): " + ", ".join(d for _, d, _ in self.pending))
+            self.pending = []
+            self.faulted = False
+        for t, desc, _ in self.pending:
+            self.log(f"OK after: {desc} | touchpad mode at the first touch, {secs(now - t)} later")
+        self.pending = []
+        self.last_touch = now
+
+    def motion(self, now):
+        """Motion from the Mouse node: the fault. Returns True when this starts a fault (once per fault)."""
+        if self.faulted:
+            return False
+        self.faulted, self.fault_at = True, now
+        since = ("since the watch started" if self.last_touch is None
+                 else f"since the last touchpad-mode touch {secs(now - self.last_touch)} earlier")
+        if self.pending:
+            for t, desc, _ in self.pending:
+                self.log(f"FAULT after: {desc} | mouse mode at the first touch, {secs(now - t)} later ({since})")
+        else:
+            self.log(f"FAULT after: nothing | no charger, monitor, sleep or input event {since}")
+        self.pending = []
+        return True
+
+
+def report(path):
+    """Per event kind: how often the touchpad was still fine after it and how often it was in mouse mode."""
+    try:
+        lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    except OSError as e:
+        print(f"cannot read {path}: {e.strerror}", file=sys.stderr)
+        return 1
+    tally = {}
+    for line in lines:
+        m = re.search(r" (OK|FAULT) after: (.*?) \|", line)
+        if m:
+            kind = re.sub(r" \(.*\)$", "", m.group(2))
+            tally.setdefault(kind, [0, 0])[m.group(1) == "FAULT"] += 1
+    recovered = sum(" RECOVERED " in l for l in lines)
+    if not tally:
+        print("nothing judged yet (each event is judged at the first touch after it)")
+    else:
+        width = max(len(k) for k in tally)
+        print(f"{'event'.ljust(width)}   ok  fault")
+        for kind, (ok, fault) in sorted(tally.items(), key=lambda kv: (-kv[1][1], kv[0])):
+            print(f"{kind.ljust(width)}  {ok:3}  {fault:5}")
+    print(f"recoveries (touchpad mode again, e.g. after bbkos-touchpad-reset): {recovered}")
+    return 0
+
+
+class Logger:
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, text):
+        try:
+            if os.path.getsize(self.path) > LOG_MAX:
+                os.replace(self.path, self.path + ".1")
+        except OSError:
+            pass
+        line = f"{datetime.now().astimezone().isoformat(timespec='seconds')} {text}\n"
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write(line)
+        os.chmod(self.path, 0o644)
+
+
+def read(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+def chargers():
+    """{name: online} for the mains and USB supplies (the batteries are left out)."""
+    out = {}
+    base = "/sys/class/power_supply"
+    for name in sorted(os.listdir(base)) if os.path.isdir(base) else []:
+        if read(f"{base}/{name}/type") in ("Mains", "USB"):
+            out[name] = read(f"{base}/{name}/online") == "1"
+    return out
+
+
+def connectors():
+    """{'HDMI-A-1': 'connected', ...} for every DRM connector."""
+    out = {}
+    base = "/sys/class/drm"
+    for entry in sorted(os.listdir(base)) if os.path.isdir(base) else []:
+        status = read(f"{base}/{entry}/status")
+        if status and "-" in entry:
+            out[entry.split("-", 1)[1]] = status
+    return out
+
+
+def kernel_lines(since_epoch):
+    """Kernel log lines newer than since_epoch, at most KERNEL_LINES of them."""
+    try:
+        text = subprocess.run(["dmesg", "--time-format", "iso"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ["(could not read the kernel log)"]
+    keep = []
+    for line in text.splitlines():
+        stamp = line.split(" ", 1)[0].replace(",", ".")
+        try:
+            if datetime.fromisoformat(stamp).timestamp() >= since_epoch:
+                keep.append(line)
+        except ValueError:
+            continue
+    return keep[-KERNEL_LINES:] or ["(no kernel lines in that window)"]
+
+
+def run():
+    log = Logger(LOG)
+    w = Watch(log)
+    fds = {}                                   # fd -> 'touchpad' / 'mouse'
+    nodes = {}
+
+    def open_nodes():
+        """(Re)open the two nodes. Always reopens: after a driver reload the numbers can stay the same (event8/9 on
+        2026-11-13) while the old descriptors are dead."""
+        nonlocal nodes
+        found = find_nodes(read("/proc/bus/input/devices"))
+        for fd in list(fds):
+            os.close(fd)
+        fds.clear()
+        for role, ev in found.items():
+            try:
+                fds[os.open(f"/dev/input/{ev}", os.O_RDONLY | os.O_NONBLOCK)] = role
+            except OSError as e:
+                log(f"NOTE cannot open /dev/input/{ev} ({role}): {e.strerror}")
+        if found != nodes:
+            log(f"NODES touchpad={found.get('touchpad', 'missing')} mouse={found.get('mouse', 'missing')}")
+        nodes = found
+
+    mon = subprocess.Popen(["udevadm", "monitor", "--udev", "--property", "--subsystem-match=power_supply",
+                            "--subsystem-match=drm", "--subsystem-match=input"], stdout=subprocess.PIPE)
+    os.set_blocking(mon.stdout.fileno(), False)
+    supplies, screens = chargers(), connectors()
+    sleep_gap = boottime() - time.monotonic()
+    log("START charger " + (", ".join(f"{n}={'on' if o else 'off'}" for n, o in supplies.items()) or "none")
+        + " | connected: " + (", ".join(n for n, s in screens.items() if s == "connected") or "none"))
+    open_nodes()
+    buf = ""
+    last_touch_epoch = time.time()
+
+    while True:
+        ready, _, _ = select.select([mon.stdout.fileno(), *fds], [], [])
+        now = boottime()
+        gap = now - time.monotonic()
+        if gap - sleep_gap > 2:                 # CLOCK_BOOTTIME ran ahead of MONOTONIC: the machine slept
+            w.event(now, "woke from sleep", f"slept {secs(gap - sleep_gap)}, noticed at the first event after waking")
+            sleep_gap = gap
+        for fd in ready:
+            if fd == mon.stdout.fileno():
+                chunk = os.read(fd, 65536)
+                if not chunk:
+                    log("STOP udevadm monitor ended")
+                    return 1
+                blocks, buf = parse_udev(buf + chunk.decode("utf-8", "replace"))
+                for b in blocks:
+                    sub, action = b.get("SUBSYSTEM"), b.get("ACTION")
+                    if sub == "power_supply":
+                        now_s = chargers()
+                        for n, on in now_s.items():
+                            if supplies.get(n) is not None and supplies[n] != on:
+                                w.event(now, "charger plugged in" if on else "charger unplugged", n)
+                        supplies = now_s
+                    elif sub == "drm":
+                        now_c = connectors()
+                        for n, s in now_c.items():
+                            if screens.get(n, s) != s:
+                                w.event(now, f"{n} {s}")
+                        screens = now_c
+                    elif sub == "input" and action in ("add", "remove") and "NAME" in b:
+                        name = b["NAME"].strip('"')
+                        w.event(now, f"input {'added' if action == 'add' else 'removed'}: {name}")
+                    if sub == "input" and action in ("add", "remove"):
+                        open_nodes()
+                continue
+            role = fds.get(fd)
+            if role is None:
+                continue
+            try:
+                data = os.read(fd, EVENT.size * 64)
+            except OSError as e:
+                if e.errno in (errno.ENODEV, errno.EIO):
+                    open_nodes()
+                continue
+            kind = classify(role, decode(data))
+            if kind == "motion":
+                if w.motion(now):
+                    for line in kernel_lines(last_touch_epoch):
+                        log("KERNEL " + line)
+            elif kind in ("touch", "multi"):
+                w.touch(now)
+                last_touch_epoch = time.time()
+
+
+def main(argv):
+    if argv[1:2] == ["--report"]:
+        return report(argv[2] if len(argv) > 2 else LOG)
+    if len(argv) > 1:
+        print("usage: bbkos-touchpad-watch [--report [LOG]]", file=sys.stderr)
+        return 2
+    if os.geteuid() != 0:
+        print("needs root (reads /dev/input); it runs as bbkos-touchpad-watch.service", file=sys.stderr)
+        return 1
+    return run()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

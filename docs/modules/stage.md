@@ -81,6 +81,12 @@ hidden on a non-stage workspace, by design).
   is drawn through a layer because `ScreencopyView` does not blend: without it a translucent window's alpha is written
   into the rail's surface and the real window shows through the card (found 2026-10-21 in the removed overview with a 50 %
   translucent kitty; `failure-modes.md`).
+- **Card icon**: the window class is matched to a desktop entry with `DesktopEntries.heuristicLookup`; the binding reads
+  `DesktopEntries.applications.values` so it re-runs when Quickshell loads or rescans the entries (any change in an
+  applications folder triggers a rescan). Without it a card kept whatever it found first: nothing at a shell start, or an
+  entry object a rescan replaced, and then fell back to the class name, which is no icon name, so the generic gear
+  showed (owner, 2026-11-14: "sometimes the icon changes", Claude and other apps, after a while). Same fix as
+  `dock.md`. An absolute `Icon=` path (web apps) is loaded as a file, not looked up in the icon theme.
 - **Refresh**: a still is taken when a card is created, when the front window changes, and every
   `stage.refreshSeconds` while a rail is visible (0 = only on a switch). Hyprland events (open, close, move, focus,
   workspace, fullscreen, float) refresh Quickshell's window models on a 140 ms debounce, only while the mode is on.

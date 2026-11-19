@@ -224,7 +224,7 @@
   "modules/launcher/MenuWindow.qml": {
     "import": 20,
     "uncreatable-type": 1,
-    "unqualified": 97,
+    "unqualified": 105,
     "unresolved-type": 16
   },
   "modules/network/CaptivePortal.qml": {
@@ -284,7 +284,10 @@
     "unresolved-type": 2
   },
   "modules/panels/CalendarPanel.qml": {
-    "syntax": 1
+    "import": 18,
+    "required": 3,
+    "unqualified": 60,
+    "unresolved-type": 10
   },
   "modules/panels/DisplayPanel.qml": {
     "import": 25,
@@ -368,7 +371,7 @@
     "unqualified": 2
   },
   "modules/settings/PageAbout.qml": {
-    "import": 21,
+    "import": 20,
     "required": 9,
     "unqualified": 19,
     "unresolved-type": 1
@@ -389,7 +392,9 @@
     "unqualified": 4
   },
   "modules/settings/PageBarWidgets.qml": {
-    "syntax": 1
+    "import": 14,
+    "required": 6,
+    "unqualified": 3
   },
   "modules/settings/PageBehavior.qml": {
     "import": 8,

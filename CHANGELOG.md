@@ -2,6 +2,19 @@
 
 What changed for people using bbkOS dots, newest first. Update with `git pull && ./install.sh --no-packages` (see "Update" in the README).
 
+## 2026-11-19
+
+### Fixed
+
+- **Menu: typing no longer selects the row under a resting pointer.** As the results change while you type, a row sliding under a pointer that has not moved used to get selected. Now only a real pointer move selects.
+- **Stage mode: a card's app icon no longer turns into the generic gear** after a while, and web app icons that are files load.
+- **Touchpad:** the fallback after a stall is measured on the device and no longer fires only on a monitor plug.
+
+### New
+
+- **Touchpad diagnostics (optional).** `bbkos-touchpad-watch` is an optional root logger that records whether the touchpad is still in touchpad mode after each charger, monitor, sleep and input event (see `docs/modules/touchpad.md`).
+- **Zen text selection (optional).** If selected text in Zen shows as a white bar (a white accent colour), copy `dotfiles/zen/user.js` and `dotfiles/zen/chrome/userContent.css` into your Zen profile.
+
 ## 2026-11-12
 
 ### New

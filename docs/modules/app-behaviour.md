@@ -40,3 +40,7 @@ Owner report: the rename dialog opened as a tile filling the workspace. Thunar's
 ## Android apps window (2026-10-28)
 
 Rule `bbkos-android`: class `org.quickshell` + title `bbkOS Android` (the window of `docs/modules/android.md`), floating, 960x680, centred, next to `bbkos-settings`. Verified: `hyprctl reload` and `configerrors` clean, `hyprctl clients -j` shows the window floating at 960x680.
+
+## Zen: text selection colour
+
+Zen reads the selection colour from the GTK theme (the accent at 25 % alpha). With a white accent Firefox drops the alpha and paints a white bar. `dotfiles/zen/` holds `user.js` and `chrome/userContent.css` (`::selection` blue `#3584e4`, white text) to copy into the Zen profile by hand; see `dotfiles/zen/README.md` and the changelog entry of 2026-11-19. The `ui.textSelect*` prefs do nothing on GTK.

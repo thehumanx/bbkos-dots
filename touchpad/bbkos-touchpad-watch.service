@@ -1,0 +1,16 @@
+[Unit]
+Description=bbkOS touchpad diagnostics: is the touchpad still in touchpad mode after charger, monitor and sleep events
+
+[Service]
+ExecStart=/usr/local/sbin/bbkos-touchpad-watch
+Restart=on-failure
+RestartSec=5
+Nice=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/log
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

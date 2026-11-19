@@ -340,7 +340,8 @@ class HelperCheckTest(unittest.TestCase):
         text = CHECK.read_text()
         for helper in sorted((ROOT / "power").glob("bbkos-*")) + sorted((ROOT / "touchpad").glob("bbkos-*")):
             with self.subTest(helper=helper.name):
-                self.assertIn(f"{helper.parent.name}/{helper.name}:/usr/local/sbin/{helper.name}:", text)
+                dest = "/etc/systemd/system" if helper.suffix == ".service" else "/usr/local/sbin"
+                self.assertIn(f"{helper.parent.name}/{helper.name}:{dest}/{helper.name}:", text)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,6 @@
+/* bbkOS: Zen's text selection. The GTK theme's selection is the accent at 25 % alpha; the accent is white and Firefox
+   drops the alpha, so selected text showed as a white bar. The ui.textSelect* prefs did nothing on GTK (tested). */
+::selection {
+  background-color: #3584e4 !important;
+  color: #ffffff !important;
+}
